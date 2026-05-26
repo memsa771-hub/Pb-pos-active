@@ -955,12 +955,18 @@ def kitchen_receipt(request, order_id):
     business_address = business_settings['business_address'].setting_value
     business_phone = business_settings['business_phone'].setting_value
     
+    import pytz
+    pkt = pytz.timezone('Asia/Karachi')
+    from django.utils.timezone import now as tz_now
+    now_pkt = tz_now().astimezone(pkt).strftime('%d/%m/%Y %I:%M %p')
+
     context = {
         'order': order,
         'order_items': order_items,
         'business_name': business_name,
         'business_address': business_address,
         'business_phone': business_phone,
+        'now_pkt': now_pkt,
     }
     
     return render(request, 'posapp/orders/kitchen_receipt.html', context)
@@ -1004,6 +1010,11 @@ def kitchen_receipt_additional(request, order_id):
     business_address = business_settings['business_address'].setting_value
     business_phone = business_settings['business_phone'].setting_value
     
+    import pytz
+    pkt = pytz.timezone('Asia/Karachi')
+    from django.utils.timezone import now as tz_now
+    now_pkt = tz_now().astimezone(pkt).strftime('%d/%m/%Y %I:%M %p')
+
     context = {
         'order': order,
         'order_items': additional_items,  # Only additional quantities
@@ -1011,6 +1022,7 @@ def kitchen_receipt_additional(request, order_id):
         'business_address': business_address,
         'business_phone': business_phone,
         'is_additional': True,  # Flag to indicate this is for additional items
+        'now_pkt': now_pkt,
     }
     
     # Check if this was triggered by order save

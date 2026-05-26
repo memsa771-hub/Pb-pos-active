@@ -179,7 +179,7 @@
             {% endif %}
             <p>{{ order.created_at|pkt_datetime }}</p>
             {% if is_additional %}
-            <p><strong>Added: {{ "now"|pkt_time }}</strong></p>
+            <p><strong>Added: {{ now_pkt }}</strong></p>
             {% endif %}
         </div>
         
