@@ -19,6 +19,7 @@ def is_branch_manager(user):
     return hasattr(user, 'profile') and user.profile and user.profile.role and user.profile.role.name == 'Branch Manager'
 
 @login_required
+@management_required
 def delivery_person_list(request):
     """List all delivery persons"""
     search_query = request.GET.get('search', '')
@@ -129,6 +130,7 @@ def delivery_person_delete(request, person_id):
     return render(request, 'posapp/delivery/delivery_person_confirm_delete.html', context)
 
 @login_required
+@management_required
 def delivery_person_detail(request, person_id):
     """Show delivery person details and their orders"""
     delivery_person = get_object_or_404(DeliveryPerson, id=person_id)
@@ -184,6 +186,7 @@ def delivery_person_detail(request, person_id):
     return render(request, 'posapp/delivery/delivery_person_detail.html', context)
 
 @login_required
+@management_required
 def delivery_report(request):
     """Generate delivery report for a specific date range and delivery person - Admin and Branch Manager can view"""
     # Allow admin and branch manager to view delivery reports

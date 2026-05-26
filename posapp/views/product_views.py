@@ -6,10 +6,12 @@ from django.db.models import Q
 from django.http import JsonResponse
 from ..models import PosProduct, PosCategory, OrderItem
 from ..forms import ProductForm
+from ..decorators import admin_required
 import django.db.models.deletion
 from django.db import transaction
 
 @login_required
+@admin_required
 def product_list(request):
     """Display list of all products"""
     # Get search parameters
@@ -57,6 +59,7 @@ def product_list(request):
     return render(request, 'posapp/products/product_list.html', context)
 
 @login_required
+@admin_required
 def product_detail(request, product_id):
     """Display details of a specific product"""
     product = get_object_or_404(PosProduct, id=product_id)
@@ -64,6 +67,7 @@ def product_detail(request, product_id):
     return render(request, 'posapp/products/product_detail.html', context)
 
 @login_required
+@admin_required
 def product_create(request):
     """Create a new product using Django Form"""
     
@@ -97,6 +101,7 @@ def product_create(request):
     return render(request, 'posapp/products/product_form.html', context)
 
 @login_required
+@admin_required
 def product_edit(request, product_id):
     """Edit an existing product"""
     product = get_object_or_404(PosProduct, id=product_id)
@@ -140,6 +145,7 @@ def product_edit(request, product_id):
     return render(request, 'posapp/products/product_form.html', context)
 
 @login_required
+@admin_required
 def product_delete(request, product_id):
     """Delete a product"""
     product = get_object_or_404(PosProduct, id=product_id)
@@ -200,6 +206,7 @@ def product_delete(request, product_id):
     return redirect('product_detail', product_id=product_id)
 
 @login_required
+@admin_required
 def product_archive(request, product_id):
     """Archive or unarchive a product"""
     product = get_object_or_404(PosProduct, id=product_id)

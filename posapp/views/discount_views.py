@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from ..models import Discount, Order
 from ..forms import DiscountForm
+from ..decorators import admin_required
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +13,7 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 
 @login_required
+@admin_required
 def discount_list(request):
     """Display list of all discounts"""
     # Get search parameters
@@ -50,6 +52,7 @@ def discount_list(request):
     return render(request, 'posapp/discounts/discount_list.html', context)
 
 @login_required
+@admin_required
 def discount_detail(request, discount_id):
     """Display details of a specific discount"""
     discount = get_object_or_404(Discount, id=discount_id)
@@ -64,6 +67,7 @@ def discount_detail(request, discount_id):
     return render(request, 'posapp/discounts/discount_detail.html', context)
 
 @login_required
+@admin_required
 def discount_create(request):
     """Create a new discount"""
     if request.method == 'POST':
@@ -88,6 +92,7 @@ def discount_create(request):
     return render(request, 'posapp/discounts/discount_form.html', context)
 
 @login_required
+@admin_required
 def discount_edit(request, discount_id):
     """Edit an existing discount"""
     discount = get_object_or_404(Discount, id=discount_id)
@@ -114,6 +119,7 @@ def discount_edit(request, discount_id):
     return render(request, 'posapp/discounts/discount_form.html', context)
 
 @login_required
+@admin_required
 def discount_delete(request, discount_id):
     """Delete a discount"""
     discount = get_object_or_404(Discount, id=discount_id)

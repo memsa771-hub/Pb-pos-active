@@ -27,7 +27,7 @@ def admin_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         if not is_admin(request.user):
             messages.error(request, "You don't have permission to access this page. Admin access required.")
-            return redirect('dashboard')
+            return redirect('pos')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 

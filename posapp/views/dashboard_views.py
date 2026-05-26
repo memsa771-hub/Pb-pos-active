@@ -52,9 +52,8 @@ def can_access_management(user):
 
 @login_required
 def dashboard(request):
-    # Check if user has admin or branch manager access
-    if not can_access_management(request.user):
-        messages.error(request, "Dashboard...")
+    # Dashboard is admin-only
+    if not is_admin(request.user):
         return redirect('pos')
     
     # Check if user is admin or branch manager

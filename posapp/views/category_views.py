@@ -4,8 +4,10 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from ..models import PosCategory
+from ..decorators import admin_required
 
 @login_required
+@admin_required
 def category_list(request):
     """Display list of all categories"""
     # Get search parameters
@@ -37,6 +39,7 @@ def category_list(request):
     return render(request, 'posapp/categories/category_list.html', context)
 
 @login_required
+@admin_required
 def category_detail(request, category_id):
     """Display details of a specific category"""
     category = get_object_or_404(PosCategory, id=category_id)
@@ -54,6 +57,7 @@ def category_detail(request, category_id):
     return render(request, 'posapp/categories/category_detail.html', context)
 
 @login_required
+@admin_required
 def category_create(request):
     """Create a new category"""
     if request.method == 'POST':
@@ -94,6 +98,7 @@ def category_create(request):
     return render(request, 'posapp/categories/category_form.html', context)
 
 @login_required
+@admin_required
 def category_edit(request, category_id):
     """Edit an existing category"""
     category = get_object_or_404(PosCategory, id=category_id)
@@ -132,6 +137,7 @@ def category_edit(request, category_id):
     return render(request, 'posapp/categories/category_form.html', context)
 
 @login_required
+@admin_required
 def category_delete(request, category_id):
     """Delete a category"""
     category = get_object_or_404(PosCategory, id=category_id)

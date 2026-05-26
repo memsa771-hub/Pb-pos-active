@@ -229,16 +229,18 @@
             </a>
             <div id="collapsePOS" class="collapse {% if request.resolver_match.namespace != 'inventory' and '/reports/' not in request.path and '/end-day' not in request.path and '/adjustments/' not in request.path and '/users/' not in request.path and '/settings/' not in request.path and '/profile/' not in request.path %}show{% endif %}" data-bs-parent="#accordionSidebar">
                 <div class="sidebar-submenu">
-                    
-                    {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
+
+                    {% if user.is_superuser or user.profile.role.name == 'Admin' %}
                     <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'product_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'product_list' %}">Products Menu</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'category_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'category_list' %}">Categories Menu</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'discount_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'discount_list' %}">Discounts</a>
                     {% endif %}
-                    {% if not user.profile.role.name == 'Cashier' %}
+
+                    {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
                     <a class="nav-link {% if request.resolver_match.url_name == 'delivery_person_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'delivery_person_list' %}">Delivery Staff</a>
                     {% endif %}
+
                     <a class="nav-link {% if request.resolver_match.url_name == 'pos' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'pos' %}">Open POS Terminal</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'order_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'order_list' %}">Orders History</a>
 
@@ -246,23 +248,41 @@
             </div>
         </li>
 
-        {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
-        <!-- Reports Menu -->
+        {% if user.is_superuser or user.profile.role.name == 'Admin' %}
+        <!-- Reports Menu - Admin Only -->
         <div class="sidebar-heading">Analytics</div>
         <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.namespace == 'inventory' or '/reports/' not in request.path and '/end-day' not in request.path and '/adjustments/' not in request.path %}collapsed{% endif %}" 
+            <a class="nav-link {% if request.resolver_match.namespace == 'inventory' or '/reports/' not in request.path and '/adjustments/' not in request.path %}collapsed{% endif %}" 
                data-bs-toggle="collapse" href="#collapseReports" role="button" 
-               aria-expanded="{% if request.resolver_match.namespace != 'inventory' and '/reports/' in request.path or request.resolver_match.namespace != 'inventory' and '/end-day' in request.path or request.resolver_match.namespace != 'inventory' and '/adjustments/' in request.path %}true{% else %}false{% endif %}">
+               aria-expanded="{% if request.resolver_match.namespace != 'inventory' and '/reports/' in request.path or request.resolver_match.namespace != 'inventory' and '/adjustments/' in request.path %}true{% else %}false{% endif %}">
                 <i class="fas fa-chart-bar"></i>
                 <span class="nav-text">Reports & Adjustments</span>
                 <i class="fas fa-chevron-down dropdown-arrow"></i>
             </a>
-            <div id="collapseReports" class="collapse {% if request.resolver_match.namespace != 'inventory' and '/reports/' in request.path or request.resolver_match.namespace != 'inventory' and '/end-day' in request.path or request.resolver_match.namespace != 'inventory' and '/adjustments/' in request.path %}show{% endif %}" data-bs-parent="#accordionSidebar">
+            <div id="collapseReports" class="collapse {% if request.resolver_match.namespace != 'inventory' and '/reports/' in request.path or request.resolver_match.namespace != 'inventory' and '/adjustments/' in request.path %}show{% endif %}" data-bs-parent="#accordionSidebar">
                 <div class="sidebar-submenu">
-                    <a class="nav-link {% if request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'report_dashboard' or request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" href="{% url 'reports_dashboard' %}">Reports Dashboard</a>
-                    <a class="nav-link {% if request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'end_day' %}active{% endif %}" href="{% url 'end_day' %}">End Day Report</a>
-                    <a class="nav-link {% if request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'end_day_reports' %}active{% endif %}" href="{% url 'end_day_reports' %}">Past End Days</a>
+                    <a class="nav-link {% if request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" href="{% url 'reports_dashboard' %}">Reports Dashboard</a>
                     <a class="nav-link {% if request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'adjustment_dashboard' %}active{% endif %}" href="{% url 'adjustment_dashboard' %}">Adjustments</a>
+                </div>
+            </div>
+        </li>
+        {% endif %}
+
+        {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
+        <!-- End Day - Admin + Branch Manager -->
+        <div class="sidebar-heading">Management</div>
+        <li class="nav-item">
+            <a class="nav-link {% if '/end-day' not in request.path and request.resolver_match.url_name != 'end_day_reports' %}collapsed{% endif %}" 
+               data-bs-toggle="collapse" href="#collapseEndDay" role="button" 
+               aria-expanded="{% if '/end-day' in request.path or request.resolver_match.url_name == 'end_day_reports' %}true{% else %}false{% endif %}">
+                <i class="fas fa-calendar-check"></i>
+                <span class="nav-text">End of Day</span>
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </a>
+            <div id="collapseEndDay" class="collapse {% if '/end-day' in request.path or request.resolver_match.url_name == 'end_day_reports' %}show{% endif %}" data-bs-parent="#accordionSidebar">
+                <div class="sidebar-submenu">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'end_day' %}active{% endif %}" href="{% url 'end_day' %}">End Day</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'end_day_reports' %}active{% endif %}" href="{% url 'end_day_reports' %}">Past End Days</a>
                 </div>
             </div>
         </li>
