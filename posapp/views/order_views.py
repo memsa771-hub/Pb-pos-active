@@ -1602,11 +1602,12 @@ def create_order_api(request):
         table_number = data.get('table_number', '')
         
         if order_type == 'Dine In' and table_number:
-            # Check if table already has a pending order
+            # Check if table already has a pending order with items
             existing_table_order = Order.objects.filter(
                 order_type='Dine In',
                 order_status='Pending',
-                table_number=table_number
+                table_number=table_number,
+                orderitem__isnull=False
             ).exists()
             
             if existing_table_order:
@@ -2076,7 +2077,8 @@ def get_active_tables(request):
     active_tables = Order.objects.filter(
         order_type='Dine In', 
         order_status='Pending',
-        table_number__isnull=False
+        table_number__isnull=False,
+        orderitem__isnull=False
     ).exclude(table_number='').values_list('table_number', flat=True).distinct()
     
     # Convert to a list
