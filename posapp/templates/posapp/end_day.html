@@ -1,0 +1,239 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}End Day | POS System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">End Day</h1>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if last_end_day %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle mr-1"></i> Last end day was on {{ last_end_day.end_date|pkt_datetime }} by {{ last_end_day.ended_by.username }}.
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle mr-1"></i> This will be the first end day record. We are showing data from the past 30 days.
+    </div>
+    {% endif %}
+ <!-- Available Reports -->
+ <div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Available Reports</h6>
+    </div>
+    <div class="card-body">
+        <p class="mb-4">Download reports from <strong>{{ start_date|pkt_datetime }}</strong> to <strong>{{ end_date|pkt_datetime }}</strong>.</p>
+        
+        <div class="row">
+            <!-- Reports Cards - Row 1 -->
+            <div class="row mb-4">
+                <!-- Sales Summary Report Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow h-100 border-left-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">Sales Summary Report</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">Detailed summary of all sales, adjustments, and net revenue during this period.</p>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'sales_summary' %}" target="_blank" class="btn btn-primary">
+                                    <i class="fas fa-receipt mr-1"></i> Thermal Receipt Summary
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adjustment Report Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow h-100 border-left-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">Adjustment Report</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">Detailed reports of both bill adjustments and advance adjustments during this period.</p>
+                            
+                            <div class="d-grid">
+                                <a href="{% url 'adjustment_receipt' %}?start_date={{ start_date_str|urlencode }}&end_date={{ end_date_str|urlencode }}" target="_blank" class="btn btn-danger">
+                                    <i class="fas fa-download mr-1"></i> Download Adjustment Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orders Report Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">Orders Report</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Complete orders data including customer details, status, payment info, and revenue totals.</p>
+                        
+                        <div class="d-grid">
+                            <a href="{% url 'export_orders_excel' %}?start={{ start_date_str|urlencode }}&end={{ end_date_str|urlencode }}" class="btn btn-success">
+                                <i class="fas fa-download mr-1"></i> Download Orders Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Products Sold Report Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Products Sold Report</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Product-focused sales data including quantities sold, revenue by product. Only includes completed orders.</p>
+                        
+                        <div class="d-grid">
+                            <a href="{% url 'export_order_items_excel' %}?start={{ start_date_str|urlencode }}&end={{ end_date_str|urlencode }}" class="btn btn-info">
+                                <i class="fas fa-download mr-1"></i> Download Products Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+         <!-- End Day Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">End Today's Business</h6>
+        </div>
+        <div class="card-body">
+            <p>This will mark the end of the current business day and allow you to download reports from {% if last_end_day %}the last end day{% else %}the past 30 days{% endif %} until now.</p>
+            
+            {% if pending_orders > 0 %}
+            <div class="alert alert-warning mb-4">
+                <i class="fas fa-exclamation-triangle me-2"></i> <strong>Warning:</strong> There are {{ pending_orders }} pending orders that need to be completed or cancelled before you can end the day.
+                <a href="{% url 'order_list' %}" class="alert-link">View pending orders</a>
+            </div>
+            {% endif %}
+            
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="notes">Notes (Optional)</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Any notes about today's business"></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger" {% if pending_orders > 0 %}disabled{% endif %}>
+                    <i class="fas fa-calendar-check mr-1"></i> End Day Now
+                </button>
+            </form>
+        </div>
+    </div>
+        <!-- Summary Information -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Orders Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Total Orders</th>
+                                        <th>Total Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{{ orders.count }}</td>
+                                        <td>
+                                            Rs. {{ order_total|floatformat:2 }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-danger">Adjustments Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Total Adjustments</th>
+                                        <th>Total Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{{ bill_adjustments.count }}</td>
+                                        <td>
+                                            Rs. {{ adjustment_total|floatformat:2 }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+   
+
+   
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Replace the default confirm with SweetAlert2
+        $('.btn-danger[type="submit"]').on('click', function(e) {
+            e.preventDefault();
+            const form = $(this).closest('form');
+            
+            Swal.fire({
+                title: 'End Day Confirmation',
+                text: 'Are you sure you want to end the day? This will finalize all transactions for the current period.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, End Day',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Ending the day and preparing reports',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Submit the form
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,120 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}End Day Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">End Day Reports</h1>
+        <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Reports
+        </a>
+    </div>
+
+    {% if is_admin %}
+    <!-- Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filter Reports</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- End Day Reports List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">End Day Reports</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>End Date</th>
+                            <th>Period</th>
+                            <th>Orders</th>
+                            <th>Total Sales</th>
+                            <th>Total Adjustments</th>
+                            <th>Net Total</th>
+                            <th>Ended By</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in end_days_data %}
+                        <tr>
+                            <td>{{ data.end_day.end_date|pkt_datetime }}</td>
+                            <td>
+                                {{ data.period_start|pkt_datetime_short }} to<br>
+                                {{ data.period_end|pkt_datetime_short }}
+                            </td>
+                            <td>{{ data.orders_count }}</td>
+                            <td>Rs. {{ data.order_total|floatformat:2 }}</td>
+                            <td>Rs. {{ data.adjustment_total|floatformat:2 }}</td>
+                            <td>Rs. {{ data.net_total|floatformat:2 }}</td>
+                            <td>{{ data.end_day.ended_by.username }}</td>
+                            <td>{{ data.end_day.notes|default:"-" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <!-- Sales Report -->
+                                    <a href="{% url 'sales_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}" 
+                                       class="btn btn-sm btn-primary" target="_blank" title="Sales Report">
+                                        <i class="fas fa-file-alt"></i>
+                                    </a>
+                                    <!-- Adjustment Report -->
+                                    <a href="{% url 'adjustment_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                       class="btn btn-sm btn-danger" target="_blank" title="Adjustment Report">
+                                        <i class="fas fa-sliders-h"></i>
+                                    </a>
+                                    <!-- Orders Excel Report -->
+                                    <a href="{% url 'export_orders_excel' %}?start={{ data.period_start|date:'Y-m-d H:i:s' }}&end={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                       class="btn btn-sm btn-success" title="Orders Excel Report">
+                                        <i class="fas fa-file-excel"></i>
+                                    </a>
+                                    <!-- Products Excel Report -->
+                                    <a href="{% url 'export_order_items_excel' %}?start={{ data.period_start|date:'Y-m-d H:i:s' }}&end={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                       class="btn btn-sm btn-info" title="Products Excel Report">
+                                        <i class="fas fa-box"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center">No end day reports found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tooltips Initialization -->
+{% block extra_js %}
+<script>
+    $(document).ready(function(){
+        $('[title]').tooltip();
+    });
+</script>
+{% endblock %}
+
+{% endblock %} 

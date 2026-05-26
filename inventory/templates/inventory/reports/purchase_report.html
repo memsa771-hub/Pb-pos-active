@@ -1,0 +1,180 @@
+{% extends 'posapp/base.html' %}
+{% load humanize %}
+
+{% block title %}Purchase Report | Inventory{% endblock %}
+{% block nav_title %}Inventory Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Purchase History</h1>
+        
+        <form method="get" class="form-inline">
+            <select name="range" class="form-select shadow-sm" onchange="this.form.submit()">
+                <option value="7days" {% if date_range == '7days' %}selected{% endif %}>Last 7 Days</option>
+                <option value="30days" {% if date_range == '30days' %}selected{% endif %}>Last 30 Days</option>
+                <option value="this_year" {% if date_range == 'this_year' %}selected{% endif %}>This Year</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Purchase Trend (Expense)</h6>
+                    <h6 class="m-0 font-weight-bold text-success">Total: Rs. {{ total_spent|intcomma }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 300px;">
+                        <canvas id="purchaseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Detailed Purchase Log</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice #</th>
+                            <th>Supplier</th>
+                            <th>Total Amount</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in purchases %}
+                        <tr>
+                            <td>{{ purchase.purchase_date|date:"M d, Y" }}</td>
+                            <td class="font-weight-bold">{{ purchase.invoice_number|default:"-" }}</td>
+                            <td>{{ purchase.supplier.name }}</td>
+                            <td class="text-success font-weight-bold">Rs. {{ purchase.total_amount|intcomma }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ purchase.id }}">
+                                    View Items
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="collapse{{ purchase.id }}">
+                            <td colspan="5" class="bg-light">
+                                <div class="p-3">
+                                    <h6><strong>Items in this bill:</strong></h6>
+                                    <ul class="list-group">
+                                        {% for item in purchase.items.all %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ item.inventory_item.name }}
+                                            <span>
+                                                {{ item.quantity|floatformat:2 }} {{ item.inventory_item.unit }} x Rs. {{ item.unit_cost|floatformat:2|intcomma }} 
+                                                = <strong>Rs. {{ item.total_cost|floatformat:2|intcomma }}</strong>
+                                            </span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No purchase records found for this period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Set new default font family and font color to mimic Bootstrap's default styling
+    Chart.defaults.font.family = 'Nunito, -apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+    Chart.defaults.color = '#858796';
+
+    var ctx = document.getElementById("purchaseChart");
+    var myLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: '{{ chart_labels|safe }}',
+            datasets: [{
+                label: "Expense",
+                lineTension: 0.3,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                data: '{{ chart_values|safe }}',
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            layout: {
+                padding: { left: 10, right: 25, top: 25, bottom: 0 }
+            },
+            scales: {
+                x: {
+                    grid: { display: false, drawBorder: false },
+                    ticks: { maxTicksLimit: 7 }
+                },
+                y: {
+                    ticks: {
+                        maxTicksLimit: 5,
+                        padding: 10,
+                        callback: function(value, index, values) {
+                            return 'Rs. ' + value;
+                        }
+                    },
+                    grid: {
+                        color: "rgb(234, 236, 244)",
+                        zeroLineColor: "rgb(234, 236, 244)",
+                        drawBorder: false,
+                        borderDash: [2],
+                        zeroLineBorderDash: [2]
+                    }
+                },
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyColor: "#858796",
+                    titleColor: '#6e707e',
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    padding: 15,
+                    displayColors: false,
+                    intersect: false,
+                    mode: 'index',
+                    caretPadding: 10,
+                    callbacks: {
+                        label: function(context) {
+                            var label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            label += 'Rs. ' + context.raw;
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

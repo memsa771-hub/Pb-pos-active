@@ -1,0 +1,99 @@
+{% extends 'posapp/base.html' %}
+
+{% block title %}Bill Adjustment Details | POS System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Bill Adjustment Details</h1>
+        <div>
+            <a href="{% url 'bill_adjustment_edit' bill_adjustment.pk %}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> Edit
+            </a>
+            <a href="{% url 'bill_adjustment_list' %}" class="btn btn-secondary shadow-sm ml-2">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Bill Adjustment Information</h6>
+                    {% if request.user.is_superuser or request.user.profile.role.name == 'Admin' %}
+                        {% load adjustment_tags %}
+                        {% if bill_adjustment|can_delete_adjustment %}
+                        <a href="{% url 'bill_adjustment_delete' bill_adjustment.pk %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </a>
+                        {% else %}
+                        <span class="btn btn-secondary btn-sm disabled" title="Cannot delete - part of closed day">
+                            <i class="fas fa-lock mr-1"></i> Locked
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-sm text-muted">Name</p>
+                            <h5>{{ bill_adjustment.name }}</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1 text-sm text-muted">Quantity</p>
+                            <h5>{{ bill_adjustment.quantity }}</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1 text-sm text-muted">Price</p>
+                            <h5>{{ bill_adjustment.price }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Images</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for img in bill_adjustment.images.all %}
+                                <div class="position-relative">
+                                    <a href="{% if img.get_image_url %}{{ img.get_image_url }}{% else %}{{ img.image.url }}{% endif %}" target="_blank">
+                                        <img src="{% if img.get_image_url %}{{ img.get_image_url }}{% else %}{{ img.image.url }}{% endif %}" alt="Bill Image" class="img-thumbnail" style="width: 200px; height: 200px; object-fit: cover;">
+                                    </a>
+                                    {% if request.user.is_superuser or request.user.profile.role.name == 'Admin' %}
+                                    <a href="{% url 'bill_adjustment_image_delete' img.id %}" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% empty %}
+                                <p class="text-muted">No images attached to this bill adjustment.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if bill_adjustment.notes %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <p class="mb-1 text-sm text-muted">Notes</p>
+                            <p>{{ bill_adjustment.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-sm text-muted">Created By</p>
+                            <p>{{ bill_adjustment.created_by.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-sm text-muted">Created At</p>
+                            <p>{{ bill_adjustment.created_at|date:"F d, Y - H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

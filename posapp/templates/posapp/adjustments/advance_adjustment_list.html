@@ -1,0 +1,247 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Advance Adjustments | POS System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Advance Adjustments</h1>
+        <a href="{% url 'advance_adjustment_create' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Advance Adjustment
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold">All Advance Adjustments</h6>
+            <div class="dropdown no-arrow">
+                <a href="{% url 'adjustment_dashboard' %}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Notification for Branch Managers -->
+            {% if not is_admin %}
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle me-2"></i> <strong>Current Period Data:</strong> 
+                As a branch manager, you are only seeing adjustments since the last day end operation.
+            </div>
+            {% endif %}
+            
+            <!-- Search and Filter Form -->
+            <form method="get" id="searchFilterForm" class="mb-4">
+                <div class="row mb-3">
+                    <div class="col-md-{% if is_admin %}6{% else %}12{% endif %}">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" name="search" id="searchInput" class="form-control" 
+                                   placeholder="Search for name or notes..." value="{{ search }}">
+                        </div>
+                    </div>
+                    
+                    {% if is_admin %}
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                            </div>
+                            <input type="date" name="start_date" id="startDateInput" class="form-control" placeholder="Start Date" value="{{ start_date }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                            </div>
+                            <input type="date" name="end_date" id="endDateInput" class="form-control" placeholder="End Date" value="{{ end_date }}">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+
+            <div id="ajaxLoader" class="text-center mb-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+
+            {% if advance_adjustments %}
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Created By</th>
+                            <th width="150">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adjustment in advance_adjustments %}
+                        <tr>
+                            <td>{{ adjustment.name }}</td>
+                            <td>{{ adjustment.amount }}</td>
+                            <td>{{ adjustment.date|pkt_date }}</td>
+                            <td>{{ adjustment.created_by.username }}</td>
+                            <td>
+                                <a href="{% url 'advance_adjustment_detail' adjustment.pk %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'advance_adjustment_edit' adjustment.pk %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if request.user.is_superuser or request.user.profile.role.name == 'Admin' %}
+                                    {% load adjustment_tags %}
+                                    {% if adjustment|can_delete_adjustment %}
+                                    <a href="{% url 'advance_adjustment_delete' adjustment.pk %}" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="btn btn-secondary btn-sm disabled" title="Cannot delete - part of closed day">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(current)</span></span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-4">
+                <p class="lead text-gray-600">No advance adjustments found.</p>
+                <a href="{% url 'advance_adjustment_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-1"></i> Add New Advance Adjustment
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchForm = document.getElementById('searchFilterForm');
+        const searchInput = document.getElementById('searchInput');
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        const ajaxLoader = document.getElementById('ajaxLoader');
+        
+        // Debounce function to limit how often a function can run
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    func.apply(context, args);
+                }, wait);
+            };
+        }
+        
+        // Function to submit the form
+        function submitForm() {
+            // Show loading indicator
+            if (ajaxLoader) {
+                ajaxLoader.style.display = 'block';
+            }
+            
+            // We'll use XMLHttpRequest for form submission to avoid page reload
+            const formData = new FormData(searchForm);
+            const queryString = new URLSearchParams(formData).toString();
+            
+            // Redirect to the same URL with the new query parameters
+            window.location.href = window.location.pathname + '?' + queryString;
+        }
+        
+        // Apply debouncing to form submission (300ms delay)
+        const debouncedSubmit = debounce(submitForm, 300);
+        
+        // Event listeners for real-time search and filtering
+        if (searchInput) {
+            // Use both input and keyup events for maximum compatibility
+            searchInput.addEventListener('input', debouncedSubmit);
+            searchInput.addEventListener('keyup', debouncedSubmit);
+            
+            // Ensure form doesn't submit on Enter key (which would cause page reload)
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    debouncedSubmit();
+                }
+            });
+        }
+        
+        if (startDateInput) {
+            startDateInput.addEventListener('change', submitForm);
+        }
+        
+        if (endDateInput) {
+            endDateInput.addEventListener('change', submitForm);
+        }
+        
+        // Prevent form submission on enter (which would cause page reload)
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm();
+            });
+        }
+    });
+</script>
+{% endblock %} 

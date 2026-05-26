@@ -1,0 +1,438 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Sales Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    .date-filter {
+        max-width: 150px;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    .table-stats th {
+        background-color: #f8f9fc;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Sales Report</h1>
+        <div>
+            <a href="{% url 'reports_dashboard' %}" class="btn btn-sm btn-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> Back to Reports
+            </a>
+            <a href="{% url 'export_order_items_excel' %}?start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm mr-2">
+                <i class="fas fa-download fa-sm text-white-50"></i> Export Products Report
+            </a>
+            <a href="{% url 'export_orders_excel' %}?start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
+                <i class="fas fa-download fa-sm text-white-50"></i> Export Orders
+            </a>
+        </div>
+    </div>
+
+    {% if not is_admin and last_end_day %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i> <strong>Current Period Data:</strong> 
+        The report is showing data since the last day end ({{ last_end_day.end_date|pkt_datetime }}). 
+        Date filtering is only available to admin users.
+    </div>
+    {% endif %}
+
+    {% if is_business_day_range %}
+    <div class="alert alert-success mb-4">
+        <i class="fas fa-business-time me-2"></i> <strong>Business Day Based Report:</strong> 
+        {{ range_description }} - This report shows data based on End Day cycles instead of calendar days.
+        <br><small class="text-muted">
+            Period: {{ start_date|pkt_date }} to {{ end_date|pkt_date }}
+        </small>
+    </div>
+    {% endif %}
+
+    {% if is_admin %}
+    <!-- Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Report Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" id="report-form" class="row g-3 align-items-end">
+                <!-- Report Type -->
+                <div class="col-md-3 mb-3">
+                    <label for="report_type" class="form-label">Report Type</label>
+                    <select class="form-select form-control" id="report_type" name="report_type">
+                        <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                    </select>
+                </div>
+                
+                <!-- Predefined Date Range -->
+                <div class="col-md-3 mb-3" id="predefined-range-container">
+                    <label for="date_range" class="form-label">Date Range</label>
+                    <select class="form-select form-control" id="date_range" name="date_range">
+                        <option value="7days" {% if date_range == '7days' %}selected{% endif %}>Last 7 Business Days</option>
+                        <option value="30days" {% if date_range == '30days' %}selected{% endif %}>Last 30 Business Days</option>
+                        <option value="this_month" {% if date_range == 'this_month' %}selected{% endif %}>This Month</option>
+                        <option value="last_month" {% if date_range == 'last_month' %}selected{% endif %}>Last Month</option>
+                        <option value="this_year" {% if date_range == 'this_year' %}selected{% endif %}>This Year</option>
+                        <option value="custom" {% if date_range == 'custom' or custom_start %}selected{% endif %}>Custom range</option>
+                    </select>
+                </div>
+                
+                <!-- Custom Date Range -->
+                <div class="col-md-5 mb-3 row" id="custom-range-container" {% if not custom_start and date_range != 'custom' %}style="display: none;"{% endif %}>
+                    <div class="col-6">
+                        <label for="custom-start" class="form-label">Start Date</label>
+                        <input type="date" class="form-control date-filter" id="custom-start" name="start" value="{{ custom_start }}">
+                    </div>
+                    <div class="col-6">
+                        <label for="custom-end" class="form-label">End Date</label>
+                        <input type="date" class="form-control date-filter" id="custom-end" name="end" value="{{ custom_end }}">
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="col-md-1 mb-3">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Summary Stats Row -->
+    <div class="row">
+        <!-- Total Sales Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Sales ({{ start_date|date:'M d, Y' }} - {{ end_date|date:'M d, Y' }})</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs.{{ total_sales|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Orders ({{ start_date|date:'M d, Y' }} - {{ end_date|date:'M d, Y' }})</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_orders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Chart -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Sales Overview</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <hr>
+                    {% if report_type == 'daily' %}
+                    <div class="text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> Daily Sales
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Order Count
+                        </span>
+                    </div>
+                    {% elif report_type == 'weekly' %}
+                    <div class="text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> Weekly Sales
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Order Count
+                        </span>
+                    </div>
+                    {% else %}
+                    <div class="text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> Monthly Sales
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Order Count
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Pie Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Sales by Category</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <hr>
+                    <div class="text-center small" id="category-legend">
+                        <!-- Legend items will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products and Sales Data Tables -->
+    <div class="row">
+        <!-- Top Products -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Selling Products (Completed Orders Only)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-stats">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Total Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>{{ product.product__name }}</td>
+                                    <td>{{ product.product__category__name|default:"Unknown" }}</td>
+                                    <td>{{ product.total_quantity }}</td>
+                                    <td>Rs.{{ product.total_sales|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No products sold in this period</td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Grand Total Row -->
+                                {% if top_products %}
+                                <tr class="bg-light">
+                                    <td colspan="2" class="text-right font-weight-bold">GRAND TOTAL:</td>
+                                    <td class="font-weight-bold">{{ top_products|dictsumattr:"total_quantity" }}</td>
+                                    <td class="font-weight-bold">Rs.{{ top_products|dictsumattr:"total_sales"|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Data Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Sales Data</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-stats">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Orders</th>
+                                    <th>Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sales_data %}
+                                <tr>
+                                    <td>
+                                        {% if report_type == 'daily' %}
+                                            {{ item.date|pkt_date }}
+                                        {% elif report_type == 'weekly' %}
+                                            Week {{ item.date|date:"W" }}, {{ item.date|date:"Y" }}
+                                        {% else %}
+                                            {{ item.date|date:"F Y" }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.order_count }}</td>
+                                    <td>Rs.{{ item.total_sales|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No sales data for this period</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Toggle date range fields based on selection
+    document.getElementById('date_range').addEventListener('change', function() {
+        const customContainer = document.getElementById('custom-range-container');
+        if (this.value === 'custom') {
+            customContainer.style.display = 'flex';
+        } else {
+            customContainer.style.display = 'none';
+        }
+    });
+
+    // Sales Chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {
+                    label: 'Sales (Rs.)',
+                    data: {{ chart_sales|safe }},
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    pointRadius: 3,
+                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointBorderColor: 'rgba(78, 115, 223, 1)',
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    fill: true,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Orders',
+                    data: {{ chart_orders|safe }},
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                    borderColor: 'rgba(28, 200, 138, 1)',
+                    pointRadius: 3,
+                    pointBackgroundColor: 'rgba(28, 200, 138, 1)',
+                    pointBorderColor: 'rgba(28, 200, 138, 1)',
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: 'rgba(28, 200, 138, 1)',
+                    pointHoverBorderColor: 'rgba(28, 200, 138, 1)',
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    fill: false,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Sales (Rs.)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    // grid line settings
+                    grid: {
+                        drawOnChartArea: false, // only want the grid lines for one axis to show up
+                    },
+                    title: {
+                        display: true,
+                        text: 'Orders'
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Pie Chart
+    const ctxPie = document.getElementById('categoryChart').getContext('2d');
+    const chartColors = [
+        'rgba(78, 115, 223, 0.8)',
+        'rgba(28, 200, 138, 0.8)',
+        'rgba(54, 185, 204, 0.8)',
+        'rgba(246, 194, 62, 0.8)',
+        'rgba(231, 74, 59, 0.8)',
+        'rgba(133, 135, 150, 0.8)',
+        'rgba(105, 70, 131, 0.8)',
+        'rgba(0, 138, 138, 0.8)',
+        'rgba(232, 82, 152, 0.8)',
+        'rgba(255, 159, 64, 0.8)'
+    ];
+    const categoryChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                data: {{ category_data|safe }},
+                backgroundColor: chartColors,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // Generate legend with matching colors
+    const legendContainer = document.getElementById('category-legend');
+    const labels = {{ category_labels|safe }};
+    
+    labels.forEach((label, index) => {
+        const color = chartColors[index % chartColors.length];
+        const legendItem = document.createElement('span');
+        legendItem.classList.add('mr-2');
+        legendItem.innerHTML = `<i class="fas fa-circle" style="color: ${color}"></i> ${label}`;
+        legendContainer.appendChild(legendItem);
+    });
+</script>
+{% endblock %} 

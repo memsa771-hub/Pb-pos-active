@@ -1,0 +1,2839 @@
+{% extends 'posapp/base.html' %}
+{% load humanize %}  {% block title %}POS Terminal | POS System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cart styles */
+    .cart-container {
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    
+    /* Custom scrollbar for cart */
+    .cart-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .cart-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .cart-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .cart-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Ultra-compact cart item design - 1 inch height */
+    .cart-item-compact {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 6px 8px;
+        margin-bottom: 4px;
+        transition: all 0.2s ease;
+        height: 60px; /* ~1 inch */
+        display: flex;
+        align-items: center;
+    }
+    
+    .cart-item-compact:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    
+    .cart-item-image {
+        width: 35px;
+        height: 35px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        flex-shrink: 0;
+    }
+    
+    .cart-item-content {
+        flex: 1;
+        min-width: 0;
+        padding: 0 6px;
+    }
+    
+    .cart-item-name {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .cart-item-price {
+        font-size: 0.65rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .cart-item-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    
+    .cart-quantity-control {
+        display: flex;
+        align-items: center;
+        background: white;
+        border-radius: 12px;
+        padding: 1px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+    }
+    
+    .cart-quantity-btn {
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        transition: all 0.15s;
+    }
+    
+    .cart-quantity-btn:hover {
+        background: #0056b3;
+        transform: scale(1.05);
+    }
+    
+    .cart-quantity-display {
+        min-width: 24px;
+        text-align: center;
+        font-weight: 600;
+        color: #333;
+        font-size: 0.7rem;
+        padding: 0 2px;
+    }
+    
+    .cart-item-total {
+        font-weight: 700;
+        color: #007bff;
+        font-size: 0.7rem;
+        margin-right: 4px;
+        white-space: nowrap;
+    }
+    
+    .cart-remove-btn {
+        width: 18px;
+        height: 18px;
+        border: none;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.5rem;
+        transition: all 0.15s;
+    }
+    
+    .cart-remove-btn:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    /* Responsive design for ultra-compact cart */
+    @media (max-width: 768px) {
+        .cart-container {
+            max-height: 450px;
+        }
+        
+        .cart-item-compact {
+            height: 55px;
+            padding: 5px 6px;
+        }
+        
+        .cart-item-image {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .cart-item-name {
+            font-size: 0.7rem;
+        }
+        
+        .cart-item-price {
+            font-size: 0.6rem;
+        }
+        
+        .cart-quantity-btn {
+            width: 18px;
+            height: 18px;
+            font-size: 0.55rem;
+        }
+        
+        .cart-quantity-display {
+            min-width: 20px;
+            font-size: 0.65rem;
+        }
+        
+        .cart-item-total {
+            font-size: 0.65rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .cart-container {
+            max-height: 400px;
+        }
+        
+        .cart-item-compact {
+            height: 50px;
+            padding: 4px 5px;
+            margin-bottom: 3px;
+        }
+        
+        .cart-item-image {
+            width: 28px;
+            height: 28px;
+        }
+        
+        .cart-item-name {
+            font-size: 0.65rem;
+        }
+        
+        .cart-item-price {
+            font-size: 0.55rem;
+        }
+        
+        .cart-quantity-btn {
+            width: 16px;
+            height: 16px;
+            font-size: 0.5rem;
+        }
+        
+        .cart-quantity-display {
+            min-width: 18px;
+            font-size: 0.6rem;
+        }
+        
+        .cart-item-total {
+            font-size: 0.6rem;
+        }
+        
+        .cart-remove-btn {
+            width: 16px;
+            height: 16px;
+            font-size: 0.45rem;
+        }
+    }
+    .product-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        height: 120px !important;
+        width: 100px;
+        border: none;
+        aspect-ratio: 1;
+    }
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .product-card .card-img-top {
+        height: 50px;
+        object-fit: cover;
+    }
+    .product-card .card-body {
+        padding: 0.3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .product-card .card-title {
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .product-card .card-text {
+        font-weight: 700;
+        color: #2c7be5;
+        font-size: 0.65rem;
+    }
+    
+    /* Small product card adjustments */
+    .product-card .position-absolute.badge {
+        font-size: 0.55rem;
+        padding: 0.15rem 0.25rem;
+        margin: 0.25rem;
+    }
+    
+    .product-card .btn-sm {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.25rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .product-card .d-flex.justify-content-between {
+        margin-top: 0.1rem;
+    }
+    
+    .product-card small {
+        font-size: 0.5rem;
+        margin-bottom: 0.1rem;
+    }
+    .cart-totals {
+        border-top: 2px solid #eaeaea;
+        padding-top: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    /* Custom styles for the POS interface */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Add scrollable product container */
+    .products-container {
+        height: calc(100vh - 260px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 10px;
+    }
+    
+    /* Style the scrollbar */
+    .products-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .products-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .products-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .products-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Fix category and search bar to top */
+    .product-section-header {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 10;
+        padding-bottom: 15px;
+    }
+    
+    /* Media query for print */
+    @media print {
+        body, html {
+            width: 80mm;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+        #receipt-container, .receipt-preview {
+            width: 80mm !important;
+            max-width: 80mm !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        nav, .sidebar, .main-content, .navbar, .notification-container, .no-print {
+            display: none !important;
+        }
+        #receipt-container, #receipt-container * {
+            page-break-inside: avoid !important;
+            page-break-before: avoid !important;
+            page-break-after: avoid !important;
+        }
+    }
+    
+    /* Category selector */
+    .category-selector {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 10px 0;
+    }
+    .category-btn {
+        margin-right: 8px;
+        border-radius: 20px;
+        padding: 8px 15px;
+        border: none;
+        background-color: #f0f0f0;
+        transition: all 0.2s;
+    }
+    .category-btn:hover, .category-btn.active {
+        background-color: #2c7be5;
+        color: white;
+    }
+    
+    /* Search bar */
+    .search-container {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .search-container input {
+        border-radius: 25px;
+        padding: 10px 15px 10px 40px;
+        border: 1px solid #ddd;
+        width: 100%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .search-container i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    
+    /* Customer search */
+    .customer-search-results {
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
+        width: 100%;
+        border-radius: 5px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .customer-item {
+        padding: 8px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+    }
+    .customer-item:hover {
+        background-color: #f5f5f5;
+    }
+    
+    /* Toast notification */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+    
+    /* Payment method styles */
+    .payment-method {
+        cursor: pointer;
+        transition: all 0.3s;
+        border-width: 2px !important;
+    }
+    .payment-method:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .payment-method.selected {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(44, 123, 229, 0.1);
+    }
+    
+    /* Cart action buttons */
+    .cart-actions {
+        margin-top: 15px;
+    }
+    .cart-actions button {
+        font-weight: 600;
+    }
+    
+    /* Total line styling */
+    .total-line {
+        border-color: rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Empty cart message */
+    .empty-cart-message {
+        display: flex;
+        height: 200px;
+        justify-content: center;
+        align-items: center;
+        color: #adb5bd;
+    }
+    
+    .disabled-product {
+        opacity: 0.5;
+        pointer-events: none;
+        position: relative;
+    }
+    .disabled-product::after {
+        content: "Out of Stock";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        background-color: rgba(220, 53, 69, 0.8);
+        color: white;
+        padding: 5px 10px;
+        font-weight: bold;
+        border-radius: 5px;
+        z-index: 10;
+    }
+    
+    .order-type {
+        cursor: pointer;
+        transition: all 0.3s;
+        border-width: 2px !important;
+    }
+    .order-type:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .order-type.selected {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(44, 123, 229, 0.1);
+    }
+    .order-type:active {
+        transform: translateY(0px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: rgba(44, 123, 229, 0.2);
+    }
+    
+    /* Pulse effect animation */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.97); }
+        100% { transform: scale(1); }
+    }
+    
+    .pulse-effect {
+        animation: pulse 0.3s ease-in-out;
+    }
+    
+    /* Comprehensive responsive design for all screen sizes and tab widths */
+    
+    /* Extra large screens (1920px+) */
+    @media (min-width: 1920px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 220px);
+        }
+        
+        .cart-container {
+            max-height: 500px;
+        }
+    }
+    
+    /* Large desktop screens (1400px-1919px) */
+    @media (min-width: 1400px) and (max-width: 1919px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 9px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 240px);
+        }
+        
+        .cart-container {
+            max-height: 480px;
+        }
+    }
+    
+    /* Standard desktop screens (1200px-1399px) */
+    @media (min-width: 1200px) and (max-width: 1399px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 260px);
+        }
+        
+        .cart-container {
+            max-height: 450px;
+        }
+    }
+    
+    /* Medium desktop screens / Tablet landscape (992px-1199px) */
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 8px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 280px);
+        }
+        
+        .cart-container {
+            max-height: 400px;
+        }
+        
+        /* Slightly smaller product cards */
+        .product-card {
+            height: 95px;
+            width: 95px;
+        }
+    }
+    
+    /* Tablet screens (768px-991px) */
+    @media (min-width: 768px) and (max-width: 991px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 7px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 300px);
+            max-height: 600px;
+        }
+        
+        .cart-container {
+            max-height: 350px;
+        }
+        
+        /* Compact product cards for tablets */
+        .product-card {
+            height: 85px;
+            width: 85px;
+        }
+        
+        .product-card .card-img-top {
+            height: 42px;
+        }
+        
+        .product-card .card-body {
+            padding: 0.25rem;
+        }
+        
+        .product-card .card-title {
+            font-size: 0.65rem;
+        }
+        
+        .product-card .card-text {
+            font-size: 0.6rem;
+        }
+    }
+    
+    /* Small tablet / Large mobile (576px-767px) */
+    @media (min-width: 576px) and (max-width: 767px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+            gap: 6px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 320px);
+            max-height: 500px;
+        }
+        
+        .cart-container {
+            max-height: 300px;
+        }
+        
+        /* More compact for small tablets */
+        .product-card {
+            height: 75px;
+            width: 75px;
+        }
+        
+        .product-card .card-img-top {
+            height: 38px;
+        }
+        
+        .product-card .card-body {
+            padding: 0.2rem;
+        }
+        
+        .product-card .card-title {
+            font-size: 0.6rem;
+        }
+        
+        .product-card .card-text {
+            font-size: 0.55rem;
+        }
+        
+        /* Better spacing for small screens */
+        .row > .col-lg-8,
+        .row > .col-lg-4 {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+    }
+    
+    /* Mobile screens (max-width: 575px) */
+    @media (max-width: 575px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 5px;
+        }
+        
+        .products-container {
+            height: calc(100vh - 340px);
+            max-height: 400px;
+        }
+        
+        .cart-container {
+            max-height: 280px;
+        }
+        
+        /* Very compact for mobile */
+        .product-card {
+            height: 65px;
+            width: 65px;
+        }
+        
+        .product-card .card-img-top {
+            height: 32px;
+        }
+        
+        .product-card .card-body {
+            padding: 0.15rem;
+        }
+        
+        .product-card .card-title {
+            font-size: 0.55rem;
+        }
+        
+        .product-card .card-text {
+            font-size: 0.5rem;
+        }
+        
+        /* Mobile layout adjustments */
+        .row > .col-lg-8,
+        .row > .col-lg-4 {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        
+        .card {
+            margin-bottom: 10px;
+        }
+        
+        /* Adjust payment modal for mobile */
+        #paymentModal .modal-dialog {
+            padding: 10px;
+        }
+        
+        .payment-method {
+            padding: 0.5rem !important;
+        }
+        
+        .payment-method i {
+            font-size: 1.5rem !important;
+        }
+    }
+    
+    /* Special handling for very narrow viewports (tab widths) */
+    @media (max-width: 400px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 4px;
+        }
+        
+        .product-card {
+            height: 60px;
+            width: 60px;
+        }
+        
+        .product-card .card-img-top {
+            height: 28px;
+        }
+        
+        .product-card .card-title {
+            font-size: 0.5rem;
+        }
+        
+        .product-card .card-text {
+            font-size: 0.45rem;
+        }
+    }
+    
+    /* Sticky category bar for all sizes */
+    .category-selector {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 20;
+        padding: 10px 0;
+        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;  /* Firefox */
+    }
+    
+    .category-selector::-webkit-scrollbar {
+        display: none;  /* Chrome, Safari, Edge */
+    }
+    
+    /* Fix for payment modal on tablets */
+    @media (min-width: 768px) and (max-width: 991px) {
+        #paymentModal .modal-dialog {
+            max-width: 96%;
+        }
+        
+        #paymentModal .payment-method,
+        #paymentModal .order-type {
+            padding: 0.75rem !important;
+        }
+    }
+    
+    /* Enhanced focus styles for better accessibility */
+    input:focus, 
+    button:focus, 
+    textarea:focus, 
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
+        border-color: var(--primary);
+    }
+    
+    /* Ensure the product grid fills available horizontal space */
+    .product-section-content {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block head_extras %}
+<style type="text/css" media="print">
+    @page {
+        size: 80mm auto;  /* Receipt printer width */
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    body * {
+        visibility: hidden;
+    }
+    .print-only, .print-only * {
+        visibility: visible;
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        text-fill-color: #000000 !important;
+    }
+    .print-only {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    /* Prevent duplicate printing */
+    #successModal, .modal-backdrop, .modal, .navbar, header, footer {
+        display: none !important;
+    }
+    /* Hide everything else */
+    #receipt-container {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+    /* Control sheet count by limiting height */
+    .receipt-preview {
+        page-break-after: always;
+        page-break-inside: avoid;
+        max-height: 100%;
+        overflow: visible;
+        font-family: 'Arial', 'Helvetica', sans-serif !important;
+        line-height: 1.3 !important;
+    }
+    /* Ensure high contrast and clean fonts for thermal printing */
+    .receipt-preview * {
+        color: #000000 !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        -webkit-text-fill-color: #000000 !important;
+        text-fill-color: #000000 !important;
+    }
+    /* Make dividers clear on thermal paper */
+    .receipt-preview [style*="border-top"] {
+        border-top: 1px dashed #000 !important;
+    }
+    /* Ensure text is bold where needed */
+    .receipt-preview [style*="font-weight: bold"] {
+        font-weight: bold !important;
+        color: #000000 !important;
+    }
+    /* Improve text clarity */
+    .receipt-preview {
+        letter-spacing: 0.02em !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+<div class="container-fluid px-lg-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 mb-lg-4 flex-wrap">
+        <h2 class="mb-2 mb-sm-0">Point of Sale</h2>
+        <div class="d-flex">
+            <a href="{% url 'order_list' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-list me-1"></i> <span class="d-none d-sm-inline">Orders</span>
+            </a>
+            {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
+            <a href="{% url 'product_list' %}" class="btn btn-outline-success">
+                <i class="fas fa-boxes me-1"></i> <span class="d-none d-sm-inline">Products</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row g-3">
+        <!-- Products Section -->
+        <div class="col-lg-8 col-md-6">
+            <div class="card shadow-sm border-0 mb-3 mb-lg-4">
+                <div class="card-body p-3 p-lg-4">
+                    <div class="product-section-header">
+                        <!-- Categories - Made scrollable for mobile -->
+                        <div class="category-selector mb-3 d-flex overflow-auto">
+                            <button class="category-btn active flex-shrink-0" data-category="all">All Products</button>
+                            {% for category in categories %}
+                            <button class="category-btn flex-shrink-0" data-category="{{ category.id }}">{{ category.name }}</button>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Search Bar -->
+                        <div class="search-container mb-3 mb-lg-4">
+                            <i class="fas fa-search"></i>
+                            <input type="text" class="form-control" id="product-search" placeholder="Search products or enter product code + Enter to add to cart">
+                        </div>
+                    </div>
+                    
+                    <!-- Product Grid - This will be scrollable -->
+                    <div class="products-container" style="height: calc(100vh - 240px); overflow-y: auto;">
+    <div class="product-grid" id="products-grid">
+        {% for product in products %}
+        <div class="product-item" data-category="{{ product.category.id }}">
+            
+            <div class="card h-100 product-card {% if product.stock_quantity <= 0 and not product.running_item and not product.is_recipe_based %}disabled-product{% endif %}" 
+                 data-id="{{ product.id }}" 
+                 data-name="{{ product.name }}" 
+                 data-price="{{ product.price }}" 
+                 data-code="{{ product.product_code }}" 
+                 data-available="{% if product.stock_quantity > 0 or product.running_item or product.is_recipe_based %}true{% else %}false{% endif %}" 
+                 data-running="{% if product.running_item or product.is_recipe_based %}true{% else %}false{% endif %}" 
+                 data-per-kg="{% if product.calculate_price_per_kg %}true{% else %}false{% endif %}" 
+                 data-image-url="{% if product.image %}{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}{% else %}https://i.imgur.com/pTXpXpF.jpg{% endif %}">
+                
+                <div class="position-relative">
+                    <div class="position-absolute top-0 end-0 p-1">
+                        {% if product.running_item %}
+                            <span class="badge bg-info rounded-pill" style="font-size: 0.6rem;">∞</span>
+                        {% elif product.is_recipe_based %}
+                            <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.6rem;">Kitchen</span>
+                        {% elif product.stock_quantity <= 0 %}
+                            <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">Out</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill stock-badge" style="font-size: 0.6rem;">{{ product.stock_quantity }}</span>
+                        {% endif %}
+                    </div>
+
+                    <img src="{% if product.image %}{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}{% else %}https://i.imgur.com/pTXpXpF.jpg{% endif %}" 
+                         class="card-img-top" 
+                         alt="{{ product.name }}" 
+                         onerror="this.src='https://i.imgur.com/pTXpXpF.jpg'">
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title text-truncate" title="{{ product.name }}">{{ product.name }}</h6>
+                    {% if product.product_code %}
+                    <small class="text-muted mb-1" style="font-size: 0.65rem;">{{ product.product_code }}</small>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <span class="card-text fw-bold text-primary">Rs. {{ product.price|intcomma }}</span>
+                        <button class="btn btn-sm btn-primary rounded-circle" style="width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        {% empty %}
+        <div class="col-12 text-center mt-5">
+            <p class="text-muted">No products available</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cart Section -->
+        <div class="col-lg-4 col-md-5">
+            <div class="card shadow-sm border-0 sticky-lg-top" style="top: 20px; z-index: 100;">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Cart</h5>
+                </div>
+                <div class="card-body">
+                    <div class="cart-container mb-3">
+                        <div id="cart-items">
+                            <div class="empty-cart-message">
+                                <div class="text-center">
+                                    <i class="fas fa-shopping-cart fa-3x mb-3 text-muted"></i>
+                                    <p class="text-muted">Your cart is empty</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="cart-totals">
+                        <div class="p-2 p-lg-3">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="fs-4 fw-bold text-dark">Total:</span>
+                                <span id="cart-total" class="fs-4 fw-bold text-primary">Rs.0.00</span>
+                            </div>
+                    
+                            <div class="cart-actions">
+                                <button class="btn btn-lg btn-danger w-100 mb-2" id="btn-clear">
+                                    <i class="fas fa-trash me-2"></i> Clear Cart
+                                </button>
+                                <button class="btn btn-lg btn-primary w-100" id="btn-payment" disabled>
+                                    <i class="fas fa-money-bill-wave me-2"></i> Process Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weight Input Modal -->
+<div class="modal fade" id="weightModal" tabindex="-1" aria-labelledby="weightModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="weightModalLabel">Enter Weight</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <h6 id="selectedProductName"></h6>
+                    <p class="text-muted">Price: Rs.<span id="selectedProductPrice"></span> per kg</p>
+                </div>
+                <div class="mb-3">
+                    <label for="productWeight" class="form-label">Weight (kg)</label>
+                    <input type="number" class="form-control" id="productWeight" min="0.5" step="0.1" value="1" placeholder="Enter weight in kg">
+                    <div class="form-text">Minimum weight: 0.5 kg</div>
+                </div>
+                <div class="alert alert-info">
+                    <strong>Total: Rs.<span id="weightTotal">0.00</span></strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="addWeightProduct">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title" id="paymentModalLabel"><i class="fas fa-shopping-bag me-2"></i>Process Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 p-lg-4">
+                <div class="row g-3 g-lg-4">
+                    <!-- Left Column: Customer Information -->
+                    <div class="col-lg-7">
+                        <!-- Customer Information Card -->
+                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
+                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
+                                <h6 class="mb-0 fw-bold"><i class="fas fa-user-circle me-2 text-primary"></i>Customer Information</h6>
+                            </div>
+                            <div class="card-body px-3 px-lg-4">
+                                <div class="mb-3">
+                                    <label for="customerName" class="form-label">Customer Name (Optional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text rounded-start-3 bg-white"><i class="fas fa-user"></i></span>
+                                        <input type="text" class="form-control rounded-end-3" id="customerName" placeholder="Enter customer name">
+                                    </div>
+                                </div>
+                                <div class="mb-0">
+                                    <label for="customerPhone" class="form-label">Customer Phone (Optional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text rounded-start-3 bg-white"><i class="fas fa-phone"></i></span>
+                                        <input type="text" class="form-control rounded-end-3" id="customerPhone" placeholder="Enter customer phone">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Service Charge Info -->
+                        <div class="alert alert-info mb-3" id="service-charge-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>A service charge of <strong>{{ default_service_charge }}%</strong> will be applied to Dine In orders with total value above <strong>Rs.1000</strong>.</small>
+                        </div>
+                
+                        <!-- Order Type Selection -->
+                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
+                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
+                                <h6 class="mb-0 fw-bold"><i class="fas fa-utensils me-2 text-primary"></i>Order Type</h6>
+                            </div>
+                            <div class="card-body px-3 px-lg-4">
+                                <div class="row g-2 g-md-3">
+                                    <div class="col-4">
+                                        <div class="order-type selected rounded-4 border p-2 p-md-3 text-center shadow-sm" data-type="Dine In">
+                                            <i class="fas fa-utensils fa-2x mb-2 text-info"></i>
+                                            <div class="fw-bold">Dine In</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="order-type rounded-4 border p-2 p-md-3 text-center shadow-sm" data-type="Takeaway">
+                                            <i class="fas fa-shopping-bag fa-2x mb-2 text-success"></i>
+                                            <div class="fw-bold">Takeaway</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="order-type rounded-4 border p-2 p-md-3 text-center shadow-sm" data-type="Delivery">
+                                            <i class="fas fa-motorcycle fa-2x mb-2 text-warning"></i>
+                                            <div class="fw-bold">Delivery</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Delivery Options (hidden by default) -->
+                                <div id="delivery-options" class="mt-3 d-none">
+                                    <div class="mb-3">
+                                        <label for="deliveryAddress" class="form-label">Delivery Address</label>
+                                        <textarea class="form-control rounded-3" id="deliveryAddress" rows="2" placeholder="Enter delivery address"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="deliveryPerson" class="form-label">
+                                            Delivery Person <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-control rounded-3" id="deliveryPerson" required>
+                                            <option value="">Select Delivery Person</option>
+                                            {% for person in delivery_persons %}
+                                            <option value="{{ person.id }}">{{ person.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback d-none" id="deliveryPersonError">
+                                            Please select a delivery person for delivery orders.
+                                        </div>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label for="deliveryCharges" class="form-label">
+                                            Delivery Charges (Rs.) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" class="form-control rounded-3" id="deliveryCharges" min="0" value="0" placeholder="Enter delivery charges" required>
+                                        <div class="invalid-feedback d-none" id="deliveryChargesError">
+                                            Delivery charges are required for delivery orders.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Order Notes Card -->
+                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
+                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
+                                <h6 class="mb-0 fw-bold"><i class="fas fa-sticky-note me-2 text-primary"></i>Order Notes</h6>
+                            </div>
+                            <div class="card-body px-3 px-lg-4">
+                                <textarea class="form-control rounded-3" id="orderNotes" rows="2" placeholder="Add any special instructions or notes"></textarea>
+                            </div>
+                        </div>
+                
+                        <!-- Payment Method Selection -->
+                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
+                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
+                                <h6 class="mb-0 fw-bold"><i class="fas fa-credit-card me-2 text-primary"></i>Payment Method</h6>
+                            </div>
+                            <div class="card-body px-3 px-lg-4">
+                                <div class="row g-2 g-md-3">
+                                    <div class="col-4">
+                                        <div class="payment-method selected rounded-4 border p-2 p-md-3 text-center shadow-sm" data-method="Cash">
+                                            <i class="fas fa-money-bill-wave fa-2x mb-2 text-success"></i>
+                                            <div class="fw-bold">Cash</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="payment-method rounded-4 border p-2 p-md-3 text-center shadow-sm" data-method="Card">
+                                            <i class="fas fa-credit-card fa-2x mb-2 text-primary"></i>
+                                            <div class="fw-bold">Card</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="payment-method rounded-4 border p-2 p-md-3 text-center shadow-sm" data-method="Mobile">
+                                            <i class="fas fa-mobile-alt fa-2x mb-2 text-danger"></i>
+                                            <div class="fw-bold">Mobile</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Order Summary -->
+                    <div class="col-lg-5">
+                        <div class="card shadow border-0 rounded-4 h-100">
+                            <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                                <h6 class="mb-0 fw-bold"><i class="fas fa-shopping-basket me-2"></i>Order Summary</h6>
+                            </div>
+                            <div class="card-body p-3 p-lg-4">
+                                <!-- Summary Details -->
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted">Subtotal:</span>
+                                    <span id="summary-subtotal" class="fw-bold">Rs.0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted">Tax (<span id="summary-tax-rate-display">15</span>%):</span>
+                                    <span id="summary-tax" class="fw-bold">Rs.0.00</span>
+                                </div>
+                                
+                                <!-- Service Charge Row (Only for Dine In) -->
+                                <div class="d-flex justify-content-between mb-3" id="service-charge-row">
+                                    <span class="text-muted">Service Charge</span>
+                                    <div class="d-flex align-items-center">
+                                        <div class="input-group input-group-sm me-2" style="width: 100px;">
+                                            <input type="number" class="form-control" id="serviceChargePercent" value="{{ default_service_charge }}" min="0" max="100" step="1">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <span id="summary-service-charge" class="fw-bold">Rs.0.00</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Delivery Charges Row -->
+                                <div class="d-flex justify-content-between mb-3" id="delivery-charges-row">
+                                    <span class="text-muted">Delivery Charges:</span>
+                                    <span id="summary-delivery-charges" class="fw-bold">Rs.0.00</span>
+                                </div>
+                                
+                                <!-- Discount Row -->
+                                <div class="d-flex justify-content-between mb-3 discount-row">
+                                    <span class="text-muted">Discount:</span>
+                                    <div class="text-end">
+                                        <span id="summary-discount" class="fw-bold">Rs.0.00</span>
+                                        <div id="discount-details" class="small text-success mt-1 d-none">
+                                            <span id="discount-type-display"></span>
+                                            <button class="btn btn-sm text-danger p-0 remove-discount ms-2" title="Remove discount">
+                                                <i class="fas fa-times-circle"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Total Line -->
+                                <div class="d-flex justify-content-between py-3 my-3 border-top border-bottom total-line">
+                                    <span class="fw-bold fs-5">Total:</span>
+                                    <span id="summary-total" class="fw-bold fs-5 text-primary">Rs.0.00</span>
+                                </div>
+                                
+                                <!-- Discount Code Section -->
+                                {% if user_permissions.can_apply_discount_codes or user_permissions.can_apply_manual_discounts %}
+                                <div class="discount-code-section mt-4">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-tag me-2 text-primary"></i>
+                                        Apply Discount
+                                    </label>
+                                    
+                                    <!-- Discount Tabs -->
+                                    <ul class="nav nav-tabs mb-3" id="discountTabs" role="tablist">
+                                        {% if user_permissions.can_apply_discount_codes %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="code-tab" data-bs-toggle="tab" data-bs-target="#code-tab-pane" type="button" role="tab" aria-controls="code-tab-pane" aria-selected="true">Discount Code</button>
+                                        </li>
+                                        {% endif %}
+                                        {% if user_permissions.can_apply_manual_discounts %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link {% if not user_permissions.can_apply_discount_codes %}active{% endif %}" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-tab-pane" type="button" role="tab" aria-controls="manual-tab-pane" aria-selected="{% if not user_permissions.can_apply_discount_codes %}true{% else %}false{% endif %}">Manual Discount</button>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                    
+                                    <!-- Tab Content -->
+                                    <div class="tab-content" id="discountTabsContent">
+                                        {% if user_permissions.can_apply_discount_codes %}
+                                        <!-- Discount Code Tab -->
+                                        <div class="tab-pane fade show active" id="code-tab-pane" role="tabpanel" aria-labelledby="code-tab" tabindex="0">
+                                            <div class="input-group mb-3">
+                                                <input type="text" class="form-control rounded-start-3" placeholder="Enter code" id="discount-code">
+                                                <button class="btn btn-primary rounded-end-3" type="button" id="apply-discount-btn">Apply</button>
+                                            </div>
+                                            <div id="discount-message"></div>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if user_permissions.can_apply_manual_discounts %}
+                                        <!-- Manual Discount Tab -->
+                                        <div class="tab-pane fade {% if not user_permissions.can_apply_discount_codes %}show active{% endif %}" id="manual-tab-pane" role="tabpanel" aria-labelledby="manual-tab" tabindex="0">
+                                            <div class="mb-3">
+                                                <select class="form-select mb-2" id="manual-discount-type">
+                                                    <option value="fixed">Fixed Amount (Rs)</option>
+                                                    <option value="percentage">Percentage (%)</option>
+                                                </select>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control rounded-start-3" placeholder="Enter amount" id="manual-discount-value" min="0" step="0.01">
+                                                    <button class="btn btn-primary rounded-end-3" type="button" id="apply-manual-discount-btn">Apply</button>
+                                                </div>
+                                            </div>
+                                            <div id="manual-discount-message"></div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <!-- Restricted Access Message -->
+                                <div class="discount-code-section mt-4">
+                                    <label class="form-label fw-bold text-muted">
+                                        <i class="fas fa-lock me-2"></i>
+                                        Apply Discount
+                                    </label>
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <strong>Access Restricted:</strong> You don't have permission to apply discounts.
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Table Number Section (Only visible for Dine In orders) -->
+                                <div id="table-number-section" class="mt-4">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-table me-2 text-primary"></i>
+                                        Table Number <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text rounded-start-3 bg-white"><i class="fas fa-chair"></i></span>
+                                        <input type="text" class="form-control rounded-end-3" id="tableNumber" placeholder="Enter table number" required>
+                                    </div>
+                                    <div class="invalid-feedback d-none" id="tableNumberError">
+                                        Table number is required for Dine In orders.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3 rounded-bottom-4">
+                <button type="button" class="btn btn-lg btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-lg btn-success rounded-3 px-4" id="completePaymentBtn">
+                    <i class="fas fa-check-circle me-2"></i> Process Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-4" id="successModalContent">
+                <!-- Content will be dynamically inserted by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalTitle">Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="errorModalContent">
+                <!-- Error content will be dynamically inserted by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Variables for cart functionality
+        let cart = [];
+        let subtotal = 0;
+        let tax = 0;
+        let discount = 0;
+        let discountType = '';
+        let discountId = '';
+        let discountCode = ''; // Add missing discountCode variable
+        let taxRate = parseFloat({{ standard_tax_rate|default:15 }});
+        let timer;
+        let selectedOrderType = 'Dine In';
+        let selectedPaymentMethod = 'Cash'; // Add missing selectedPaymentMethod variable
+        let serviceChargeRate = parseFloat({{ default_service_charge|default:0 }});
+        let serviceChargeThreshold = 1000;
+        let deliveryCharges = 0;
+        
+        // Display tax rate
+        $('#tax-rate-display').text(taxRate);
+        
+        // Initialize the responsive UI adjustments
+        initResponsiveUI();
+        
+        // Handle window resize events
+        $(window).on('resize', function() {
+            clearTimeout(timer);
+            timer = setTimeout(initResponsiveUI, 250);
+        });
+        
+        // Function to initialize responsive UI adjustments
+        function initResponsiveUI() {
+            const windowWidth = $(window).width();
+            
+            // Adjust product grid columns based on screen size
+            adjustProductGrid(windowWidth);
+            
+            // Adjust cart container height based on screen size
+            adjustCartContainer(windowWidth);
+            
+            // Hide text in buttons on very small screens
+            if (windowWidth < 576) {
+                $('.btn-outline-primary, .btn-outline-success').addClass('btn-sm');
+            } else {
+                $('.btn-outline-primary, .btn-outline-success').removeClass('btn-sm');
+            }
+            
+            // Set sticky behavior for cart on larger screens
+            if (windowWidth >= 992) {
+                const navbarHeight = $('.navbar').outerHeight(true);
+                const headerHeight = $('.d-flex.justify-content-between.align-items-center').outerHeight(true);
+                const topOffset = navbarHeight + headerHeight + 15;
+                
+                // Set top position for sticky cart
+                $('.sticky-lg-top').css('top', topOffset + 'px');
+                
+                // Dynamically adjust cart container height to show 4-5 items
+                const viewportHeight = window.innerHeight;
+                const cartCard = $('.col-lg-4 .card');
+                    const cartHeader = cartCard.find('.card-header');
+                    const cartTotals = cartCard.find('.cart-totals');
+                    
+                // Calculate optimal height to show 4-5 cart items
+                const itemHeight = 85; // Approximate height of each compact cart item
+                const optimalItemCount = Math.min(5, Math.max(3, Math.floor((viewportHeight - topOffset - 300) / itemHeight)));
+                const optimalCartHeight = optimalItemCount * itemHeight + 20; // Add padding
+                
+                $('.cart-container').css('max-height', optimalCartHeight + 'px');
+            } else {
+                // For smaller screens, use responsive heights
+                if (windowWidth >= 768) {
+                    $('.cart-container').css('max-height', '350px');
+                } else {
+                    $('.cart-container').css('max-height', '300px');
+                }
+            }
+        }
+        
+        // Function to adjust product grid based on screen width
+        function adjustProductGrid(windowWidth) {
+            let columnWidth;
+            
+            if (windowWidth >= 1600) {
+                columnWidth = 'minmax(100px, 1fr)';
+            } else if (windowWidth >= 1200) {
+                columnWidth = 'minmax(100px, 1fr)';
+            } else if (windowWidth >= 992) {
+                columnWidth = 'minmax(90px, 1fr)';
+            } else if (windowWidth >= 768) {
+                columnWidth = 'minmax(80px, 1fr)';
+            } else if (windowWidth >= 576) {
+                columnWidth = 'minmax(80px, 1fr)';
+            } else {
+                columnWidth = 'minmax(70px, 1fr)';
+            }
+            
+            $('.product-grid').css('grid-template-columns', `repeat(auto-fill, ${columnWidth})`);
+        }
+        
+        // Function to adjust cart container height
+        function adjustCartContainer(windowWidth) {
+            let maxCartHeight;
+            
+            if (windowWidth >= 1200) {
+                maxCartHeight = 450;
+            } else if (windowWidth >= 992) {
+                maxCartHeight = 400;
+            } else if (windowWidth >= 768) {
+                maxCartHeight = 350;
+            } else {
+                maxCartHeight = 300;
+            }
+            
+            $('.cart-container').css('max-height', maxCartHeight + 'px');
+        }
+        
+        // Set up CSRF token for all AJAX requests
+        $.ajaxSetup({
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            }
+        });
+        
+        // Initialize service charge visibility based on default order type
+        if (selectedOrderType === 'Dine In' && calculateSubtotal() >= 1000) {
+            $('#service-charge-row').show();
+        } else {
+            $('#service-charge-row').hide();
+        }
+        
+        // Initialize service charge info visibility
+        if (selectedOrderType === 'Dine In') {
+            $('#service-charge-info').show();
+        } else {
+            $('#service-charge-info').hide();
+        }
+        
+        // Tax rates from Django context
+        const cardTaxRate = parseFloat('{{ card_tax_rate }}');
+        const standardTaxRate = parseFloat('{{ standard_tax_rate }}');
+        let currentTaxRate = standardTaxRate;  // Default tax rate
+        
+        // Initialize tax rate display
+        $('#tax-rate-display').text(currentTaxRate);
+        $('#summary-tax-rate-display').text(currentTaxRate);
+        
+        // Helper function to show alerts
+        function showAlert(message, type = 'info') {
+            // Create toast notification
+            const toast = `
+                <div class="toast align-items-center text-white bg-${type} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Add toast to container
+            const toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                // Create toast container if it doesn't exist
+                const container = document.createElement('div');
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(container);
+                container.innerHTML = toast;
+            } else {
+                toastContainer.innerHTML += toast;
+            }
+            
+            // Initialize and show the toast
+            const toastElement = document.querySelector('.toast:last-child');
+            const bsToast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            bsToast.show();
+        }
+        
+        // Initialize product cards - ensure out-of-stock items are properly disabled
+        document.querySelectorAll('.product-card').forEach(productCard => {
+            const isRunning = productCard.dataset.running === 'true';
+            const stockElement = productCard.querySelector('.badge');
+            
+            if (!isRunning && stockElement) {
+                const stockValue = parseInt(stockElement.textContent);
+                if (stockValue <= 0) {
+                    // Disable product card for zero stock non-running items
+                    productCard.classList.add('disabled-product');
+                    productCard.dataset.available = 'false';
+                }
+            }
+        });
+        
+        function updateCartDisplay() {
+            updateCart();
+        }
+        
+        function updateCart() {
+            const cartEl = $('#cart-items');
+            if (cart.length === 0) {
+                cartEl.html(`
+                    <div class="empty-cart-message">
+                        <div class="text-center">
+                            <i class="fas fa-shopping-cart fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">Your cart is empty</p>
+                        </div>
+                    </div>
+                `);
+                $('#btn-payment').prop('disabled', true);
+            } else {
+                let cartItems = '';
+                cart.forEach((item, index) => {
+                    cartItems += `
+                        <div class="cart-item-compact">
+                                    <img src="${item.image}" 
+                                class="cart-item-image" alt="${item.name}" 
+                                        onerror="this.src='https://i.imgur.com/pTXpXpF.jpg';">
+                            <div class="cart-item-content">
+                                <div class="cart-item-name">${item.name}</div>
+                                <div class="cart-item-price">Rs.${item.price.toFixed(2)}</div>
+                                    </div>
+                            <div class="cart-item-controls">
+                                <div class="cart-quantity-control">
+                                    <button class="cart-quantity-btn btn-decrease" data-index="${index}">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    <span class="cart-quantity-display">${item.quantity}</span>
+                                    <button class="cart-quantity-btn btn-increase" data-index="${index}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                <span class="cart-item-total">Rs.${(item.price * item.quantity).toFixed(2)}</span>
+                                <button class="cart-remove-btn btn-remove" data-index="${index}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                cartEl.html(cartItems);
+                $('#btn-payment').prop('disabled', false);
+            }
+            
+            updateTotals();
+        }
+        
+        function updateTotals() {
+            const subtotal = calculateSubtotal();
+            const tax = subtotal * (currentTaxRate / 100);
+            
+            // Calculate discount
+            let discountAmount = 0;
+            if (discountType === 'percentage') {
+                discountAmount = subtotal * (discount / 100);
+            } else {
+                discountAmount = discount;
+            }
+            
+            // Update service charge visibility based on subtotal threshold
+            if (selectedOrderType === 'Dine In' && subtotal >= 1000) {
+                $('#service-charge-row').show();
+            } else {
+                $('#service-charge-row').hide();
+            }
+            
+            // Calculate service charge (only for Dine In with subtotal >= 1000)
+            let serviceChargeAmount = 0;
+            if (selectedOrderType === 'Dine In' && subtotal >= 1000) {
+                // Get the service charge percent from the input field
+                const serviceChargePercent = parseFloat($('#serviceChargePercent').val()) / 100;
+                serviceChargeAmount = subtotal * serviceChargePercent;
+                
+                // Update service charge display
+                $('#summary-service-charge').text('Rs.' + serviceChargeAmount.toFixed(2));
+            }
+            
+            // Include delivery charges and service charges in total
+            const total = subtotal + tax + deliveryCharges + serviceChargeAmount - discountAmount;
+            
+            // Update tax rate display
+            $('#tax-rate-display').text(currentTaxRate);
+            $('#summary-tax-rate-display').text(currentTaxRate);
+            
+            $('#cart-subtotal').text('Rs.' + subtotal.toFixed(2));
+            $('#cart-tax').text('Rs.' + tax.toFixed(2));
+            $('#cart-discount').text('Rs.' + discountAmount.toFixed(2));
+            $('#cart-total').text('Rs.' + total.toFixed(2));
+            
+            // Update payment modal
+            $('#summary-subtotal').text('Rs.' + subtotal.toFixed(2));
+            $('#summary-tax').text('Rs.' + tax.toFixed(2));
+            $('#summary-service-charge').text('Rs.' + serviceChargeAmount.toFixed(2));
+            $('#summary-delivery-charges').text('Rs.' + deliveryCharges.toFixed(2));
+            $('#summary-discount').text('Rs.' + discountAmount.toFixed(2));
+            $('#summary-total').text('Rs.' + total.toFixed(2));
+            
+            // Show/hide discount details based on whether a discount is applied
+            if (discount > 0) {
+                $('#discount-details').removeClass('d-none');
+            } else {
+                $('#discount-details').addClass('d-none');
+            }
+        }
+        
+        function calculateSubtotal() {
+            return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        }
+        
+        // Add item to cart
+        function addToCart(productId, name, price, image, quantity = 1) {
+            // Get the product element
+            const productEl = document.querySelector(`.product-card[data-id="${productId}"]`);
+            const isAvailable = productEl.dataset.available === 'true';
+            const isRunning = productEl.dataset.running === 'true';
+            
+            // Check if product is available
+            if (!isAvailable) {
+                showAlert("This product is not available for ordering.", "danger");
+                return;
+            }
+            
+            // For non-running items, check current stock before proceeding
+            if (!isRunning) {
+                const currentStock = parseInt(productEl.querySelector('.badge').textContent);
+                if (currentStock <= 0) {
+                    showAlert("This product is out of stock.", "warning");
+                    return;
+                }
+            }
+            
+            // Get the current item in cart if exists
+            const existingItem = cart.find(item => item.id === productId);
+            
+            // If item exists, add to quantity, else add new item
+            if (existingItem) {
+                // For non-running items, check stock before adding
+                if (!isRunning) {
+                    const currentStock = parseInt(productEl.querySelector('.badge').textContent);
+                    
+                    // Check if we can add one more (current stock should be > 0)
+                    if (currentStock <= 0) {
+                        showAlert("Cannot add more. Stock limit reached.", "warning");
+                        return;
+                    }
+                    
+                    // Update the stock display visually
+                    const newStockValue = currentStock - Math.ceil(quantity); // Use ceiling for stock deduction
+                    productEl.querySelector('.badge').textContent = Math.max(0, newStockValue);
+                    
+                    // If stock reaches zero, disable the product card
+                    if (newStockValue <= 0) {
+                        productEl.classList.add('disabled-product');
+                        productEl.dataset.available = 'false';
+                    }
+                }
+                existingItem.quantity += quantity; // Add the specified quantity (can be decimal)
+                existingItem.total = existingItem.quantity * existingItem.price;
+            } else {
+                // For non-running items, check stock before adding new item
+                if (!isRunning) {
+                    const currentStock = parseInt(productEl.querySelector('.badge').textContent);
+                    
+                    // Check if we have enough stock (use ceiling for stock check)
+                    if (currentStock < Math.ceil(quantity)) {
+                        showAlert("Cannot add more. Stock limit reached.", "warning");
+                        return;
+                    }
+                    
+                    // Update the stock display visually
+                    const newStockValue = currentStock - Math.ceil(quantity);
+                    productEl.querySelector('.badge').textContent = Math.max(0, newStockValue);
+                    
+                    // If stock reaches zero, disable the product card
+                    if (newStockValue <= 0) {
+                        productEl.classList.add('disabled-product');
+                        productEl.dataset.available = 'false';
+                    }
+                }
+                
+                cart.push({
+                    id: productId,
+                    name: name,
+                    price: parseFloat(price),
+                    quantity: quantity,
+                    total: parseFloat(price) * quantity,
+                    image: image
+                });
+            }
+            
+            updateCartDisplay();
+        }
+        
+        // Event Handlers
+        // Add product to cart - handle weight-based products
+        $(document).on('click', '.product-card', function() {
+            const productId = $(this).data('id');
+            const productName = $(this).data('name');
+            const productPrice = parseFloat($(this).data('price'));
+            const productImage = $(this).data('image-url');
+            const isPerKg = $(this).data('per-kg') === true;
+            
+            if (isPerKg) {
+                // Show weight input modal for weight-based products
+                $('#selectedProductName').text(productName);
+                $('#selectedProductPrice').text(productPrice);
+                $('#productWeight').val(1);
+                updateWeightTotal();
+                
+                // Store product info for later use
+                $('#weightModal').data('product-id', productId);
+                $('#weightModal').data('product-name', productName);
+                $('#weightModal').data('product-price', productPrice);
+                $('#weightModal').data('product-image', productImage);
+                
+                $('#weightModal').modal('show');
+            } else {
+                addToCart(productId, productName, productPrice, productImage);
+            }
+        });
+        
+        // Increase quantity
+        $(document).on('click', '.btn-increase', function() {
+            const index = $(this).data('index');
+            const item = cart[index];
+            
+            // Get the product element to check stock
+            const productEl = document.querySelector(`.product-card[data-id="${item.id}"]`);
+            const isRunning = productEl.dataset.running === 'true';
+            
+            // For non-running items, check stock before adding more
+            if (!isRunning) {
+                const currentStock = parseInt(productEl.querySelector('.badge').textContent);
+                
+                // Check if we can add one more (current stock should be > 0)
+                if (currentStock <= 0) {
+                    showAlert("Cannot add more. Stock limit reached.", "warning");
+                    return;
+                }
+                
+                // Update the stock display visually
+                const newStockValue = currentStock - 1;
+                productEl.querySelector('.badge').textContent = newStockValue;
+                
+                // If stock reaches zero, disable the product card
+                if (newStockValue <= 0) {
+                    productEl.classList.add('disabled-product');
+                    productEl.dataset.available = 'false';
+                }
+            }
+            
+            // Increment quantity
+            item.quantity += 1;
+            updateCart();
+        });
+        
+        // Function to restore stock visually when items are removed from cart
+        function restoreStockVisually(productId, quantity) {
+            const productEl = document.querySelector(`.product-card[data-id="${productId}"]`);
+            const isRunning = productEl.dataset.running === 'true';
+            
+            // Only restore stock for non-running items
+            if (!isRunning) {
+                const currentStock = parseInt(productEl.querySelector('.badge').textContent);
+                const newStockValue = currentStock + quantity;
+                productEl.querySelector('.badge').textContent = newStockValue;
+                
+                // Re-enable the product card if it was disabled
+                if (productEl.classList.contains('disabled-product')) {
+                    productEl.classList.remove('disabled-product');
+                    productEl.dataset.available = 'true';
+                }
+            }
+        }
+        
+        // Decrease quantity
+        $(document).on('click', '.btn-decrease', function() {
+            const index = $(this).data('index');
+            const item = cart[index];
+            
+            if (item.quantity > 1) {
+                // Restore 1 unit of stock visually
+                restoreStockVisually(item.id, 1);
+                
+                // Decrease quantity by 1
+                item.quantity -= 1;
+            } else {
+                // Restore all remaining stock visually
+                restoreStockVisually(item.id, item.quantity);
+                
+                // Remove item from cart
+                cart.splice(index, 1);
+            }
+            updateCart();
+        });
+        
+        // Remove item
+        $(document).on('click', '.btn-remove', function() {
+            const index = $(this).data('index');
+            const item = cart[index];
+            
+            // Restore all stock visually
+            restoreStockVisually(item.id, item.quantity);
+            
+            // Remove from cart
+            cart.splice(index, 1);
+            updateCart();
+        });
+        
+        // Clear cart
+        $('#btn-clear').click(function() {
+            if (cart.length > 0 && confirm('Are you sure you want to clear the cart?')) {
+                // Restore stock for all items in cart
+                cart.forEach(item => {
+                    restoreStockVisually(item.id, item.quantity);
+                });
+                
+                // Clear cart
+                cart = [];
+                updateCart();
+            }
+        });
+        
+        // Category filter
+        $('.category-btn').click(function() {
+            $('.category-btn').removeClass('active');
+            $(this).addClass('active');
+            
+            const category = $(this).data('category');
+            if (category === 'all') {
+                $('.product-item').show();
+            } else {
+                $('.product-item').hide();
+                $(`.product-item[data-category="${category}"]`).show();
+            }
+        });
+        
+        // Search products
+        $('#product-search').on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            $('.product-item').each(function() {
+                const productName = $(this).find('.card-title').text().toLowerCase();
+                const productCode = $(this).find('.product-card').data('code').toString().toLowerCase();
+                if (productName.includes(searchTerm) || productCode.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+        
+        // Add product by code when Enter key is pressed in search bar
+        $('#product-search').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                const searchTerm = $(this).val().toLowerCase().trim();
+                if (searchTerm) {
+                    let foundProduct = false;
+                    
+                    // Look for exact product code match
+                    $('.product-card').each(function() {
+                        const productCode = $(this).data('code').toString().toLowerCase();
+                        if (productCode === searchTerm) {
+                            const productId = $(this).data('id');
+                            const productName = $(this).data('name');
+                            const productPrice = parseFloat($(this).data('price'));
+                            const productImage = $(this).data('image-url');
+                            
+                            // Add to cart
+                            addToCart(productId, productName, productPrice, productImage);
+                            
+                            // Clear search
+                            $('#product-search').val('');
+                            
+                            // Show all products again
+                            $('.product-item').show();
+                            
+                            // Focus search again
+                            $('#product-search').focus();
+                            
+                            foundProduct = true;
+                            return false; // Break the loop
+                        }
+                    });
+                    
+                    if (!foundProduct) {
+                        showAlert("No product found with code: " + searchTerm, "warning");
+                    }
+                }
+            }
+        });
+        
+        // Weight modal functions
+        function updateWeightTotal() {
+            const weight = parseFloat($('#productWeight').val()) || 0;
+            const price = parseFloat($('#selectedProductPrice').text()) || 0;
+            const total = weight * price;
+            $('#weightTotal').text(total.toFixed(2));
+        }
+        
+        // Update total when weight changes
+        $(document).on('input', '#productWeight', function() {
+            const weight = parseFloat($(this).val());
+            if (weight < 0.5) {
+                $(this).val(0.5);
+            }
+            updateWeightTotal();
+        });
+        
+        // Add weight-based product to cart
+        $(document).on('click', '#addWeightProduct', function() {
+            const modal = $('#weightModal');
+            const productId = modal.data('product-id');
+            const productName = modal.data('product-name');
+            const productPrice = modal.data('product-price');
+            const productImage = modal.data('product-image');
+            const weight = parseFloat($('#productWeight').val()) || 1;
+            
+            if (weight < 0.5) {
+                showAlert('Minimum weight is 0.5 kg', 'warning');
+                return;
+            }
+            
+            // Add to cart with weight as quantity
+            addToCart(productId, productName, productPrice, productImage, weight);
+            modal.modal('hide');
+        });
+
+        // Payment Modal
+        $('#btn-payment').click(function() {
+            updateTotals();
+            
+            // For dine-in orders, check if the table is already in use
+            if (selectedOrderType === 'Dine In') {
+                const tableNumber = $('#tableNumber').val();
+                if (tableNumber) {
+                    // Check table availability before opening payment modal
+                    fetchActiveTables().then(response => {
+                        const activeTables = response.active_tables || [];
+                        
+                        if (activeTables.includes(tableNumber)) {
+                            // Table is already in use, show warning
+                            $('#tableNumber').addClass('is-invalid border-danger');
+                            
+                            // Add invalid feedback if it doesn't exist
+                            if (!$('#tableNumber').next('.invalid-feedback').length) {
+                                $('#tableNumber').after(`<div class="invalid-feedback">This table already has a pending order. Please select a different table.</div>`);
+                            }
+                            
+                            // Show error modal instead of payment modal
+                            $('#errorModalTitle').text('Table Already In Use');
+                            $('#errorModalContent').html(`
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Table #${tableNumber} already has a pending order. Please select a different table or complete/cancel the existing order first.
+                                </div>
+                            `);
+                            $('#errorModal').modal('show');
+                        } else {
+                            // Table is available, show payment modal
+                            $('#tableNumber').removeClass('is-invalid border-danger');
+                            $('#tableNumber').next('.invalid-feedback').remove();
+                            $('#paymentModal').modal('show');
+                        }
+                    }).catch(error => {
+                        console.error('Error checking table availability:', error);
+                        // If the check fails, still allow opening the payment modal
+                        $('#paymentModal').modal('show');
+                    });
+                } else {
+                    // No table number specified, show the modal
+                    $('#paymentModal').modal('show');
+                }
+            } else {
+                // Not a dine-in order, show the modal without checking
+                $('#paymentModal').modal('show');
+            }
+        });
+        
+        // Select payment method
+        $(document).on('click', '.payment-method', function() {
+            $('.payment-method').removeClass('selected');
+            $(this).addClass('selected');
+            
+            selectedPaymentMethod = $(this).data('method');
+            
+            // Update tax rate based on payment method
+            if (selectedPaymentMethod === 'Card') {
+                currentTaxRate = cardTaxRate;
+            } else {
+                currentTaxRate = standardTaxRate;
+            }
+            
+            // Update totals with new tax rate
+            updateTotals();
+        });
+        
+        // Select order type
+        $(document).on('click', '.order-type', function() {
+            // Add click animation effect
+            $(this).addClass('pulse-effect');
+            setTimeout(() => {
+                $(this).removeClass('pulse-effect');
+            }, 300);
+            
+            $('.order-type').removeClass('selected');
+            $(this).addClass('selected');
+            
+            selectedOrderType = $(this).data('type');
+            
+            // Show/hide options based on order type selection
+            if (selectedOrderType === 'Delivery') {
+                $('#delivery-options').removeClass('d-none');
+                $('#delivery-charges-row').removeClass('d-none');
+                // Hide table number section for delivery orders
+                $('#table-number-section').addClass('d-none');
+                // Hide service charge for delivery orders
+                $('#service-charge-row').addClass('d-none');
+                // Update delivery charges
+                deliveryCharges = parseFloat($('#deliveryCharges').val()) || 0;
+                // Make delivery fields required
+                $('#deliveryCharges').attr('required', true);
+                $('#deliveryPerson').attr('required', true);
+                // Clear any table number validation errors
+                $('#tableNumber').removeClass('is-invalid');
+                $('#tableNumberError').addClass('d-none');
+            } else if (selectedOrderType === 'Takeaway') {
+                // Hide all special sections for takeaway
+                $('#delivery-options').addClass('d-none');
+                $('#delivery-charges-row').addClass('d-none');
+                $('#table-number-section').addClass('d-none');
+                $('#service-charge-row').addClass('d-none');
+                deliveryCharges = 0;
+                // Make delivery fields optional
+                $('#deliveryCharges').removeAttr('required');
+                $('#deliveryPerson').removeAttr('required');
+                $('#deliveryCharges').removeClass('is-invalid');
+                $('#deliveryChargesError').addClass('d-none');
+                $('#deliveryPerson').removeClass('is-invalid');
+                $('#deliveryPersonError').addClass('d-none');
+                // Clear any validation errors
+                $('#tableNumber').removeClass('is-invalid');
+                $('#tableNumberError').addClass('d-none');
+            } else if (selectedOrderType === 'Dine In') {
+                // Dine In order type
+                $('#delivery-options').addClass('d-none');
+                $('#delivery-charges-row').addClass('d-none');
+                // Show table number section for dine-in orders
+                $('#table-number-section').removeClass('d-none');
+                deliveryCharges = 0;
+                // Make delivery fields optional
+                $('#deliveryCharges').removeAttr('required');
+                $('#deliveryPerson').removeAttr('required');
+                $('#deliveryCharges').removeClass('is-invalid');
+                $('#deliveryChargesError').addClass('d-none');
+                $('#deliveryPerson').removeClass('is-invalid');
+                $('#deliveryPersonError').addClass('d-none');
+                
+                // Show service charge for Dine In orders if subtotal is above 1000
+                if (calculateSubtotal() >= 1000) {
+                    $('#service-charge-row').removeClass('d-none');
+                } else {
+                    $('#service-charge-row').addClass('d-none');
+                }
+                
+                // Add visual indication that the field is required
+                $('#tableNumber').attr('placeholder', 'Enter table number (required)');
+                $('#tableNumber').focus();
+            }
+            
+            // Show/hide service charge info based on order type
+            if (selectedOrderType === 'Dine In') {
+                $('#service-charge-info').show();
+            } else {
+                $('#service-charge-info').hide();
+            }
+            
+            // Update totals with delivery charges and service charges
+            updateTotals();
+        });
+        
+        // Update delivery charges when value changes
+        $(document).on('change', '#deliveryCharges', function() {
+            deliveryCharges = parseFloat($(this).val()) || 0;
+            updateTotals();
+        });
+        
+        // Complete payment
+        $('#completePaymentBtn').click(function() {
+            const orderNotes = $('#orderNotes').val();
+            const customerName = $('#customerName').val();
+            const customerPhone = $('#customerPhone').val();
+            const total = parseFloat($('#summary-total').text().replace('Rs.', ''));
+            
+            // Process all orders normally (cash handling will be done at completion)
+            // Validate table number for Dine In orders
+            if (selectedOrderType === 'Dine In') {
+                const tableNumber = $('#tableNumber').val();
+                if (!tableNumber) {
+                    // Show validation error
+                    $('#tableNumber').addClass('is-invalid');
+                    $('#tableNumberError').removeClass('d-none');
+                    return; // Prevent form submission
+                } else {
+                    // Clear validation error if previously set
+                    $('#tableNumber').removeClass('is-invalid');
+                    $('#tableNumberError').addClass('d-none');
+                    
+                    // Check if table is already in use
+                    fetchActiveTables().then(response => {
+                        const activeTables = response.active_tables || [];
+                        
+                        if (activeTables.includes(tableNumber)) {
+                            // Table is already in use, show warning
+                            $('#tableNumber').addClass('is-invalid border-danger');
+                            
+                            // Add invalid feedback if it doesn't exist
+                            if (!$('#tableNumber').next('.invalid-feedback').length) {
+                                $('#tableNumber').after(`<div class="invalid-feedback">This table already has a pending order. Please select a different table.</div>`);
+                            }
+                            
+                            // Show error modal
+                            $('#errorModalTitle').text('Table Already In Use');
+                            $('#errorModalContent').html(`
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Table #${tableNumber} already has a pending order. Please select a different table or complete/cancel the existing order first.
+                                </div>
+                            `);
+                            $('#errorModal').modal('show');
+                            return; // Prevent form submission
+                        } else {
+                            // Table is available, proceed with order submission
+                            processOrder();
+                        }
+                    }).catch(error => {
+                        console.error('Error checking table availability:', error);
+                        
+                        // If the check fails, still allow submitting the order
+                        processOrder();
+                    });
+                }
+            } else {
+                // Not a dine-in order, proceed directly
+                processOrder();
+            }
+            
+            // Function to process the order after validation
+            function processOrder() {
+                // Validate the delivery address, person, and charges for delivery orders
+                if (selectedOrderType === 'Delivery') {
+                    const deliveryAddress = $('#deliveryAddress').val().trim();
+                    const deliveryPerson = $('#deliveryPerson').val();
+                    const deliveryChargesValue = parseFloat($('#deliveryCharges').val()) || 0;
+                    
+                    // Validate delivery address
+                    if (!deliveryAddress) {
+                        // Show error for delivery address
+                        $('#deliveryAddress').addClass('is-invalid');
+                        $('#deliveryAddressError').removeClass('d-none');
+                        return;
+                    } else {
+                        // Clear validation error if previously set
+                        $('#deliveryAddress').removeClass('is-invalid');
+                        $('#deliveryAddressError').addClass('d-none');
+                    }
+                    
+                    // Validate delivery person
+                    if (!deliveryPerson) {
+                        // Show error for delivery person
+                        $('#deliveryPerson').addClass('is-invalid');
+                        $('#deliveryPersonError').removeClass('d-none');
+                        return;
+                    } else {
+                        // Clear validation error if previously set
+                        $('#deliveryPerson').removeClass('is-invalid');
+                        $('#deliveryPersonError').addClass('d-none');
+                    }
+                    
+                    // Validate delivery charges
+                    if (deliveryChargesValue <= 0) {
+                        // Show error for delivery charges
+                        $('#deliveryCharges').addClass('is-invalid');
+                        $('#deliveryChargesError').removeClass('d-none');
+                        return;
+                    } else {
+                        // Clear validation error if previously set
+                        $('#deliveryCharges').removeClass('is-invalid');
+                        $('#deliveryChargesError').addClass('d-none');
+                    }
+                }
+
+                // Continue with payment processing
+                const subtotal = parseFloat($('#summary-subtotal').text().replace('Rs.', ''));
+                
+                // Create order data - ensure all numeric values are correctly formatted
+                const taxAmount = parseFloat($('#summary-tax').text().replace('Rs.', ''));
+                const discountAmount = parseFloat($('#summary-discount').text().replace('Rs.', ''));
+                const serviceChargeAmount = selectedOrderType === 'Dine In' ? parseFloat($('#summary-service-charge').text().replace('Rs.', '')) : 0;
+                
+                // Cash payment details will be handled at order completion
+                let cashGiven = null;
+                let changeAmount = null;
+                
+                const orderData = {
+                    customer_name: customerName,
+                    customer_phone: customerPhone,
+                    subtotal: subtotal.toFixed(2),
+                    tax_amount: taxAmount.toFixed(2),
+                    discount_amount: discountAmount.toFixed(2),
+                    service_charge_percent: selectedOrderType === 'Dine In' && subtotal >= 1000 ? $('#serviceChargePercent').val() : '0',
+                    service_charge_amount: serviceChargeAmount.toFixed(2),
+                    total_amount: total.toFixed(2),
+                    payment_method: selectedPaymentMethod,
+                    payment_status: 'Pending',
+                    order_status: 'Pending',
+                    notes: orderNotes,
+                    discount_code: discountCode,
+                    discount_type: discountType,
+                    discount_value: discount,
+                    discount_id: discountId,
+                    cash_given: cashGiven,
+                    change_amount: changeAmount,
+                    items: cart.map(item => ({
+    product_id: item.id,
+    quantity: item.quantity,
+    unit_price: item.price,  // <--- Yeh add karna zaroori hai
+    total_price: (item.price * item.quantity).toFixed(2)
+})),
+                    delivery_charges: deliveryCharges.toFixed(2),
+                    order_type: selectedOrderType,
+                    delivery_address: selectedOrderType === 'Delivery' ? $('#deliveryAddress').val() : '',
+                    delivery_person: selectedOrderType === 'Delivery' ? $('#deliveryPerson').val() : '',
+                    table_number: selectedOrderType === 'Dine In' ? $('#tableNumber').val() : ''
+                };
+                
+                // Save order to server
+                $.ajax({
+                    url: '/api/orders/',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(orderData),
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log('Order saved:', response);
+                        
+                        // Close payment modal
+                        $('#paymentModal').modal('hide');
+                        
+                        // Store order number for reference
+                        const orderNumber = response.reference_number;
+                        const orderNumberDisplay = response.display_number || '0';
+                        
+                        console.log("DEBUG: Order details received:", response);
+                        console.log("DEBUG: Order display number:", orderNumberDisplay);
+
+                        // Calculate discount amount for display
+                        let discountAmount = 0;
+                        if (discountType === 'percentage') {
+                            discountAmount = subtotal * (discount / 100);
+                        } else {
+                            discountAmount = discount;
+                        }
+                        
+                        // Calculate tax amount for display
+                        const taxAmount = parseFloat(orderData.tax_amount);
+                        const total = parseFloat(orderData.total_amount);
+                        
+                        // Create thermal printer optimized kitchen receipt - 70mm width
+                        const receiptHTML = `
+                            <div id="receipt-container" class="print-only">
+                                <div class="receipt-preview" style="width: 70mm; padding: 1mm; font-family: 'Courier New', 'Arial', monospace; font-size: 12px; line-height: 1.1; color: #000000;">
+                                    <!-- Header -->
+                                    <div style="text-align: center; margin-bottom: 8px; color: #000000;">
+                                        <h1 style="font-size: 16px; font-weight: bold; margin: 0; color: #000000;">Order ${orderNumberDisplay}</h1>
+                                        ${selectedOrderType === 'Dine In' && $('#tableNumber').val() ? 
+                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Table ${$('#tableNumber').val()}</p>` : 
+                                         selectedOrderType === 'Delivery' ? 
+                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Delivery</p>` : ''}
+                                        <p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+                                    </div>
+                                    
+                                    <div style="border-top: 1px dashed #000; margin: 6px 0; clear: both;"></div>
+                                    
+                                    <!-- Order Items in Blocks -->
+                                    ${cart.map(item => `
+                                        <div style="display: flex; align-items: center; margin: 4px 0; padding: 4px; border: 1px solid #000; background-color: white; color: #000000;">
+                                            <div style="font-weight: bold; font-size: 14px; color: #000000; min-width: 30px; text-align: center; margin-right: 8px; border-right: 1px solid #000; padding-right: 8px;">${item.quantity}</div>
+                                            <div style="font-weight: bold; font-size: 11px; color: #000000; flex: 1;">${item.name}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add the receipt to the body
+                        $('body').append(receiptHTML);
+                        
+                        // Trigger print
+                        window.print();
+                        
+                        // Remove the receipt element after printing
+                        setTimeout(() => {
+                            $('#receipt-container').remove();
+                        }, 1000);
+                        
+                        // Show success message with link to orders
+                        $('#successModalContent').html(`
+                            <div class="text-center mb-4">
+                                <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                                <h4>Processed Successfully!</h4>
+                                <p>The order has been processed successfully.</p>
+                                <p>Order #: <strong>${orderNumberDisplay}</strong></p>
+                                <p>Receipt #: <strong>${orderNumber}</strong></p>
+                                <p>Order Type: <strong>${selectedOrderType}</strong></p>
+                                ${selectedOrderType === 'Dine In' && $('#tableNumber').val() ? 
+                                    `<p>Table #: <strong>${$('#tableNumber').val()}</strong></p>` : ''}
+                                <div class="mt-4">
+                                    <a href="/orders/" class="btn btn-primary">View in Orders</a>
+                                </div>
+                            </div>
+                        `);
+                        
+                        $('#successModal').modal('show');
+                        
+                        // Clear cart
+                        cart = [];
+                        updateCart();
+                        
+                        // Reset order form
+                        $('#tableNumber').val('');  // Clear table number
+                        $('#customerName').val('');  // Clear customer name
+                        $('#customerPhone').val('');  // Clear customer phone
+                        $('#orderNotes').val('');  // Clear order notes
+                        selectedOrderType = 'Dine In';  // Reset to default order type
+                        $('.order-type').removeClass('selected');  // Clear order type selection
+                        $('.order-type[data-type="Dine In"]').addClass('selected');  // Select default order type
+                        
+                        // Reset payment method
+                        selectedPaymentMethod = 'Cash';  // Reset to default payment method
+                        $('.payment-method').removeClass('selected');  // Clear payment method selection
+                        $('.payment-method[data-method="Cash"]').addClass('selected');  // Select default payment method
+                        
+                        // Cash payment details handled at order completion
+                        
+                        // Reset discount
+                        resetDiscount();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error saving order:', error);
+                        
+                        // Try to get detailed error message from response
+                        let errorMessage = 'There was an error processing the payment. Please try again.';
+                        let isTableNumberError = false;
+                        
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response && response.message) {
+                                errorMessage = response.message;
+                                
+                                // Check if this is a table number error
+                                if (errorMessage.includes('Table #') && errorMessage.includes('already has a pending order')) {
+                                    isTableNumberError = true;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Could not parse error response:', e);
+                        }
+                        
+                        // Close payment modal
+                        $('#paymentModal').modal('hide');
+                        
+                        // If it's a table number error, highlight the field
+                        if (isTableNumberError) {
+                            // Store the table number for when we return to the payment screen
+                            const problematicTableNumber = $('#tableNumber').val();
+                            
+                            // Show error with specific button to edit table
+                            $('#errorModalContent').html(`
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    ${errorMessage}
+                                </div>
+                                <div class="text-center mt-3">
+                                    <button type="button" class="btn btn-primary" id="editTableNumberBtn">
+                                        Change Table Number
+                                    </button>
+                                </div>
+                            `);
+                            
+                            // Add event listener for the edit table button
+                            $('#errorModal').on('shown.bs.modal', function() {
+                                $('#editTableNumberBtn').off('click').on('click', function() {
+                                    $('#errorModal').modal('hide');
+                                    setTimeout(() => {
+                                        // Reopen payment modal
+                                        $('#paymentModal').modal('show');
+                                        
+                                        // Highlight table number field
+                                        $('#tableNumber').addClass('is-invalid border-danger');
+                                        $('#tableNumber').focus();
+                                        
+                                        // Add invalid feedback
+                                        if (!$('#tableNumber').next('.invalid-feedback').length) {
+                                            $('#tableNumber').after(`<div class="invalid-feedback">This table already has a pending order.</div>`);
+                                        }
+                                    }, 500);
+                                });
+                            });
+                        } else {
+                            // Show generic error
+                            $('#errorModalContent').html(`
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    ${errorMessage}
+                                </div>
+                            `);
+                        }
+                        
+                        $('#errorModalTitle').text('Order Error');
+                        $('#errorModal').modal('show');
+                    }
+                });
+            }
+        });
+        
+        // Apply discount code
+        $('#apply-discount-btn').click(function() {
+            // Check permission first
+            {% if not user_permissions.can_apply_discount_codes %}
+            $('#discount-message').html('<div class="alert alert-danger"><i class="fas fa-lock me-2"></i>Access Restricted: You don\'t have permission to apply discount codes.</div>');
+            return;
+            {% endif %}
+            
+            const code = $('#discount-code').val().trim();
+            if (!code) {
+                $('#discount-message').html('<div class="alert alert-warning">Please enter a discount code</div>');
+                return;
+            }
+            
+            // Clear previous messages
+            $('#discount-message').empty();
+            
+            // Show loading message
+            $('#discount-message').html('<div class="alert alert-info">Validating discount code...</div>');
+            
+            // Call API to validate discount code
+            $.ajax({
+                url: '/api/discounts/validate/',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ code: code }),
+                success: function(response) {
+                    console.log("Discount API response:", response);
+                    
+                    if (response.valid) {
+                        const discountData = response.discount;
+                        discountCode = discountData.code;
+                        discountType = discountData.type.toLowerCase();
+                        discount = parseFloat(discountData.value);
+                        discountId = discountData.id;  // Store the discount ID
+                        
+                        // Show success message
+                        $('#discount-message').html(
+                            `<div class="alert alert-success">
+                                Discount "${discountData.name}" applied successfully!
+                            </div>`
+                        );
+                        
+                        // Show discount details
+                        $('#discount-type-display').text(
+                            discountType === 'percentage' ? 
+                            `${discount}% off (${discountData.name})` : 
+                            `Rs.${discount.toFixed(2)} off (${discountData.name})`
+                        );
+                        
+                        // Clear the input field
+                        $('#discount-code').val('');
+                        
+                        // Update totals
+                        updateTotals();
+                    } else {
+                        // Show error message
+                        $('#discount-message').html(`<div class="alert alert-danger">${response.message}</div>`);
+                        
+                        // Reset discount
+                        resetDiscount();
+                        updateTotals();
+                    }
+                },
+                error: function(xhr) {
+                    console.log("Discount API error:", xhr);
+                    
+                    let errorMsg = 'Error validating discount code';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    
+                    // Show error message
+                    $('#discount-message').html(`<div class="alert alert-danger">${errorMsg}</div>`);
+                    
+                    // Reset discount
+                    resetDiscount();
+                    updateTotals();
+                }
+            });
+        });
+        
+        // Apply manual discount
+        $('#apply-manual-discount-btn').click(function() {
+            // Check permission first
+            {% if not user_permissions.can_apply_manual_discounts %}
+            $('#manual-discount-message').html('<div class="alert alert-danger"><i class="fas fa-lock me-2"></i>Access Restricted: You don\'t have permission to apply manual discounts.</div>');
+            return;
+            {% endif %}
+            
+            const discountValue = parseFloat($('#manual-discount-value').val());
+            const selectedType = $('#manual-discount-type').val();
+            
+            // Validate input
+            if (isNaN(discountValue) || discountValue < 0) {
+                $('#manual-discount-message').html('<div class="alert alert-warning">Please enter a valid discount amount</div>');
+                return;
+            }
+            
+            // Clear previous messages
+            $('#manual-discount-message').empty();
+            
+            // Apply the manual discount
+            discountCode = 'MANUAL';
+            discountType = selectedType;
+            discount = discountValue;
+            
+            // For percentage discount, validate it's not over 100%
+            if (discountType === 'percentage' && discount > 100) {
+                $('#manual-discount-message').html('<div class="alert alert-warning">Percentage discount cannot exceed 100%</div>');
+                resetDiscount();
+                return;
+            }
+            
+            // Show success message
+            $('#manual-discount-message').html(
+                `<div class="alert alert-success">
+                    Manual discount applied successfully!
+                </div>`
+            );
+            
+            // Show discount details
+            $('#discount-type-display').text(
+                discountType === 'percentage' ? 
+                `${discount}% off (Manual)` : 
+                `Rs.${discount.toFixed(2)} off (Manual)`
+            );
+            
+            // Make discount details visible
+            $('#discount-details').removeClass('d-none');
+            
+            // Update totals
+            updateTotals();
+        });
+        
+        // Remove discount button click handler
+        $(document).on('click', '.remove-discount', function() {
+            // Reset discount values
+            resetDiscount();
+            
+            // Show message
+            $('#discount-message').html(
+                `<div class="alert alert-info">
+                    Discount has been removed successfully.
+                </div>`
+            );
+            $('#manual-discount-message').html(
+                `<div class="alert alert-info">
+                    Discount has been removed successfully.
+                </div>`
+            );
+            
+            // Update totals to reflect removed discount
+            updateTotals();
+        });
+        
+        // Function to reset discount state
+        function resetDiscount() { 
+            discountCode = '';
+            discount = 0;
+            discountType = 'fixed';
+            discountId = '';  // Reset discount ID
+            
+            // Reset manual discount input
+            $('#manual-discount-value').val(''); 
+            
+            // Hide discount details
+            $('#discount-details').addClass('d-none');
+        }
+        
+        // Reset discount message when modal is opened
+        $('#btn-payment').click(function() {
+            $('#discount-message').empty();
+            $('#manual-discount-message').empty();
+            if (!discountCode) {
+                $('#discount-code').val('');
+                $('#manual-discount-value').val('');
+            }
+        });
+        
+        // Listen for table number input changes to reset validation
+        $('#tableNumber').on('input', function() {
+            $(this).removeClass('is-invalid border-danger');
+            $(this).next('.invalid-feedback').remove();
+        });
+        
+        // Initialize cart
+        updateCart();
+        
+        // Initialize table number section based on default order type
+        $('#paymentModal').on('show.bs.modal', function() {
+            // Default order type is "Dine In" - make sure table number is visible
+            if (selectedOrderType === 'Dine In') {
+                $('#table-number-section').removeClass('d-none');
+            } else {
+                $('#table-number-section').addClass('d-none');
+            }
+            
+                        // Initialize any modal-specific settings here if needed
+        });
+
+        // Auto-focus table number when modal fully opens (Dine In) or payment field otherwise
+        $('#paymentModal').on('shown.bs.modal', function() {
+            if (selectedOrderType === 'Dine In') {
+                $('#tableNumber').trigger('focus');
+            }
+        });
+
+        // Allow pressing Enter in the table number field to submit the order
+        $('#tableNumber').on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#completePaymentBtn').trigger('click');
+            }
+        });
+        
+
+        
+        // Clear table number and reset form when success modal is closed
+        $('#successModal').on('hidden.bs.modal', function() {
+            // Clear table number
+            $('#tableNumber').val('');
+            
+            // Reset order type to default
+            selectedOrderType = 'Dine In';
+            $('.order-type').removeClass('selected');
+            $('.order-type[data-type="Dine In"]').addClass('selected');
+            
+            // Reset payment method to default
+            selectedPaymentMethod = 'Cash';
+            $('.payment-method').removeClass('selected');
+            $('.payment-method[data-method="Cash"]').addClass('selected');
+            
+            // Clear other form fields
+            $('#customerName').val('');
+            $('#customerPhone').val('');
+            $('#orderNotes').val('');
+            
+            // Cash payment details handled at order completion
+            
+            // Reset discount
+            resetDiscount();
+        });
+
+        // Create a function to fetch active tables 
+        function fetchActiveTables() {
+            return $.ajax({
+                url: '/api/tables/active/',
+                type: 'GET',
+                dataType: 'json'
+            });
+        }
+        
+        // Function to check and highlight tables that are already in use
+        function checkTableAvailability(tableNumber) {
+            if (!tableNumber) return Promise.resolve(true);
+            
+            return fetchActiveTables().then(response => {
+                const activeTables = response.active_tables || [];
+                
+                if (activeTables.includes(tableNumber)) {
+                    // Table is already in use, show warning
+                    $('#tableNumber').addClass('is-invalid border-danger');
+                    
+                    // Add invalid feedback if it doesn't exist
+                    if (!$('#tableNumber').next('.invalid-feedback').length) {
+                        $('#tableNumber').after(`<div class="invalid-feedback">This table already has a pending order. Please select a different table.</div>`);
+                    }
+                    
+                    return false;
+                } else {
+                    // Table is available
+                    $('#tableNumber').removeClass('is-invalid border-danger');
+                    $('#tableNumber').next('.invalid-feedback').remove();
+                    return true;
+                }
+            }).catch(error => {
+                console.error('Error checking table availability:', error);
+                return true; // Allow proceeding if the check fails
+            });
+        }
+
+        // Clear the warning border when user starts typing in the table number
+        $(document).on('input', '#tableNumber', function() {
+            $(this).removeClass('border-warning');
+            if ($(this).val().trim()) {
+                $(this).removeClass('is-invalid');
+                $('#tableNumberError').addClass('d-none');
+            }
+        });
+
+        // Tax rate change handler
+        $(document).on('change', '#manual-discount-type, #manual-discount-value', function() {
+            updateTotals();
+        });
+        
+        // Service charge change handler
+        $(document).on('input', '#serviceChargePercent', function() {
+            let value = parseFloat($(this).val());
+            if (isNaN(value) || value < 0) {
+                $(this).val(0);
+                showAlert("Service charge cannot be negative", "warning");
+            } else if (value > 100) {
+                $(this).val(100);
+                showAlert("Service charge cannot exceed 100%", "warning");
+            }
+            updateTotals();
+        });
+    });
+</script>
+{% endblock %} 

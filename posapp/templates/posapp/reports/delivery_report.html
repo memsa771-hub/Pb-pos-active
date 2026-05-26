@@ -1,0 +1,98 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+{% load humanize %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <div>
+            <a href="{% url 'reports_dashboard' %}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filter Delivery Report</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4 mb-3">
+                    <label for="delivery_person" class="form-label">Delivery Staff</label>
+                    <select class="form-select form-control" id="delivery_person" name="delivery_person" required>
+                        <option value="">Select Delivery Person</option>
+                        {% for dp in delivery_persons %}
+                            <option value="{{ dp.id }}" {% if selected_person_id|add:"0" == dp.id %}selected{% endif %}>{{ dp.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|default:'' }}">
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|default:'' }}">
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <button type="submit" class="btn btn-primary w-100">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if delivery_person and orders != None %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Results for {{ delivery_person.name }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Order No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>#{{ order.order_number }}</td>
+                            <td>{{ order.created_at|date:"M d, Y h:i A" }}</td>
+                            <td>{{ order.customer_name|default:"-" }}</td>
+                            <td>
+                                {% if order.order_status == 'Completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif order.order_status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ order.order_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>Rs.{{ order.total_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No orders found for this period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

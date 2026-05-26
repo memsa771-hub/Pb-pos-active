@@ -1,0 +1,398 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Order {{ order.reference_number }} - POS System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-primary-subtle">
+            <div class="d-flex align-items-center">
+                <h5 class="m-0 font-weight-bold text-primary">
+                    Order #{{ order.daily_order_number }}
+                    <small class="text-muted ms-2">({{ order.reference_number }})</small>
+                </h5>
+                <span class="badge bg-{% if order.order_status == 'Completed' %}success{% elif order.order_status == 'Pending' %}warning{% elif order.order_status == 'Cancelled' %}danger{% else %}secondary{% endif %} ms-3">
+                    {{ order.order_status }}
+                </span>
+                <span class="badge bg-{% if order.payment_status == 'Paid' %}success{% elif order.payment_status == 'Pending' %}warning{% elif order.payment_status == 'Failed' %}danger{% else %}secondary{% endif %} ms-2">
+                    {{ order.payment_status }}
+                </span>
+                <span class="badge bg-primary ms-2">{{ order.order_type }}</span>
+                <span class="badge bg-info ms-2">{{ order.payment_method }}</span>
+            </div>
+            <div>
+                <a href="{% url 'order_receipt' order.id %}" class="btn btn-success btn-sm me-2" target="_blank">
+                    <i class="fas fa-print me-1"></i> Print Receipt
+                </a>
+                <a href="{% url 'kitchen_receipt' order.id %}" class="btn btn-warning btn-sm me-2" target="_blank">
+                    <i class="fas fa-utensils me-1"></i> Kitchen Copy
+                </a>
+                {% if order.order_status != 'Completed' and order.order_status != 'Cancelled' %}
+                <a href="{% url 'order_edit' order.id %}" class="btn btn-info btn-sm me-2">
+                    <i class="fas fa-edit me-1"></i> Edit
+                </a>
+                {% endif %}
+                {% if order.order_status == 'Pending' %}
+                <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#completeModal">
+                    <i class="fas fa-check me-1"></i> Complete
+                </button>
+                {% endif %}
+                {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' %}
+                    {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                        <i class="fas fa-ban me-1"></i> Cancel
+                    </button>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <!-- Customer & Order Information -->
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width:35%"><i class="fas fa-user text-primary me-2"></i>Customer</th>
+                                <td>{{ order.customer_name|default:"--" }}</td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-phone text-primary me-2"></i>Phone</th>
+                                <td>{{ order.customer_phone|default:"--" }}</td>
+                            </tr>
+                            <tr>
+                                                            <th><i class="fas fa-calendar text-primary me-2"></i>Date</th>
+                            <td>{{ order.created_at|pkt_datetime }}</td>
+                            </tr>
+                            {% if is_admin or user.profile.role.name == 'Branch Manager' %}
+                            <tr>
+                                <th><i class="fas fa-user-shield text-primary me-2"></i>Created By</th>
+                                <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if order.order_type == 'Dine In' and order.table_number %}
+                            <tr>
+                                <th><i class="fas fa-chair text-primary me-2"></i>Table Number</th>
+                                <td>{{ order.table_number }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if order.order_type == 'Delivery' and order.delivery_address %}
+                            <tr>
+                                <th><i class="fas fa-map-marker-alt text-primary me-2"></i>Delivery Address</th>
+                                <td>{{ order.delivery_address }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if order.order_type == 'Delivery' and order.delivery_person %}
+                            <tr>
+                                <th><i class="fas fa-motorcycle text-primary me-2"></i>Delivery Person</th>
+                                <td>
+                                    {{ order.delivery_person.name }}
+                                    {% if order.delivery_person.phone %}
+                                        <small class="text-muted d-block">{{ order.delivery_person.phone }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if order.notes %}
+                            <tr>
+                                <th><i class="fas fa-sticky-note text-primary me-2"></i>Notes</th>
+                                <td>{{ order.notes }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width:40%">Subtotal:</th>
+                                <td class="text-end">Rs.{{ subtotal|floatformat:2 }}</td>
+                            </tr>
+                            
+                            {% if order.discount_amount > 0 or discount_amount > 0 %}
+                            <tr>
+                                <th>Discount:
+                                    {% if order.discount %}
+                                    <span class="badge bg-success">({{ order.discount.name }})</span>
+                                    {% elif order.discount_code == 'MANUAL' %}
+                                    <span class="badge bg-primary">(Manual{% if order.discount_type == 'percentage' %} {{ order.discount_value }}%{% endif %})</span>
+                                    {% elif order.discount_code %}
+                                    <span class="badge bg-info">({{ order.discount_code }})</span>
+                                    {% endif %}
+                                </th>
+                                <td class="text-end text-danger">-Rs.{{ discount_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            <tr>
+                                <th>Tax ({{ tax_rate|floatformat:1 }}%):</th>
+                                <td class="text-end">Rs.{{ tax_amount|floatformat:2 }}</td>
+                            </tr>
+                            
+                            {% if order.order_type == 'Dine In' and order.service_charge_percent > 0 %}
+                            <tr>
+                                <th>Service Charge ({{ order.service_charge_percent|floatformat:1 }}%):</th>
+                                <td class="text-end text-primary">Rs.{{ service_charge_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if order.order_type == 'Delivery' and order.delivery_charges > 0 %}
+                            <tr>
+                                <th>Delivery Charges:</th>
+                                <td class="text-end">Rs.{{ order.delivery_charges|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            <tr class="table-primary">
+                                <th>Total Amount:</th>
+                                <td class="text-end fw-bold fs-5">Rs.{{ total|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="table-responsive">
+                <h6 class="mb-3 text-primary">
+                    <i class="fas fa-shopping-basket me-2"></i>Order Items 
+                    <span class="badge bg-info">{{ order_items|length }} item(s)</span>
+                </h6>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th width="15%">Unit Price</th>
+                            <th width="15%">Quantity</th>
+                            <th width="15%">Total</th>
+                            <th width="20%">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.product.name }}</strong>
+                                {% if item.product.product_code %}
+                                <small class="text-muted d-block">#{{ item.product.product_code }}</small>
+                                {% endif %}
+                            </td>
+                            <td>Rs.{{ item.unit_price }}</td>
+                            <td class="text-center">{{ item.quantity|stringformat:"g" }}{% if item.product.calculate_price_per_kg %} kg{% endif %}</td>
+                            <td>Rs.{{ item.total_price|floatformat:2 }}</td>
+                            <td class="text-muted small">{{ item.notes|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                <p>No items in this order</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Order Modal -->
+<div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-success text-white py-3 rounded-top-4">
+                <h5 class="modal-title" id="completeModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Complete Order {{ order.reference_number }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="fs-4 fw-bold text-primary">
+                        Total Amount: <span>Rs.{{ total|floatformat:2 }}</span>
+                    </div>
+                    <div class="text-muted">Payment Method: <strong>{{ order.payment_method }}</strong></div>
+                </div>
+                
+                {% if order.payment_method == 'Cash' %}
+                <!-- Cash Payment Details -->
+                <div class="card border-success mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Cash Payment Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-hand-holding-usd me-2 text-success"></i>
+                                Cash Given by Customer
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-white border-end-0 fs-5">Rs.</span>
+                                <input type="number" class="form-control border-start-0 fs-5" id="cashGiven" 
+                                       placeholder="0.00" min="0" step="0.01" autofocus value="{{ order.cash_given|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div id="change-display" class="alert alert-success border-0 rounded-3 d-none">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold fs-5">
+                                    <i class="fas fa-exchange-alt me-2"></i>Change to Return:
+                                </span>
+                                <span class="fs-4 fw-bold" id="change-amount">Rs.0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div id="insufficient-cash-warning" class="alert alert-warning border-0 rounded-3 d-none">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span class="fw-bold">Please enter sufficient cash amount!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Non-cash payment confirmation -->
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Are you sure you want to mark this {{ order.payment_method }} payment order as completed?
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3 rounded-bottom-4">
+                <button type="button" class="btn btn-lg btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form action="{% url 'order_complete' order.id %}" method="post" style="display: inline;" id="completeOrderForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="cash_given" id="hiddenCashGiven" value="{{ order.cash_given|default:'' }}">
+                    <input type="hidden" name="change_amount" id="hiddenChangeAmount" value="{{ order.change_amount|default:'' }}">
+                    <button type="submit" class="btn btn-lg btn-success rounded-3 px-4" id="completeOrderBtn" 
+                            {% if order.payment_method == 'Cash' %}disabled{% endif %}>
+                        <i class="fas fa-check-circle me-2"></i>Complete Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Cancel Order {{ order.reference_number }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel order {{ order.reference_number }}? This action cannot be undone.</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Note: Only Branch Managers and Administrators can cancel orders.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
+                <form action="{% url 'order_cancel' order.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Cancel Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Check if there are additional items to show/hide button
+        // This will be handled by the backend - if no additional items, the button shows a message
+        
+        {% if order.payment_method == 'Cash' %}
+        // Cash payment modal logic
+        const totalAmount = {{ total|floatformat:2 }};
+        
+        // Handle cash given input change
+        $('#cashGiven').on('input', function() {
+            const cashGiven = parseFloat($(this).val()) || 0;
+            
+            if (cashGiven > 0) {
+                if (cashGiven >= totalAmount) {
+                    const changeAmount = cashGiven - totalAmount;
+                    $('#change-amount').text('Rs.' + changeAmount.toFixed(2));
+                    $('#change-display').removeClass('d-none');
+                    $('#insufficient-cash-warning').addClass('d-none');
+                    $('#completeOrderBtn').prop('disabled', false);
+                    
+                    // Update hidden fields
+                    $('#hiddenCashGiven').val(cashGiven.toFixed(2));
+                    $('#hiddenChangeAmount').val(changeAmount.toFixed(2));
+                } else {
+                    $('#change-display').addClass('d-none');
+                    $('#insufficient-cash-warning').removeClass('d-none');
+                    $('#completeOrderBtn').prop('disabled', true);
+                    
+                    // Clear hidden fields
+                    $('#hiddenCashGiven').val('');
+                    $('#hiddenChangeAmount').val('');
+                }
+            } else {
+                $('#change-display').addClass('d-none');
+                $('#insufficient-cash-warning').addClass('d-none');
+                $('#completeOrderBtn').prop('disabled', true);
+                
+                // Clear hidden fields
+                $('#hiddenCashGiven').val('');
+                $('#hiddenChangeAmount').val('');
+            }
+        });
+        
+        // Handle Enter key press on cashGiven input
+        $('#cashGiven').on('keypress', function(e) {
+            if (e.which === 13) { // 13 is the Enter key code
+                e.preventDefault();
+                if (!$('#completeOrderBtn').prop('disabled')) {
+                    $('#completeOrderBtn').click();
+                }
+            }
+        });
+        
+        // Initialize if cash_given already exists
+        {% if order.cash_given %}
+        $('#cashGiven').trigger('input');
+        {% endif %}
+        
+        // Auto-focus cash input when modal opens
+        $('#completeModal').on('shown.bs.modal', function() {
+            $('#cashGiven').trigger('focus').trigger('select');
+        });
+
+        // Reset modal when it's closed
+        $('#completeModal').on('hidden.bs.modal', function() {
+            {% if not order.cash_given %}
+            $('#cashGiven').val('');
+            $('#change-display').addClass('d-none');
+            $('#insufficient-cash-warning').addClass('d-none');
+            $('#completeOrderBtn').prop('disabled', true);
+            $('#hiddenCashGiven').val('');
+            $('#hiddenChangeAmount').val('');
+            {% endif %}
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %} 

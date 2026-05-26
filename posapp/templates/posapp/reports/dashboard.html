@@ -1,0 +1,370 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Reports Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Reports Dashboard</h1>
+    </div>
+
+    {% if not is_admin and last_end_day %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i> <strong>Current Period Data:</strong> 
+        The reports are showing data since the last day end ({{ last_end_day.end_date|pkt_datetime }}). 
+    </div>
+    {% endif %}
+
+    <!-- Business Day Information -->
+    {% if is_admin %}
+    <div class="alert alert-success mb-4">
+        <i class="fas fa-business-time me-2"></i> <strong>Business Day Based Reporting:</strong> 
+        Reports now show data based on your End Day cycles instead of calendar days. 
+        <br><small class="text-muted">
+            • Today: {{ today_range }} 
+            • Last 7 Business Days: {{ week_range }} 
+            • Last 30 Business Days: {{ month_range }}
+        </small>
+    </div>
+    {% endif %}
+
+    <!-- Overview Cards -->
+    {% if is_admin %}
+    <!-- All 8 cards for admin users -->
+    <div class="row">
+        <!-- Orders Today Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" title="Current business day (since last End Day)">
+                                Orders Today (Business Day)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orders_today }}</div>
+                            <div class="text-xs text-muted">{{ today_range }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders This Week Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1" title="Last 7 business days (End Day cycles)">
+                                Orders (7 Business Days)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orders_week }}</div>
+                            <div class="text-xs text-muted">{{ week_range }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders This Month Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" title="Last 30 business days (End Day cycles)">
+                                Orders (30 Business Days)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orders_month }}</div>
+                            <div class="text-xs text-muted">{{ month_range }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                All Time Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orders_total }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Cards -->
+    <div class="row">
+        <!-- Revenue Today Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" title="Current business day revenue (since last End Day)">
+                                Revenue Today (Business Day)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs.{{ revenue_today|floatformat:2 }}</div>
+                            <div class="text-xs text-muted">{{ today_range }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue This Week Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1" title="Last 7 business days revenue (End Day cycles)">
+                                Revenue (7 Business Days)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs.{{ revenue_week|floatformat:2 }}</div>
+                            <div class="text-xs text-muted">{{ week_range }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue This Month Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" title="Last 30 business days revenue (End Day cycles)">
+                                Revenue (30 Business Days)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs.{{ revenue_month|floatformat:2 }}</div>
+                            <div class="text-xs text-muted">{{ month_range }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Revenue Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                All Time Revenue
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs.{{ revenue_total|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Simplified 2 cards for branch managers (no revenue cards) -->
+    <div class="row">
+        <!-- Orders Today Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                ORDERS TODAY (BUSINESS DAY)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orders_today }}</div>
+                            <div class="text-xs text-muted">Since last End Day</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Since Last End Day -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                ORDERS SINCE LAST END DAY
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orders_total }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Reports -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Available Reports</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if is_admin %}
+                        <!-- Sales Report Card (Admin Only) -->
+                        <div class="col-lg-4 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    Sales Reports
+                                </div>
+                                <div class="card-body">
+                                    <p>View detailed sales reports with charts and analytics. Filter by date range and view daily, weekly, or monthly trends.</p>
+                                    <a href="{% url 'sales_report' %}" class="btn btn-primary">View Report</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Adjustment Report Card -->
+                        <div class="col-lg-4 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    Adjustment Report
+                                </div>
+                                <div class="card-body">
+                                    <p>View detailed reports of both bill adjustments and advance adjustments. Filter by date range and track all adjustments.</p>
+                                    <a href="{% url 'adjustment_report' %}" class="btn btn-danger">View Report</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- End Day Reports Card -->
+                        <div class="col-lg-4 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    End Day Reports
+                                </div>
+                                <div class="card-body">
+                                    <p>View and print reports from all previous end day operations. Access sales summaries, adjustments, and detailed data for each end day.</p>
+                                    <a href="{% url 'end_day_reports' %}" class="btn btn-info">View Reports</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Report Card -->
+                        <div class="col-lg-4 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    Delivery Report
+                                </div>
+                                <div class="card-body">
+                                    <p>View detailed reports of orders handled by delivery persons. Filter by date and track performance of each delivery staff.</p>
+                                    <a href="{% url 'delivery_report' %}" class="btn btn-secondary">View Report</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if is_admin %}
+                        <!-- Export Orders Card -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    Export Orders
+                                </div>
+                                <div class="card-body">
+                                    <p>Export complete orders data to Excel including customer details, status, payment info, and revenue totals.</p>
+                                    <form action="{% url 'export_orders_excel' %}" method="get">
+                                        <div class="mb-2">
+                                            <label for="order-start-date" class="form-label small">Start Date</label>
+                                            <input type="date" id="order-start-date" name="start" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="order-end-date" class="form-label small">End Date</label>
+                                            <input type="date" id="order-end-date" name="end" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="order-status" class="form-label small">Order Status</label>
+                                            <select id="order-status" name="status" class="form-select form-select-sm">
+                                                <option value="">All Statuses</option>
+                                                <option value="Pending">Pending</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm mt-2 w-100">Export to Excel</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Export Products Sold Card -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    Export Products Sold (Completed Orders)
+                                </div>
+                                <div class="card-body">
+                                    <p>Export product-focused sales data including quantities sold, revenue by product, and profit margins. Only includes completed orders.</p>
+                                    <form action="{% url 'export_order_items_excel' %}" method="get">
+                                        <div class="mb-2">
+                                            <label for="product-start-date" class="form-label small">Start Date</label>
+                                            <input type="date" id="product-start-date" name="start" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="product-end-date" class="form-label small">End Date</label>
+                                            <input type="date" id="product-end-date" name="end" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="category" class="form-label small">Category Filter</label>
+                                            <select id="category" name="category" class="form-select form-select-sm">
+                                                <option value="">All Categories</option>
+                                                {% for category in categories %}
+                                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-info btn-sm mt-2 w-100">Export to Excel</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

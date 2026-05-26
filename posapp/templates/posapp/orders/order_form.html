@@ -1,0 +1,2053 @@
+{% extends 'posapp/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block head %}
+<title>{{ title|default:"Order Form" }}</title>
+<style>
+    .order-items-table th,
+    .order-items-table td {
+        vertical-align: middle;
+    }
+    
+    #floatingSaveBtn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: none;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+    
+    .btn-pulse {
+        animation: pulse 1.5s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if order %}Edit Order #{{ order.id }}{% else %}Create New Order{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <strong>Note:</strong> Changes will only be saved when you click the "Save Order Changes" button.
+                    </div>
+                    
+                    {% if has_changes %}
+                    <div id="unsavedChangesAlert" class="alert alert-warning" role="alert">
+                        <strong>Warning:</strong> You have unsaved changes to items. Click "Save Order Changes" to apply these changes.
+                    </div>
+                    {% else %}
+                    <div id="unsavedChangesAlert" class="alert alert-warning" role="alert" style="display: none;">
+                        <strong>Warning:</strong> You have unsaved changes. Please click "Save Order Changes" to save your changes.
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="orderForm" action="{% if order %}{% url 'order_edit' order.id %}{% else %}{% url 'order_create' %}{% endif %}">
+                        {% csrf_token %}
+                        
+                        <!-- Customer Information Card -->
+                        <div class="card mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Customer Information</h6>
+                                {% if order.customer_name or order.customer_phone %}
+                                <span class="badge bg-success px-3 py-2">
+                                    <i class="fas fa-user-check me-1"></i> Customer Info Added
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="id_customer_name" class="form-label">
+                                            <i class="fas fa-user text-primary me-1"></i> Customer Name
+                                        </label>
+                                        <input type="text" name="customer_name" id="id_customer_name" class="form-control" 
+                                                value="{% if order %}{{ order.customer_name }}{% endif %}" placeholder="Enter customer name">
+                                </div>
+                                
+                                    <div class="col-md-6">
+                                        <label for="id_customer_phone" class="form-label">
+                                            <i class="fas fa-phone text-primary me-1"></i> Customer Phone
+                                        </label>
+                                        <input type="text" name="customer_phone" id="id_customer_phone" class="form-control" 
+                                                value="{% if order %}{{ order.customer_phone }}{% endif %}" placeholder="Enter phone number">
+                                </div>
+                                
+                                    <div class="col-md-12">
+                                        <label for="id_notes" class="form-label">
+                                            <i class="fas fa-sticky-note text-primary me-1"></i> Order Notes
+                                        </label>
+                                        <textarea name="notes" id="id_notes" class="form-control" rows="2" placeholder="Add any special instructions or notes">{% if order %}{{ order.notes }}{% endif %}</textarea>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden fields for order status and payment -->
+                                <input type="hidden" name="payment_method" value="{% if order %}{{ order.payment_method }}{% else %}Cash{% endif %}">
+                                <input type="hidden" name="payment_status" value="{% if order %}{{ order.payment_status }}{% else %}Unpaid{% endif %}">
+                                <input type="hidden" name="order_status" value="{% if order %}{{ order.order_status }}{% else %}Pending{% endif %}">
+                                <input type="hidden" name="service_charge_amount" id="hidden_service_charge_amount" value="{{ order.service_charge_amount|default:'0.00' }}">
+                                <input type="hidden" name="submit_order" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Delivery Information Card -->
+                        <div class="card mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Order Details</h6>
+                                <span class="badge bg-primary px-3 py-2">
+                                    <i class="fas fa-info-circle me-1"></i> {{ order.order_type|default:"Dine In" }}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="id_order_type" class="form-label">
+                                            <i class="fas fa-utensils text-primary me-1"></i> Order Type
+                                        </label>
+                                        <select name="order_type" id="id_order_type" class="form-select">
+                                            <option value="Dine In" {% if order.order_type == 'Dine In' %}selected{% endif %}>Dine In</option>
+                                            <option value="Takeaway" {% if order.order_type == 'Takeaway' %}selected{% endif %}>Takeaway</option>
+                                            <option value="Delivery" {% if order.order_type == 'Delivery' %}selected{% endif %}>Delivery</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6" id="dineInSection" {% if order.order_type != 'Dine In' %}style="display:none"{% endif %}>
+                                        <label for="id_table_number" class="form-label">
+                                            <i class="fas fa-chair text-primary me-1"></i> Table Number
+                                        </label>
+                                        <input type="text" name="table_number" id="id_table_number" class="form-control" 
+                                                value="{{ order.table_number|default:'' }}" placeholder="Enter table number">
+                                </div>
+                                
+                                    <div class="col-md-6" id="deliveryChargesSection" {% if order.order_type != 'Delivery' %}style="display:none"{% endif %}>
+                                        <label for="id_delivery_charges" class="form-label">
+                                            <i class="fas fa-money-bill text-primary me-1"></i> Delivery Charges
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Rs.</span>
+                                            <input type="number" name="delivery_charges" id="id_delivery_charges" class="form-control" 
+                                                   step="0.01" value="{{ order.delivery_charges|default:'0.00' }}">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6" id="deliveryPersonSection" {% if order.order_type != 'Delivery' %}style="display:none"{% endif %}>
+                                        <label for="id_delivery_person" class="form-label">
+                                            <i class="fas fa-motorcycle text-primary me-1"></i> Delivery Staff
+                                        </label>
+                                        {{ form.delivery_person }}
+                                    </div>
+                                    
+                                    <div class="col-md-12" id="deliveryAddressSection" {% if order.order_type != 'Delivery' %}style="display:none"{% endif %}>
+                                        <label for="id_delivery_address" class="form-label">
+                                            <i class="fas fa-map-marker-alt text-primary me-1"></i> Delivery Address
+                                        </label>
+                                        <textarea name="delivery_address" id="id_delivery_address" class="form-control" rows="2" placeholder="Enter delivery address">{{ order.delivery_address|default:'' }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <!-- Discount Card -->
+                        <div class="card mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Discount & Service Charges</h6>
+                                <div class="d-flex">
+                                    <span id="serviceChargeBadge" class="badge bg-primary px-3 py-2 me-2 {% if order.order_type != 'Dine In' %}d-none{% endif %}">
+                                        <i class="fas fa-utensils me-1"></i> Service: <span id="serviceChargeText">{% if order.service_charge_percent is not None %}{{ order.service_charge_percent }}{% else %}{{ default_service_charge }}{% endif %}%</span>
+                                    </span>
+                                    <span id="discountBadge" class="badge bg-success px-3 py-2 d-none">
+                                        <i class="fas fa-tag me-1"></i> <span id="discountBadgeText">0%</span>
+                                    </span>
+                        </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Tabs for Discount and Service Charge -->
+                                <ul class="nav nav-tabs nav-fill mb-3" id="discountTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="code-tab" data-bs-toggle="tab" data-bs-target="#code-tab-pane" type="button" role="tab" aria-controls="code-tab-pane" aria-selected="true">
+                                            <i class="fas fa-tag me-2"></i> Discount Code
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-tab-pane" type="button" role="tab" aria-controls="manual-tab-pane" aria-selected="false">
+                                            <i class="fas fa-edit me-2"></i> Manual Discount
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="service-tab" data-bs-toggle="tab" data-bs-target="#service-tab-pane" type="button" role="tab" aria-controls="service-tab-pane" aria-selected="false">
+                                            <i class="fas fa-utensils me-2"></i> Service Charge
+                                        </button>
+                                    </li>
+                                </ul>
+                                
+                                <!-- Current Discount Display -->
+                                <div id="current-discount" class="mb-3 {% if not order.discount and not order.discount_amount > 0 %}d-none{% endif %}">
+                                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong><i class="fas fa-check-circle me-2"></i> Applied Discount:</strong> 
+                                            <span id="discount-type-display" class="ms-2 fw-bold">
+                                                {% if order.discount %}
+                                                    {% if order.discount.type == 'Percentage' %}
+                                                        {{ order.discount.value }}% off ({{ order.discount.name }})
+                                                    {% else %}
+                                                        Rs.{{ order.discount.value }} off ({{ order.discount.name }})
+                                                    {% endif %}
+                                                {% elif order.discount_code == 'MANUAL' %}
+                                                    {% if order.discount_type == 'percentage' %}
+                                                        {{ order.discount_value }}% off (Manual)
+                                                    {% else %}
+                                                        Rs.{{ order.discount_value }} off (Manual)
+                                                    {% endif %}
+                                                {% elif order.discount_amount > 0 %}
+                                                    Rs.{{ order.discount_amount }} off (Manual)
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-discount">
+                                            <i class="fas fa-times me-1"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tab Content -->
+                                <div class="tab-content" id="discountTabsContent">
+                                    <!-- Discount Code Tab -->
+                                    <div class="tab-pane fade show active" id="code-tab-pane" role="tabpanel" aria-labelledby="code-tab" tabindex="0">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text bg-white"><i class="fas fa-ticket-alt text-primary"></i></span>
+                                            <input type="text" class="form-control" placeholder="Enter discount code" id="discount-code">
+                                            <button class="btn btn-primary" type="button" id="apply-discount-btn">
+                                                <i class="fas fa-check me-1"></i> Apply
+                                            </button>
+                                        </div>
+                                        <div id="discount-message"></div>
+                                    </div>
+                                    
+                                    <!-- Manual Discount Tab -->
+                                    <div class="tab-pane fade" id="manual-tab-pane" role="tabpanel" aria-labelledby="manual-tab" tabindex="0">
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <select class="form-select" id="manual-discount-type">
+                                                    <option value="fixed">Fixed Amount (Rs)</option>
+                                                    <option value="percentage">Percentage (%)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white"><i class="fas fa-money-bill text-primary"></i></span>
+                                                    <input type="number" class="form-control" placeholder="Enter amount" id="manual-discount-value" min="0" step="0.01">
+                                                    <button class="btn btn-primary" type="button" id="apply-manual-discount-btn">
+                                                        <i class="fas fa-check me-1"></i> Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="manual-discount-message" class="mt-2"></div>
+                                    </div>
+                                    
+                                    <!-- Service Charge Tab -->
+                                    <div class="tab-pane fade" id="service-tab-pane" role="tabpanel" aria-labelledby="service-tab" tabindex="0">
+                                        <div class="alert alert-info mb-3">
+                                            <i class="fas fa-info-circle me-2"></i> Service charge is only applied to Dine In orders.
+                                        </div>
+                                        
+                                        <div class="input-group">
+                                            <button type="button" class="btn btn-outline-secondary decrease-service-charge">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" class="form-control" id="serviceChargePercent" name="service_charge_percent"
+                                                   min="0" max="100" step="1" value="{% if order.service_charge_percent is not None %}{{ order.service_charge_percent }}{% else %}{{ default_service_charge }}{% endif %}"
+                                                   {% if not is_editable %}disabled{% endif %}>
+                                            <span class="input-group-text">%</span>
+                                            <button type="button" class="btn btn-outline-secondary increase-service-charge">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-primary" id="apply-service-charge-btn">
+                                                <i class="fas fa-check me-1"></i> Apply
+                                            </button>
+                                        </div>
+                                        <div id="service-charge-message" class="mt-2"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden fields for discount -->
+                                <input type="hidden" name="discount_code" id="hidden_discount_code" value="{{ order.discount_code|default:'' }}">
+                                <input type="hidden" name="discount_type" id="hidden_discount_type" value="{{ order.discount_type|default:'fixed' }}">
+                                <input type="hidden" name="discount_value" id="hidden_discount_value" value="{{ order.discount_value|default:'0' }}">
+                                <input type="hidden" name="discount_amount" id="hidden_discount_amount" value="{{ order.discount_amount|default:'0' }}">
+                                <input type="hidden" name="discount_id" id="hidden_discount_id" value="{{ order.discount.id|default:'' }}">
+                            </div>
+                        </div>
+
+                        <!-- Product Selection Card -->
+                        <div class="card mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Add Product</h6>
+                                <span class="badge bg-info px-3 py-2">
+                                    <i class="fas fa-keyboard me-1"></i> Press Enter after typing code
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="fas fa-shopping-basket text-primary"></i></span>
+                                        <select id="productSelect" class="form-select">
+                                            <option value="">Select Product</option>
+                                            {% for product in products %}
+                                                    <option value="{{ product.id }}" 
+                                                            data-code="{{ product.product_code|default:'' }}"
+                                                            data-per-kg="{{ product.calculate_price_per_kg|yesno:'true,false' }}">
+                                                        {{ product.name }} - Rs.{{ product.price }}{% if product.calculate_price_per_kg %} per kg{% endif %}
+                                                    </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="fas fa-hashtag text-primary"></i></span>
+                                            <input type="number" id="productQuantity" class="form-control" value="1" min="1" placeholder="Qty">
+                                            <input type="number" id="productWeight" class="form-control" value="1" min="0.5" step="0.1" placeholder="Weight (kg)" style="display: none;">
+                                    </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="fas fa-barcode text-primary"></i></span>
+                                        <input type="text" id="productCodeInput" class="form-control" placeholder="Product Code" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary w-100" id="addProductBtn">
+                                            <i class="fas fa-plus me-1"></i> Add Item
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Items Card -->
+                        <div class="card mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold text-primary">Order Items</h6>
+                                <span id="itemCountBadge" class="badge bg-info px-3 py-2">
+                                    <i class="fas fa-shopping-basket me-1"></i> {{ order_items|length }} item(s)
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning mb-3" id="unsavedItemsAlert" {% if not has_changes %}style="display: none;"{% endif %}>
+                                    <i class="fas fa-exclamation-triangle me-2"></i> You have unsaved changes to order items. Don't forget to save!
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover order-items-table" id="orderItemsTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Product</th>
+                                                <th width="15%">Price</th>
+                                                <th width="20%">Quantity</th>
+                                                <th width="15%">Subtotal</th>
+                                                <th width="12%">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if order_items %}
+                                                {% for item in order_items %}
+                                                <tr data-item-id="{{ item.id }}" data-product-id="{{ item.product.id }}" data-per-kg="{{ item.product.calculate_price_per_kg|yesno:'true,false' }}" {% if item.has_changed %}class="table-warning"{% endif %}>
+                                                    <td data-product-id="{{ item.product.id }}">
+                                                        <strong>{{ item.product.name }}{% if item.product.calculate_price_per_kg %} <span class="badge bg-info">per kg</span>{% endif %}</strong>
+                                                        {% if item.product.product_code %}
+                                                        <small class="text-muted d-block">#{{ item.product.product_code }}</small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="item-price" data-price="{{ item.unit_price }}">Rs.{{ item.unit_price }}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <!-- Quantity control group -->
+                                                            <div class="input-group" style="width: 130px;">
+                                                                <!-- Decrease quantity button -->
+                                                                {% if item.product.calculate_price_per_kg %}
+                                                                <button type="button" class="btn btn-outline-secondary edit-weight-item" data-item-id="{{ item.id }}" data-product-id="{{ item.product.id }}" data-product-name="{{ item.product.name }}" data-price="{{ item.unit_price }}" data-current-weight="{{ item.quantity }}">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                {% else %}
+                                                                <button type="button" class="btn btn-outline-secondary decrease-item" data-item-id="{{ item.id }}" data-price="{{ item.unit_price }}">
+                                                                    <i class="fas fa-minus"></i>
+                                                                </button>
+                                                                {% endif %}
+                                                                
+                                                                <!-- Current quantity display -->
+                                                                <span class="form-control text-center item-quantity {% if item.has_changed %}text-danger fw-bold{% endif %}" id="quantity-{{ item.id }}" data-original="{{ item.original_quantity|default:item.quantity }}">
+                                                                    {{ item.quantity|stringformat:"g" }}
+                                                                    {% if item.has_changed %}
+                                                                    <small class="text-muted d-block" style="font-size: 10px;">was {{ item.original_quantity }}</small>
+                                                                    {% endif %}
+                                                                </span>
+                                                                
+                                                                <!-- Increase quantity button -->
+                                                                {% if item.product.calculate_price_per_kg %}
+                                                                <button type="button" class="btn btn-outline-secondary edit-weight-item" data-item-id="{{ item.id }}" data-product-id="{{ item.product.id }}" data-product-name="{{ item.product.name }}" data-price="{{ item.unit_price }}" data-current-weight="{{ item.quantity }}">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                {% else %}
+                                                                <button type="button" class="btn btn-outline-secondary increase-item" data-item-id="{{ item.id }}" data-product-id="{{ item.product.id }}" data-price="{{ item.unit_price }}">
+                                                                    <i class="fas fa-plus"></i>
+                                                                </button>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="item-subtotal fw-bold">
+                                                        {% if item.has_changed %}
+                                                        <span class="text-danger">Rs.{{ item.total_price }}</span>
+                                                        <small class="text-muted d-block">was Rs.{{ item.original_quantity|multiply:item.unit_price }}</small>
+                                                        {% else %}
+                                                        Rs.{{ item.total_price }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger delete-item" data-item-id="{{ item.id }}">
+                                                            <i class="fas fa-trash me-1"></i> Remove
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr id="noItemsRow">
+                                                    <td colspan="5" class="text-center py-4 text-muted">
+                                                        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                                        <p>No items added yet</p>
+                                                        <p class="small">Use the product selection above to add items</p>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            {% if deleted_items %}
+                                                {% for item in deleted_items %}
+                                                <tr data-item-id="{{ item.id }}" class="table-danger text-decoration-line-through">
+                                                    <td>{{ item.product.name }} <span class="badge bg-danger">Will be deleted</span></td>
+                                                    <td class="item-price" data-price="{{ item.unit_price }}">Rs.{{ item.unit_price }}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <!-- Quantity control group -->
+                                                            <div class="input-group" style="width: 130px;">
+                                                                <!-- Decrease quantity button -->
+                                                                <button type="button" class="btn btn-outline-secondary decrease-item" data-item-id="{{ item.id }}" data-price="{{ item.unit_price }}" disabled>
+                                                                    <i class="fas fa-minus"></i>
+                                                                </button>
+                                                                
+                                                                <!-- Current quantity display -->
+                                                                <span class="form-control text-center item-quantity text-danger" id="quantity-{{ item.id }}" data-original="{{ item.original_quantity }}">
+                                                                    0
+                                                                    <small class="text-muted d-block" style="font-size: 10px;">was {{ item.original_quantity }}</small>
+                                                                </span>
+                                                                
+                                                                <!-- Increase quantity button -->
+                                                                <button type="button" class="btn btn-outline-secondary restore-item" data-item-id="{{ item.id }}" data-price="{{ item.unit_price }}">
+                                                                    <i class="fas fa-undo"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="item-subtotal">
+                                                        <span class="text-danger text-decoration-line-through">Rs.{{ item.original_quantity|multiply:item.unit_price }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary restore-item" data-item-id="{{ item.id }}">
+                                                            <i class="fas fa-undo"></i> Restore
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Order Summary Card -->
+                                <div class="card mb-4">
+                                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="m-0 font-weight-bold text-primary">Order Summary</h6>
+                                        <span class="badge bg-primary px-3 py-2">
+                                            <i class="fas fa-receipt me-1"></i> Total: <span id="summary-total">Rs.0.00</span>
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-striped" id="orderSummaryTable">
+                                                <tbody>
+                                                    <tr>
+                                                        <th style="width:40%">Subtotal:</th>
+                                                        <td class="text-end" id="order-subtotal">Rs.{{ subtotal|default:'0.00' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Discount:
+                                                    {% if order.discount %}
+                                                    <span class="badge bg-success">({{ order.discount.name }})</span>
+                                                    {% elif order.discount_code == 'MANUAL' %}
+                                                    <span class="badge bg-primary">(Manual{% if order.discount_type == 'percentage' %} {{ order.discount_value }}%{% endif %})</span>
+                                                    {% elif order.discount_code %}
+                                                    <span class="badge bg-info">({{ order.discount_code }})</span>
+                                                    {% endif %}
+                                                </th>
+                                                <td class="text-end text-danger" id="order-discount">-Rs.{{ discount_amount|floatformat:2 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Tax (<span id="tax-rate-display">{{ tax_rate|floatformat:1 }}</span>%):</th>
+                                                <td class="text-end" id="order-tax">Rs.{{ tax_amount|default:'0.00' }}</td>
+                                            </tr>
+                                            <tr id="service-charge-row" {% if order.order_type != 'Dine In' or order.service_charge_amount == 0 %}style="display: none;"{% endif %}>
+                                                        <th>Service Charge (<span id="service-charge-percent-display">{% if order.service_charge_percent is not None %}{{ order.service_charge_percent }}{% else %}{{ default_service_charge }}{% endif %}</span>%):</th>
+                                                        <td class="text-end" id="order-service-charge">
+                                                            Rs.{{ order.service_charge_amount|default:'0.00' }}
+                                                        </td>
+                                                    </tr>
+                                                    <tr id="delivery-charges-row" {% if order.order_type != 'Delivery' %}style="display:none"{% endif %}>
+                                                <th>Delivery Charges:</th>
+                                                        <td class="text-end" id="order-delivery-charges">
+                                                            Rs.{{ order.delivery_charges|default:'0.00' }}
+                                                        </td>
+                                            </tr>
+                                            <tr>
+                                                        <th class="table-primary">Total Amount:</th>
+                                                        <td class="text-end table-primary">
+                                                            <strong class="text-primary fs-5" id="order-total">
+                                                                Rs.{{ order.total_amount|default:'0.00' }}
+                                                            </strong>
+                                                </td>
+                                            </tr>
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                        <div>
+                                            <span class="small text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                Tax is calculated after discount is applied. The tax rate is {{ tax_rate|floatformat:1 }}%.
+                                            </span>
+                                            <!-- Hidden fields for taxes -->
+                                            <span id="tax-rate" class="d-none">{{ tax_rate|floatformat:1 }}</span>
+                                </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="text-center mb-5">
+                            <button type="submit" class="btn btn-success btn-lg px-5" id="saveOrderBtn">
+                                <i class="fas fa-save me-2"></i> Save Order Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weight Edit Modal -->
+<div class="modal fade" id="weightEditModal" tabindex="-1" aria-labelledby="weightEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="weightEditModalLabel">Edit Weight</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <h6 id="editProductName"></h6>
+                    <p class="text-muted">Price: Rs.<span id="editProductPrice"></span> per kg</p>
+                </div>
+                <div class="mb-3">
+                    <label for="editProductWeight" class="form-label">Weight (kg)</label>
+                    <input type="number" class="form-control" id="editProductWeight" min="0.5" step="0.1" value="1">
+                    <div class="form-text">Minimum weight: 0.5 kg</div>
+                </div>
+                <div class="text-center">
+                    <p class="fw-bold">Total: Rs.<span id="editWeightTotal">0.00</span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateWeightProduct">Update Weight</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Store initial order ID to track if we're editing
+    const orderId = "{{ order.id|default:'new' }}";
+    const isEditable = {{ is_editable|yesno:"true,false" }};
+    let hasUnsavedChanges = {{ has_changes|yesno:"true,false" }};
+    
+    // Store the original payment method to detect changes
+    window.originalPaymentMethod = "{{ order.payment_method|default:'Cash' }}";
+    
+    // Store all changes to be sent on form submission
+    let itemChanges = {};
+    
+    // Keep track of product stocks
+    let productStocks = {};
+    
+    // Track highest quantity reached for each item to properly handle stock
+    let itemMaxQuantities = {};
+    
+    // Handle order type change
+    $('#id_order_type').on('change', function() {
+        const orderType = $(this).val();
+        
+        // Hide all sections first
+        $('#dineInSection, #deliveryChargesSection, #deliveryAddressSection, #deliveryPersonSection').hide();
+        
+        // Show relevant sections based on order type
+        if (orderType === 'Dine In') {
+            $('#dineInSection').show();
+            // Default service charge for Dine In
+            const defaultServiceCharge = {{ default_service_charge }};
+            $('#serviceChargePercent').val(defaultServiceCharge);
+            $('#serviceChargeBadge').removeClass('d-none');
+            $('#service-charge-row').show();
+            $('#delivery-charges-row').hide();
+        } else if (orderType === 'Delivery') {
+            $('#deliveryChargesSection, #deliveryAddressSection, #deliveryPersonSection').show();
+            $('#delivery-charges-row').show();
+            $('#service-charge-row').hide();
+            $('#serviceChargePercent').val(0);
+            $('#serviceChargePercent').prop('disabled', true);
+            $('#serviceChargeBadge').addClass('d-none');
+        } else {
+            // Takeaway
+            $('#delivery-charges-row').hide();
+            $('#service-charge-row').hide();
+            $('#serviceChargePercent').val(0);
+            $('#serviceChargePercent').prop('disabled', true);
+            $('#serviceChargeBadge').addClass('d-none');
+        }
+        updateOrderTotals();
+    });
+    
+    // Handle delivery charges change
+    $('#id_delivery_charges').on('input', function() {
+        updateOrderTotals();
+        markAsUnsaved();
+    });
+    
+    // Also handle service charge direct input
+    $('#serviceChargePercent').on('change input', function() {
+        const serviceChargePercent = parseFloat($(this).val()) || 0;
+        // Ensure it's properly set in the DOM
+        $('#service-charge-percent-display').text(serviceChargePercent.toFixed(1));
+        updateOrderTotals();
+        markAsUnsaved();
+    });
+    
+    // Service charge increment/decrement buttons
+    $('.increase-service-charge').on('click', function() {
+        let currentVal = parseFloat($('#serviceChargePercent').val()) || 0;
+        // Increment by 1 and limit to 100
+        currentVal = Math.min(100, currentVal + 1);
+        $('#serviceChargePercent').val(currentVal.toFixed(1));
+        updateOrderTotals();
+        markAsUnsaved();
+    });
+    
+    $('.decrease-service-charge').on('click', function() {
+        let currentVal = parseFloat($('#serviceChargePercent').val()) || 0;
+        // Decrement by 1 but not below 0
+        currentVal = Math.max(0, currentVal - 1);
+        $('#serviceChargePercent').val(currentVal.toFixed(1));
+        updateOrderTotals();
+        markAsUnsaved();
+    });
+    
+    // Handle table number change
+    $('#id_table_number').on('change input', function() {
+        markAsUnsaved();
+    });
+    
+    // Handle payment method change to update tax rates
+    $('#id_payment_method').on('change', function() {
+        updateOrderTotals();
+        markAsUnsaved();
+    });
+    
+    // Fetch initial stock quantities for all products
+    function fetchProductStocks() {
+        // Use AJAX to get current stock quantities for all products
+        $.ajax({
+            url: '/api/products/stock/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success && response.products) {
+                    response.products.forEach(product => {
+                        productStocks[product.id] = {
+                            stock_quantity: product.stock_quantity,
+                            running_item: product.running_item,
+                            is_available: product.is_available
+                        };
+                    });
+                    console.log("Product stocks loaded successfully");
+                } else {
+                    console.error("Error in product stock response:", response.message);
+                    showNotification("Could not load product stock information", "warning");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching product stocks:", error);
+                showNotification("Could not load product stock information", "warning");
+            }
+        });
+    }
+    
+    // Initialize with any existing changes from the server
+    {% if has_changes %}
+    // Initialize based on server-provided changes
+    {% for item in order_items %}
+        {% if item.has_changed %}
+        itemChanges['{{ item.id }}'] = { 
+                                                    quantity: {{ item.quantity }},
+            originalQuantity: {{ item.original_quantity }},
+            delete: false
+        };
+        {% endif %}
+    {% endfor %}
+    
+    {% for item in deleted_items %}
+        itemChanges['{{ item.id }}'] = { 
+            delete: true,
+            originalQuantity: {{ item.original_quantity }}
+        };
+    {% endfor %}
+    {% endif %}
+    
+    // Initialize the product stocks
+    fetchProductStocks();
+    
+    // Add product IDs to all increase buttons for existing items
+    $('#orderItemsTable tr[data-item-id]').each(function() {
+        const itemId = $(this).data('item-id');
+        if (itemId && !itemId.toString().startsWith('temp-')) {
+            const productId = $(this).find('td:first').data('product-id');
+            if (productId) {
+                $(this).find('.increase-item').data('product-id', productId);
+            }
+        }
+    });
+    
+    // Function to show notification alerts
+    function showNotification(message, type = 'info') {
+        // Create alert element
+        const alertDiv = $('<div class="alert alert-' + type + ' alert-dismissible fade show mt-3" role="alert">')
+            .text(message)
+            .append('<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+        
+        // Add to the top of the card body
+        $('.card-body:first').prepend(alertDiv);
+        
+        // Auto dismiss after 3 seconds
+        setTimeout(function() {
+            alertDiv.alert('close');
+        }, 3000);
+    }
+    
+    // Function to mark the form as having unsaved changes
+    function markAsUnsaved() {
+        hasUnsavedChanges = true;
+        $('#unsavedChangesAlert').removeClass('d-none');
+    }
+    
+    // Update order totals based on current items and changes
+    function updateOrderTotals() {
+        // Calculate subtotal from all visible items (rows with data-item-id that aren't marked for deletion)
+        let subtotal = 0;
+        const $allItems = $('#orderItemsTable tbody tr[data-item-id]').not('.table-danger');
+        
+        $allItems.each(function() {
+            const $tr = $(this);
+            const quantityText = $tr.find('.item-quantity, .temp-item-quantity').text().trim();
+            const quantity = parseFloat(quantityText.split('\n')[0]); // Get first line only (current quantity)
+            const price = parseFloat($tr.find('.item-price').data('price'));
+            
+            if (!isNaN(quantity) && !isNaN(price)) {
+                subtotal += quantity * price;
+            }
+        });
+        
+        // Update subtotal display
+        $('#order-subtotal').text('Rs.' + subtotal.toFixed(2));
+        
+        // Get discount information
+        const discountCode = $('#hidden_discount_code').val();
+        const discountType = $('#hidden_discount_type').val();
+        const discountValue = parseFloat($('#hidden_discount_value').val()) || 0;
+        
+        // Calculate discount
+        let discountAmount = 0;
+        if (discountCode && discountValue > 0) {
+            if (discountType === 'percentage') {
+                discountAmount = subtotal * (discountValue / 100);
+            } else {
+                discountAmount = discountValue;
+            }
+        }
+        
+        // Update discount display
+        $('#order-discount').text('-Rs.' + discountAmount.toFixed(2));
+        
+        // Calculate tax
+        const taxableAmount = subtotal - discountAmount;
+        
+        // Get tax rate - READ FROM SERVER-RENDERED DOM ELEMENT
+        let taxRate = parseFloat($('#tax-rate-display').text()) || 0;
+        
+        // If the payment method changes, then recalculate tax rate
+        const paymentMethod = $('#id_payment_method').val() || 'Cash';
+        const serverTaxRateCard = parseFloat('{{ tax_rate_card }}') || 0;
+        const serverTaxRateCash = parseFloat('{{ tax_rate_cash }}') || 0;
+        
+        // Only recalculate tax rate if payment method is different from what was originally rendered
+        if (window.originalPaymentMethod && paymentMethod !== window.originalPaymentMethod) {
+            taxRate = paymentMethod.toLowerCase() === 'card' ? serverTaxRateCard : serverTaxRateCash;
+        }
+        
+        const taxAmount = taxableAmount * (taxRate / 100);
+        
+        // Update tax rate display
+        $('#tax-rate-display').text(taxRate.toFixed(1));
+        $('#tax-rate').text(taxRate.toFixed(1));
+        
+        // Update tax display
+        $('#order-tax').text('Rs.' + taxAmount.toFixed(2));
+        
+        // Calculate service charge for Dine In orders
+        let serviceChargeAmount = 0;
+        if ($('#id_order_type').val() === 'Dine In') {
+            const serviceChargePercent = parseFloat($('#serviceChargePercent').val()) || 0;
+            serviceChargeAmount = subtotal * (serviceChargePercent / 100);
+            
+            // Update service charge display
+            $('#order-service-charge').text('Rs.' + serviceChargeAmount.toFixed(2));
+            $('#service-charge-percent-display').text(serviceChargePercent.toFixed(1));
+            
+            // Update hidden field
+            $('#hidden_service_charge_amount').val(serviceChargeAmount.toFixed(2));
+            
+            // Show service charge row and update badge
+            $('#service-charge-row').show();
+            $('#serviceChargeBadge').removeClass('d-none');
+            $('#serviceChargeText').text(serviceChargePercent.toFixed(1) + '%');
+        } else {
+            // Hide service charge for non-Dine In orders
+            $('#service-charge-row').hide();
+            $('#serviceChargeBadge').addClass('d-none');
+        }
+        
+        // Get delivery charges
+        const deliveryCharges = parseFloat($('#id_delivery_charges').val()) || 0;
+        $('#order-delivery-charges').text('Rs.' + deliveryCharges.toFixed(2));
+        
+        // Calculate total
+        const total = taxableAmount + taxAmount + serviceChargeAmount + deliveryCharges;
+        $('#order-total').text('Rs.' + total.toFixed(2));
+        
+        // Also update the summary badge
+        $('#summary-total').text('Rs.' + total.toFixed(2));
+        
+        // Update hidden fields
+        $('#hidden_discount_amount').val(discountAmount.toFixed(2));
+        
+        // Update text in the Discount card badge if discountAmount > 0
+        if (discountAmount > 0) {
+            $('#discountBadge').removeClass('d-none').text(`${discountType === 'percentage' ? discountValue + '%' : 'Rs.' + discountValue.toFixed(2)}`);
+        } else {
+            $('#discountBadge').addClass('d-none');
+        }
+        
+        // Update the count of items in order items badge
+        $('#itemCountBadge').html('<i class="fas fa-shopping-basket me-1"></i> ' + $allItems.length + ' item(s)');
+    }
+    
+    // Handle weight-based product editing
+    $(document).on('click', '.edit-weight-item', function() {
+        const itemId = $(this).data('item-id');
+        const productName = $(this).data('product-name');
+        const price = parseFloat($(this).data('price'));
+        const currentWeight = parseFloat($(this).data('current-weight'));
+        
+        // Populate modal
+        $('#editProductName').text(productName);
+        $('#editProductPrice').text(price.toFixed(2));
+        $('#editProductWeight').val(currentWeight);
+        
+        // Calculate initial total
+        updateEditWeightTotal();
+        
+        // Store item ID for later use
+        $('#weightEditModal').data('item-id', itemId);
+        
+        // Show modal
+        $('#weightEditModal').modal('show');
+    });
+    
+    // Update total when weight changes in edit modal
+    $(document).on('input', '#editProductWeight', function() {
+        const weight = parseFloat($(this).val());
+        if (weight < 0.5) {
+            $(this).val(0.5);
+        }
+        updateEditWeightTotal();
+    });
+    
+    // Function to update weight total in edit modal
+    function updateEditWeightTotal() {
+        const weight = parseFloat($('#editProductWeight').val()) || 0;
+        const price = parseFloat($('#editProductPrice').text()) || 0;
+        const total = weight * price;
+        $('#editWeightTotal').text(total.toFixed(2));
+    }
+    
+    // Update weight product
+    $(document).on('click', '#updateWeightProduct', function() {
+        const modal = $('#weightEditModal');
+        const itemId = modal.data('item-id');
+        const newWeight = parseFloat($('#editProductWeight').val());
+        
+        if (newWeight < 0.5) {
+            showNotification('Minimum weight is 0.5 kg', 'warning');
+            return;
+        }
+        
+        // Update the quantity in the table
+        const quantitySpan = $('#quantity-' + itemId);
+        const originalQty = parseFloat(quantitySpan.data('original'));
+        
+        quantitySpan.text(newWeight.toFixed(3).replace(/\.?0+$/, '')); // Remove trailing zeros
+        
+        // Update UI styling
+        if (newWeight !== originalQty) {
+            quantitySpan.addClass('text-danger fw-bold');
+            if (quantitySpan.find('small').length === 0) {
+                quantitySpan.append('<small class="text-muted d-block" style="font-size: 10px;">was ' + originalQty.toFixed(3).replace(/\.?0+$/, '') + '</small>');
+            } else {
+                quantitySpan.find('small').text('was ' + originalQty.toFixed(3).replace(/\.?0+$/, ''));
+            }
+            quantitySpan.closest('tr').addClass('table-warning');
+            
+            // Update changes tracking
+            itemChanges[itemId] = {
+                quantity: newWeight,
+                originalQuantity: originalQty,
+                delete: false
+            };
+        } else {
+            quantitySpan.removeClass('text-danger fw-bold');
+            quantitySpan.find('small').remove();
+            quantitySpan.closest('tr').removeClass('table-warning');
+            delete itemChanges[itemId];
+        }
+        
+        // Update totals
+        updateOrderTotals();
+        markAsUnsaved();
+        
+        // Close modal
+        modal.modal('hide');
+    });
+
+    // Handle increasing item quantity
+    $(document).on('click', '.increase-item, .temp-increase-item', function() {
+        // Prevent duplicate trigger
+        if ($(this).data('processing')) return;
+        $(this).data('processing', true);
+        
+        const $tr = $(this).closest('tr');
+        const productId = $(this).data('product-id');
+        const itemId = $tr.data('item-id');
+        const isTemp = $(this).hasClass('temp-increase-item');
+        const quantitySpan = isTemp ? $tr.find('.temp-item-quantity') : $('#quantity-' + itemId);
+        const currentQty = parseFloat(quantitySpan.text().trim());
+        const originalQty = isTemp ? 0 : parseFloat(quantitySpan.data('original'));
+        
+        // Initialize max quantity tracking for this item if not already
+        if (!itemMaxQuantities[itemId]) {
+            itemMaxQuantities[itemId] = originalQty;
+        }
+        
+        // Check stock availability
+        const productStock = productStocks[productId];
+        
+        if (productStock) {
+            // Calculate how many net new items we need from stock
+            const maxQty = itemMaxQuantities[itemId];
+            const wouldExceedMax = (currentQty + 1) > maxQty;
+            
+            // Check if we can increment:
+            // 1. Running items can always be incremented
+            // 2. If we have stock available, we can increment
+            // 3. If we're below the original quantity, we can increment
+            // 4. If we're at or below our previous max quantity, we can increment (already reserved that stock)
+            const canIncrement = productStock.running_item || 
+                               (productStock.stock_quantity > 0 && wouldExceedMax) || 
+                               (currentQty < originalQty) ||
+                               (!wouldExceedMax);
+            
+            if (canIncrement) {
+                // Increment quantity
+                const newQty = currentQty + 1;
+                quantitySpan.text(newQty);
+                
+                // Update UI for existing items
+                if (!isTemp) {
+                    if (newQty !== originalQty) {
+                        quantitySpan.addClass('text-danger fw-bold');
+                        if (quantitySpan.find('small').length === 0) {
+                            quantitySpan.append('<small class="text-muted d-block" style="font-size: 10px;">was ' + originalQty + '</small>');
+                        }
+                        $tr.addClass('table-warning');
+                        
+                        // Update changes tracking
+                        itemChanges[itemId] = {
+                            quantity: newQty,
+                            originalQuantity: originalQty,
+                            delete: false
+                        };
+                    } else {
+                        quantitySpan.removeClass('text-danger fw-bold');
+                        quantitySpan.find('small').remove();
+                        $tr.removeClass('table-warning');
+                        delete itemChanges[itemId];
+                    }
+                } else {
+                    // For temporary items, update the subtotal directly
+                    const price = parseFloat($tr.find('.item-price').data('price'));
+                    $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+                }
+                
+                // Update stock cache if not running item and we're using new stock
+                if (!productStock.running_item && wouldExceedMax) {
+                    productStock.stock_quantity--;
+                    // Update the max quantity we've reached
+                    itemMaxQuantities[itemId] = newQty;
+                }
+        
+                // Update totals
+                updateOrderTotals();
+                markAsUnsaved();
+            } else {
+                showNotification("Cannot add more. Stock limit reached.", "warning");
+            }
+        } else {
+            // Fallback to API check if no local data
+            $.ajax({
+                url: '/api/products/' + productId + '/check-stock/',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Cache the response
+                        productStocks[productId] = {
+                            stock_quantity: response.available_stock,
+                            running_item: response.running_item,
+                            is_available: response.available
+                        };
+                        
+                        // Try incrementing again now that we have stock data
+                        $(this).data('processing', false).trigger('click');
+                    } else {
+                        showNotification("Cannot add more. Stock limit reached.", "warning");
+                    }
+                },
+                error: function() {
+                    showNotification("Error checking stock availability", "error");
+                },
+                context: this  // Preserve the 'this' context for the trigger call
+            });
+        }
+        
+        // Release lock after a short delay
+        setTimeout(() => {
+            $(this).data('processing', false);
+        }, 200);
+    });
+    
+    // DISABLED: Original decrease handler (replaced with password-protected version)
+    // $(document).on('click', '.decrease-item, .temp-decrease-item', function() {
+    //     // Prevent duplicate trigger
+    //     if ($(this).data('processing')) return;
+    //     $(this).data('processing', true);
+    //     
+    //     const $tr = $(this).closest('tr');
+    //     const productId = $(this).data('product-id');
+    //     const itemId = $tr.data('item-id');
+    //     const isTemp = $(this).hasClass('temp-decrease-item');
+    //     const quantitySpan = isTemp ? $tr.find('.temp-item-quantity') : $('#quantity-' + itemId);
+    //     const currentQty = parseFloat(quantitySpan.text().trim());
+    //     const originalQty = isTemp ? 0 : parseFloat(quantitySpan.data('original'));
+    //     
+    //     if (currentQty > 0.1) {
+    //         // Decrease quantity
+    //         const newQty = currentQty - 1;
+    //         quantitySpan.text(newQty);
+    //         
+    //         // Update UI for existing items
+    //         if (!isTemp) {
+    //             if (newQty !== originalQty) {
+    //                 quantitySpan.addClass('text-danger fw-bold');
+    //                 if (quantitySpan.find('small').length === 0) {
+    //                     quantitySpan.append('<small class="text-muted d-block" style="font-size: 10px;">was ' + originalQty + '</small>');
+    //                 }
+    //                 $tr.addClass('table-warning');
+    //                 
+    //                 // Update changes tracking
+    //                 itemChanges[itemId] = {
+    //                     quantity: newQty,
+    //                     originalQuantity: originalQty,
+    //                     delete: false
+    //                 };
+    //             } else {
+    //                 quantitySpan.removeClass('text-danger fw-bold');
+    //                 quantitySpan.find('small').remove();
+    //                 $tr.removeClass('table-warning');
+    //                 delete itemChanges[itemId];
+    //             }
+    //         } else {
+    //             // For temporary items, update the subtotal directly
+    //             const price = parseFloat($tr.find('.item-price').data('price'));
+    //             $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //         }
+    //         
+    //         // Check max quantity
+    //         const maxQty = itemMaxQuantities[itemId] || originalQty;
+    //         
+    //         // Only return stock if we're decreasing from the current max and above original quantity
+    //         if (productId && productStocks[productId] && !productStocks[productId].running_item) {
+    //             if (currentQty === maxQty && currentQty > originalQty) {
+    //                 productStocks[productId].stock_quantity++;
+    //                 // Update the max quantity we've reached
+    //                 itemMaxQuantities[itemId] = newQty;
+    //             }
+    //         }
+    //         
+    //         // Update totals
+    //         updateOrderTotals();
+    //         markAsUnsaved();
+    //     }
+    //     
+    //     // Release lock after a short delay
+    //     setTimeout(() => {
+    //         $(this).data('processing', false);
+    //     }, 200);
+    // });
+    
+    // Keep the temp-decrease-item handler for temporary items (no password required)
+    $(document).on('click', '.temp-decrease-item', function() {
+        // Prevent duplicate trigger
+        if ($(this).data('processing')) return;
+        $(this).data('processing', true);
+        
+        const $tr = $(this).closest('tr');
+        const productId = $(this).data('product-id');
+        const itemId = $tr.data('item-id');
+        const quantitySpan = $tr.find('.temp-item-quantity');
+        const currentQty = parseFloat(quantitySpan.text().trim());
+        
+        if (currentQty > 0.1) {
+            // Decrease quantity
+            const newQty = currentQty - 1;
+            quantitySpan.text(newQty);
+            
+            // For temporary items, update the subtotal directly
+            const price = parseFloat($tr.find('.item-price').data('price'));
+            $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+            
+            // Update totals
+            updateOrderTotals();
+            markAsUnsaved();
+        }
+        
+        // Release lock after a short delay
+        setTimeout(() => {
+            $(this).data('processing', false);
+        }, 200);
+    });
+    
+    // Handle delete button click - DISABLED (replaced with password-protected version)
+    // $(document).on('click', '.delete-item', function() {
+    //     const itemId = $(this).data('item-id');
+    //     const $tr = $('#orderItemsTable tr[data-item-id="' + itemId + '"]');
+    //     const productName = $tr.find('td:first').text().trim();
+    //     
+    //     // Show confirmation dialog
+    //     if (confirm(`Are you sure you want to remove "${productName}" from this order?`)) {
+    //         // Mark the item as to be deleted
+    //         $tr.addClass('table-danger text-decoration-line-through');
+    //         $tr.find('button').attr('disabled', true);
+    //         $tr.find('.restore-item').attr('disabled', false);
+    //         
+    //         // Add to changes list
+    //         const originalQuantity = parseFloat($tr.find('.item-quantity').data('original'));
+    //         itemChanges[itemId] = {
+    //             delete: true,
+    //             originalQuantity: originalQuantity
+    //         };
+    //         
+    //         // Update totals and mark changes
+    //         updateOrderTotals();
+    //         markAsUnsaved();
+    //         
+    //         // Optionally hide the row for better UX
+    //         $tr.hide('slow');
+    //     }
+    // });
+    
+    // Handle restoring deleted items
+    $(document).on('click', '.restore-item', function() {
+        const itemId = $(this).data('item-id');
+        const $tr = $('#orderItemsTable tr[data-item-id="' + itemId + '"]');
+        const originalQuantity = parseInt($tr.find('.item-quantity').data('original'));
+        
+        // Unmark deleted items
+        $tr.removeClass('table-danger text-decoration-line-through');
+        $tr.find('button').attr('disabled', false);
+        $tr.find('.item-quantity').removeClass('text-danger')
+           .text(originalQuantity)
+           .removeClass('text-danger fw-bold')
+           .find('small').remove();
+        
+        // Remove from changes if it's back to original state
+        delete itemChanges[itemId];
+        
+        // Update totals and mark changes
+        updateOrderTotals();
+        markAsUnsaved();
+    });
+    
+    // Handle temporary item interactions
+    // $(document).on('click', '.temp-increase-item', function() {
+    //    const $tr = $(this).closest('tr');
+    //    const qtySpan = $tr.find('.temp-item-quantity');
+    //    const currentQty = parseInt(qtySpan.text());
+    //    const productId = $(this).data('product-id');
+    //    
+    //    // Check if we have stock data locally first
+    //    const productStock = productStocks[productId];
+    //    
+    //    if (productStock) {
+    //        // Use cached stock information
+    //        if (productStock.running_item || productStock.stock_quantity > 0) {
+    //            // Increment quantity and update display
+    //            const newQty = currentQty + 1;
+    //            qtySpan.text(newQty);
+    //            
+    //            // Update subtotal
+    //            const price = parseFloat($tr.find('.item-price').data('price'));
+    //            $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //            
+    //            // Update local stock cache if not a running item
+    //            if (!productStock.running_item) {
+    //                productStock.stock_quantity--;
+    //            }
+    //            
+    //            // Update totals and mark as unsaved
+    //            updateOrderTotals();
+    //            markAsUnsaved();
+    //        } else {
+    //            showNotification("Cannot add more. Stock limit reached.", "warning");
+    //        }
+    //    } else {
+    //        // Use server check if no local data
+    //        $.ajax({
+    //            url: '/api/products/' + productId + '/check-stock/',
+    //            type: 'GET',
+    //            success: function(response) {
+    //                if (response.success) {
+    //                    if (response.running_item || response.available_stock > 0) {
+    //                        const newQty = currentQty + 1;
+    //                        qtySpan.text(newQty);
+    //                        
+    //                        // Update subtotal
+    //                        const price = parseFloat($tr.find('.item-price').data('price'));
+    //                        $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //                        
+    //                        // Cache the stock info
+    //                        productStocks[productId] = {
+    //                            stock_quantity: response.available_stock - 1, // Subtract 1 for the item we just added
+    //                            running_item: response.running_item,
+    //                            is_available: response.available
+    //                        };
+    //                        
+    //                        updateOrderTotals();
+    //                        markAsUnsaved();
+    //                    } else {
+    //                        showNotification("Cannot add more. Stock limit reached.", "warning");
+    //                    }
+    //                } else {
+    //                    showNotification(response.message || "Could not check stock availability", "warning");
+    //                }
+    //            },
+    //            error: function() {
+    //                showNotification("Error checking stock availability", "error");
+    //            }
+    //        });
+    //    }
+    //});
+    //
+    //$(document).on('click', '.temp-decrease-item', function() {
+    //    const $tr = $(this).closest('tr');
+    //    const qtySpan = $tr.find('.temp-item-quantity');
+    //    const currentQty = parseInt(qtySpan.text());
+    //    const productId = $(this).data('product-id');
+    //    
+    //    if (currentQty > 1) {
+    //        const newQty = currentQty - 1;
+    //        qtySpan.text(newQty);
+    //        
+    //        // Update subtotal
+    //        const price = parseFloat($tr.find('.item-price').data('price'));
+    //        $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //        
+    //        // Update stock cache if not running item
+    //        if (productId && productStocks[productId] && !productStocks[productId].running_item) {
+    //            productStocks[productId].stock_quantity++;
+    //        }
+    //        
+    //        updateOrderTotals();
+    //        markAsUnsaved();
+    //    }
+    //});
+    
+    $(document).on('click', '.temp-delete-item', function() {
+        const $tr = $(this).closest('tr');
+        const productName = $tr.find('td:first').text().trim();
+        
+        // Show confirmation dialog
+        if (confirm(`Are you sure you want to remove "${productName}" from this order?`)) {
+            $tr.remove();
+            updateOrderTotals();
+            markAsUnsaved();
+            
+            // If no items left, show the no items row
+            if ($('#orderItemsTable tbody tr').length === 0) {
+                $('#orderItemsTable tbody').append('<tr id="noItemsRow"><td colspan="5" class="text-center">No items added yet</td></tr>');
+            }
+        }
+    });
+    
+    // Handle form submission - add hidden inputs for item changes
+    $('#orderForm').on('submit', function(e) {
+        // Add hidden inputs for all tracked changes
+        for (const [itemId, change] of Object.entries(itemChanges)) {
+            if (change.delete) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: `item_changes[${itemId}][delete]`,
+                    value: 'true'
+                }).appendTo('#orderForm');
+            } else {
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: `item_changes[${itemId}][quantity]`,
+                    value: change.quantity
+                }).appendTo('#orderForm');
+            }
+        }
+        
+        // Update quantities for new items (temp items)
+        $('.new-item').each(function() {
+            const tempId = $(this).data('temp-id');
+            const quantity = parseInt($(this).find('.temp-item-quantity').text());
+            
+            // Update the hidden input value for this item's quantity
+            $(this).find('input[name^="new_items"]').val(JSON.stringify({
+                product_id: $(this).data('product-id'),
+                quantity: quantity
+            }));
+        });
+        
+        // Reset unsaved changes flag to prevent "Leave site?" dialog after submission
+        hasUnsavedChanges = false;
+    });
+    
+    // Handle product selection change to show/hide weight input
+    $("#productSelect").on("change", function() {
+        const selectedOption = $(this).find('option:selected');
+        const isPerKg = selectedOption.data('per-kg') === 'true';
+        
+        if (isPerKg) {
+            $("#productQuantity").hide();
+            $("#productWeight").show().focus();
+        } else {
+            $("#productWeight").hide();
+            $("#productQuantity").show();
+        }
+    });
+
+    // Add new item handler - now without page refresh
+    $("#addProductBtn").on("click", function() {
+        const productSelect = $("#productSelect");
+        const productId = productSelect.val();
+        
+        // Check if this is a weight-based product
+        const productOption = productSelect.find('option:selected');
+        const isPerKg = productOption.data('per-kg') === 'true';
+        
+        // Get quantity from appropriate input field
+        let quantity;
+        if (isPerKg) {
+            quantity = parseFloat($("#productWeight").val()) || 1;
+            if (quantity < 0.5) {
+                showNotification("Minimum weight is 0.5 kg", "warning");
+                return;
+            }
+        } else {
+            quantity = parseFloat($("#productQuantity").val()) || 1;
+        }
+        
+        if (productId) {
+            // Get product details from the selected option
+            const productName = productOption.text().split(' - ')[0];
+            const productPrice = parseFloat(productOption.text().split('Rs.')[1]);
+            
+            // Check if we have stock data locally first
+            const productStock = productStocks[productId];
+            
+            if (productStock) {
+                // Use cached stock information
+                if (productStock.running_item || productStock.stock_quantity >= quantity) {
+                    // Proceed with adding the item
+                    addItemToOrder(productId, productName, productPrice, quantity, productStock.running_item);
+                } else {
+                    showNotification(`Not enough stock for ${productName}. Only ${productStock.stock_quantity} available.`, "warning");
+                }
+            } else {
+                // Fallback to API check if local data is not available
+                $.ajax({
+                    url: '/api/products/' + productId + '/check-stock/',
+                    type: 'GET',
+                    data: { quantity: quantity },
+                    success: function(response) {
+                        if (response.success) {
+                            if (response.running_item || response.available_stock >= quantity) {
+                                // Proceed with adding the item
+                                addItemToOrder(productId, productName, productPrice, quantity, response.running_item);
+                                
+                                // Update our local cache
+                                productStocks[productId] = {
+                                    stock_quantity: response.available_stock,
+                                    running_item: response.running_item,
+                                    is_available: response.available
+                                };
+                            } else {
+                                showNotification(`Not enough stock for ${productName}. Only ${response.available_stock} available.`, "warning");
+                            }
+                        } else {
+                            showNotification(response.message || "Could not verify stock availability", "warning");
+                        }
+                    },
+                    error: function() {
+                        showNotification("Error checking stock availability", "error");
+                    }
+                });
+            }
+        } else {
+            showNotification("Please select a product", "warning");
+        }
+    });
+    
+    // Function to add an item to the order after stock check
+    function addItemToOrder(productId, productName, productPrice, quantity, isRunningItem) {
+        // Check if product already exists in the order
+        let existingRow = $('#orderItemsTable tbody tr').filter(function() {
+            return $(this).find('td:first').data('product-id') == productId &&
+                   !$(this).hasClass('table-danger'); // Exclude deleted items
+        }).first();
+            
+        if (existingRow.length) {
+            // Product exists, update quantity instead of adding new row
+            let quantitySpan = existingRow.find('.item-quantity, .temp-item-quantity');
+            let currentQty = parseFloat(quantitySpan.text());
+            let newQty = currentQty + quantity;
+            
+            // Update quantity
+            quantitySpan.text(newQty);
+            
+            // Update subtotal
+            let subtotal = productPrice * newQty;
+            existingRow.find('.item-subtotal').text('Rs.' + subtotal.toFixed(2));
+            
+            // If it's an existing item (not temporary), handle original quantity
+            if (quantitySpan.hasClass('item-quantity')) {
+                let originalQty = parseFloat(quantitySpan.data('original'));
+                if (newQty !== originalQty) {
+                    quantitySpan.addClass('text-danger fw-bold');
+                    if (quantitySpan.find('small').length === 0) {
+                        quantitySpan.append('<small class="text-muted d-block" style="font-size: 10px;">was ' + originalQty + '</small>');
+                    }
+                    existingRow.addClass('table-warning');
+                    
+                    // Update changes tracking
+                    itemChanges[existingRow.data('item-id')] = {
+                        quantity: newQty,
+                        originalQuantity: originalQty,
+                        delete: false
+                    };
+                }
+            }
+        } else {
+            // Remove "no items" row if present
+            $('#noItemsRow').remove();
+            
+            // Generate a temporary ID for the new item
+            const tempId = 'temp-' + Date.now();
+                
+            // Create the new row HTML
+            let newRow = `
+                <tr class="new-item" data-product-id="${productId}" data-temp-id="${tempId}">
+                    <td data-product-id="${productId}">
+                        ${productName}
+                        <input type="hidden" name="new_items[${tempId}]" value='${JSON.stringify({product_id: productId, quantity: quantity})}'>
+                    </td>
+                    <td class="item-price text-right" data-price="${productPrice}">Rs.${productPrice.toFixed(2)}</td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                                <div class="input-group" style="width: 130px;">
+                                <button type="button" class="btn btn-outline-secondary temp-decrease-item" data-product-id="${productId}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span class="form-control text-center temp-item-quantity">${quantity}</span>
+                                <button type="button" class="btn btn-outline-secondary temp-increase-item" data-product-id="${productId}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    <td class="item-subtotal text-right">Rs.${(productPrice * quantity).toFixed(2)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger temp-delete-item">
+                            <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                
+            // Append the new row to the table
+            $('#orderItemsTable tbody').append(newRow);
+        }
+
+        // If not a running item, update local stock cache
+        if (!isRunningItem && productStocks[productId]) {
+            productStocks[productId].stock_quantity -= quantity;
+        }
+            
+        // Reset the form inputs
+            $("#productSelect").val('');
+            $("#productQuantity").val(1);
+            $("#productWeight").val(1).hide();
+            $("#productQuantity").show();
+            
+        // Update order totals
+            updateOrderTotals();
+        
+        // Mark form as having unsaved changes
+            markAsUnsaved();
+        }
+    
+    // Setup form field change detection
+    $("#orderForm input, #orderForm textarea, #orderForm select").on("change", function() {
+        markAsUnsaved();
+    });
+    
+    // Warn users about unsaved changes when leaving the page
+    window.addEventListener("beforeunload", function(e) {
+        if (hasUnsavedChanges) {
+            const message = "You have unsaved changes. Are you sure you want to leave?";
+            e.returnValue = message;
+            return message;
+        }
+    });
+    
+    // Initialize discount tabs
+    const discountTabs = document.getElementById('discountTabs');
+    if (discountTabs) {
+        const tabsInstance = new bootstrap.Tab(discountTabs);
+    }
+    
+    // Initial update of order totals
+    // updateOrderTotals(); // Commented out to preserve server-calculated values
+
+    // Add product by code when Enter key is pressed in productCodeInput
+    $('#productCodeInput').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            e.preventDefault(); // Prevent form submission
+            const code = $(this).val().toLowerCase().trim();
+            if (!code) return;
+            let found = false;
+            $('#productSelect option').each(function() {
+                const productCode = ($(this).data('code') || '').toString().toLowerCase();
+                if (productCode && productCode === code) {
+                    $('#productSelect').val($(this).val());
+                    found = true;
+                    return false; // break
+                }
+            });
+            if (found) {
+                $('#addProductBtn').click();
+                $('#productCodeInput').val('');
+            } else {
+                showNotification('No product found with code: ' + code, 'warning');
+            }
+        }
+    });
+
+    // Apply discount code functionality
+    $('#apply-discount-btn').click(function() {
+        const code = $('#discount-code').val().trim();
+        if (!code) {
+            $('#discount-message').html('<div class="alert alert-warning">Please enter a discount code</div>');
+            return;
+        }
+        
+        // Clear previous messages
+        $('#discount-message').empty();
+        
+        // Show loading message
+        $('#discount-message').html('<div class="alert alert-info">Validating discount code...</div>');
+        
+        // Call API to validate discount code
+        $.ajax({
+            url: '/api/discounts/validate/',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ code: code }),
+            success: function(response) {
+                if (response.valid) {
+                    const discountData = response.discount;
+                    
+                    // Update hidden fields
+                    $('#hidden_discount_code').val(discountData.code);
+                    $('#hidden_discount_type').val(discountData.type.toLowerCase());
+                    $('#hidden_discount_value').val(discountData.value);
+                    $('#hidden_discount_id').val(discountData.id);
+                    
+                    // Show success message
+                    $('#discount-message').html(
+                        `<div class="alert alert-success">
+                            Discount "${discountData.name}" applied successfully!
+                        </div>`
+                    );
+                    
+                    // Show discount details
+                    let displayText = discountData.type.toLowerCase() === 'percentage' ? 
+                        `${discountData.value}% off (${discountData.name})` : 
+                        `Rs.${discountData.value.toFixed(2)} off (${discountData.name})`;
+                    
+                    $('#discount-type-display').text(displayText);
+                    
+                    // Show the current discount section
+                    $('#current-discount').removeClass('d-none');
+                    
+                    // Clear the input field
+                    $('#discount-code').val('');
+                    
+                    // Update totals
+                    updateOrderTotals();
+                    
+                    // Mark form as having unsaved changes
+                    markAsUnsaved();
+                } else {
+                    // Show error message
+                    $('#discount-message').html(`<div class="alert alert-danger">${response.message}</div>`);
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = 'Error validating discount code';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                
+                // Show error message
+                $('#discount-message').html(`<div class="alert alert-danger">${errorMsg}</div>`);
+            }
+        });
+    });
+    
+    // Apply manual discount
+    $('#apply-manual-discount-btn').click(function() {
+        const discountValue = parseFloat($('#manual-discount-value').val());
+        const selectedType = $('#manual-discount-type').val();
+        
+        // Validate input
+        if (isNaN(discountValue) || discountValue < 0) {
+            $('#manual-discount-message').html('<div class="alert alert-warning">Please enter a valid discount amount</div>');
+            return;
+        }
+        
+        // Clear previous messages
+        $('#manual-discount-message').empty();
+        
+        // For percentage discount, validate it's not over 100%
+        if (selectedType === 'percentage' && discountValue > 100) {
+            $('#manual-discount-message').html('<div class="alert alert-warning">Percentage discount cannot exceed 100%</div>');
+            return;
+        }
+        
+        // Apply the manual discount
+        $('#hidden_discount_code').val('MANUAL');
+        $('#hidden_discount_type').val(selectedType);
+        $('#hidden_discount_value').val(discountValue);
+        $('#hidden_discount_id').val('');
+        
+        // Show success message
+        $('#manual-discount-message').html(
+            `<div class="alert alert-success">
+                Manual discount applied successfully!
+            </div>`
+        );
+        
+        // Show discount details
+        let displayText = selectedType === 'percentage' ? 
+            `${discountValue}% off (Manual)` : 
+            `Rs.${discountValue.toFixed(2)} off (Manual)`;
+        
+        $('#discount-type-display').text(displayText);
+        
+        // Show the current discount section
+        $('#current-discount').removeClass('d-none');
+        
+        // Update totals
+        updateOrderTotals();
+        
+        // Mark form as having unsaved changes
+        markAsUnsaved();
+    });
+    
+    // Remove discount button
+    $(document).on('click', '.remove-discount', function() {
+        // Reset discount values
+        $('#hidden_discount_code').val('');
+        $('#hidden_discount_type').val('fixed');
+        $('#hidden_discount_value').val('0');
+        $('#hidden_discount_amount').val('0');
+        $('#hidden_discount_id').val('');
+        
+        // Clear inputs
+        $('#discount-code').val('');
+        $('#manual-discount-value').val('');
+        
+        // Hide discount display
+        $('#current-discount').addClass('d-none');
+        
+        // Show message
+        $('#discount-message').html(
+            `<div class="alert alert-info">
+                Discount has been removed.
+            </div>`
+        );
+        $('#manual-discount-message').html(
+            `<div class="alert alert-info">
+                Discount has been removed.
+            </div>`
+        );
+        
+        // Update totals
+        updateOrderTotals();
+        
+        // Mark form as having unsaved changes
+        markAsUnsaved();
+    });
+    
+    // Add a new event handler for the service charge apply button
+    $('#apply-service-charge-btn').click(function() {
+        const serviceChargePercent = parseFloat($('#serviceChargePercent').val());
+        
+        // Validate input
+        if (isNaN(serviceChargePercent) || serviceChargePercent < 0) {
+            $('#service-charge-message').html('<div class="alert alert-warning">Please enter a valid service charge percentage</div>');
+            return;
+        }
+        
+        // Clear previous messages
+        $('#service-charge-message').empty();
+        
+        // For percentage discount, validate it's not over 100%
+        if (serviceChargePercent > 100) {
+            $('#service-charge-message').html('<div class="alert alert-warning">Service charge percentage cannot exceed 100%</div>');
+            return;
+        }
+        
+        // Apply the service charge
+        $('#serviceChargePercent').val(serviceChargePercent.toFixed(1));
+        
+        // Show success message
+        $('#service-charge-message').html(
+            `<div class="alert alert-success">
+                Service charge updated to ${serviceChargePercent.toFixed(1)}%.
+            </div>`
+        );
+        
+        // Update totals
+        updateOrderTotals();
+        
+        // Mark form as having unsaved changes
+        markAsUnsaved();
+    });
+    
+    // Initialize order totals and service charge display on page load
+    updateOrderTotals();
+    
+    // Admin Password Verification for Order Item Deletion
+    let pendingDeleteAction = null;
+    
+    // Override the delete item functions to check for password requirement
+    function deleteItemWithPasswordCheck(itemId, deleteMode = 'all', reduceBy = 1) {
+        // Store the pending action
+        pendingDeleteAction = {
+            itemId: itemId,
+            deleteMode: deleteMode,
+            reduceBy: reduceBy
+        };
+        
+        // Check if user has password permission
+        const hasPasswordPermission = {{ user_permissions.can_edit_orders_with_password|yesno:"true,false" }};
+        console.log('Password permission check:', hasPasswordPermission);
+        console.log('Pending delete action:', pendingDeleteAction);
+        
+        if (hasPasswordPermission) {
+            // Show password verification modal
+            console.log('Showing password modal');
+            $('#adminPasswordModal').modal('show');
+        } else {
+            // Proceed with normal deletion
+            console.log('No password required, proceeding with delete');
+            executeDeleteAction();
+        }
+    }
+    
+    function executeDeleteAction() {
+        if (!pendingDeleteAction) return;
+        
+        const { itemId, deleteMode, reduceBy } = pendingDeleteAction;
+        
+        // Prepare the form data
+        const formData = new FormData();
+        formData.append('delete_mode', deleteMode);
+        if (deleteMode === 'reduce') {
+            formData.append('reduce_by', reduceBy);
+        }
+        formData.append('csrfmiddlewaretoken', $('[name=csrfmiddlewaretoken]').val());
+        
+        // Make the AJAX request
+        $.ajax({
+            url: `/orders/{{ order.id }}/delete-item/${itemId}/`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.status === 'password_required') {
+                    // Show password modal
+                    $('#adminPasswordModal').modal('show');
+                } else if (response.status === 'success') {
+                    // Handle UI updates similar to the original delete functionality
+                    const $tr = $('#orderItemsTable tr[data-item-id="' + itemId + '"]');
+                    
+                    if (deleteMode === 'all') {
+                        // Mark the item as to be deleted
+                        $tr.addClass('table-danger text-decoration-line-through');
+                        $tr.find('button').attr('disabled', true);
+                        $tr.find('.restore-item').attr('disabled', false);
+                        
+                        // Add to changes list
+                        const originalQuantity = parseFloat($tr.find('.item-quantity').data('original'));
+                        itemChanges[itemId] = {
+                            delete: true,
+                            originalQuantity: originalQuantity
+                        };
+                        
+                        // Hide the row for better UX
+                        $tr.hide('slow');
+                    } else {
+                        // For reduce mode, update the UI similar to original decrease functionality
+                        const $tr = $('#orderItemsTable tr[data-item-id="' + itemId + '"]');
+                        const quantitySpan = $('#quantity-' + itemId);
+                        const currentQty = parseFloat(quantitySpan.text().trim());
+                        const originalQty = parseFloat(quantitySpan.data('original'));
+                        const newQty = currentQty - reduceBy;
+                        
+                        if (newQty > 0) {
+                            // Update quantity display
+                            quantitySpan.text(newQty);
+                            
+                            if (newQty !== originalQty) {
+                                quantitySpan.addClass('text-danger fw-bold');
+                                if (quantitySpan.find('small').length === 0) {
+                                    quantitySpan.append('<small class="text-muted d-block" style="font-size: 10px;">was ' + originalQty + '</small>');
+                                }
+                                $tr.addClass('table-warning');
+                                
+                                // Update changes tracking
+                                itemChanges[itemId] = {
+                                    quantity: newQty,
+                                    originalQuantity: originalQty,
+                                    delete: false
+                                };
+                            } else {
+                                quantitySpan.removeClass('text-danger fw-bold');
+                                quantitySpan.find('small').remove();
+                                $tr.removeClass('table-warning');
+                                delete itemChanges[itemId];
+                            }
+                        } else {
+                            // If quantity would be 0 or less, mark for deletion
+                            $tr.addClass('table-danger text-decoration-line-through');
+                            $tr.find('button').attr('disabled', true);
+                            $tr.find('.restore-item').attr('disabled', false);
+                            
+                            itemChanges[itemId] = {
+                                delete: true,
+                                originalQuantity: originalQty
+                            };
+                            
+                            $tr.hide('slow');
+                        }
+                    }
+                    
+                    // Show success message
+                    showNotification(response.message, 'success');
+                    
+                    // Update totals and mark changes
+                    updateOrderTotals();
+                    markAsUnsaved();
+                } else {
+                    showNotification(response.message || 'Error deleting item', 'error');
+                }
+            },
+            error: function(xhr) {
+                showNotification('Error deleting item', 'error');
+            }
+        });
+        
+        // Clear pending action
+        pendingDeleteAction = null;
+    }
+    
+    // Verify admin password
+    $('#verifyPasswordBtn').click(function() {
+        const password = $('#adminPassword').val();
+        
+        if (!password) {
+            $('#passwordError').text('Please enter admin password').show();
+            return;
+        }
+        
+        // Show loading
+        $('#verifyPasswordBtn').prop('disabled', true).text('Verifying...');
+        $('#passwordError').hide();
+        
+        // Verify password
+        $.ajax({
+            url: '/api/verify-admin-password/',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ password: password }),
+            success: function(response) {
+                if (response.success) {
+                    // Hide modal and execute the pending action
+                    $('#adminPasswordModal').modal('hide');
+                    $('#adminPassword').val('');
+                    executeDeleteAction();
+                } else {
+                    $('#passwordError').text(response.message || 'Invalid password').show();
+                }
+            },
+            error: function(xhr) {
+                $('#passwordError').text('Error verifying password').show();
+            },
+            complete: function() {
+                $('#verifyPasswordBtn').prop('disabled', false).text('Verify Password');
+            }
+        });
+    });
+    
+    // Clear password modal when hidden
+    $('#adminPasswordModal').on('hidden.bs.modal', function() {
+        $('#adminPassword').val('');
+        $('#passwordError').hide();
+        pendingDeleteAction = null;
+    });
+    
+    // Update existing delete button click handlers
+    $(document).on('click', '.delete-item', function(e) {
+        e.preventDefault();
+        const itemId = $(this).data('item-id');
+        console.log('Delete button clicked for item:', itemId);
+        deleteItemWithPasswordCheck(itemId, 'all');
+    });
+    
+    $(document).on('click', '.decrease-item', function(e) {
+        e.preventDefault();
+        const itemId = $(this).data('item-id');
+        console.log('Decrease button clicked for item:', itemId);
+        deleteItemWithPasswordCheck(itemId, 'reduce', 1);
+    });
+});
+
+// Admin Password Verification Modal
+function showAdminPasswordModal() {
+    $('#adminPasswordModal').modal('show');
+}
+</script>
+
+<!-- Admin Password Verification Modal -->
+<div class="modal fade" id="adminPasswordModal" tabindex="-1" role="dialog" aria-labelledby="adminPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="adminPasswordModalLabel">
+                    <i class="fas fa-key"></i> Admin Password Required
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Admin password verification is required for deleting/reducing order items.</p>
+                <div class="form-group">
+                    <label for="adminPassword">Admin Password:</label>
+                    <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password">
+                    <div id="passwordError" class="text-danger mt-2" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="verifyPasswordBtn">
+                    <i class="fas fa-key"></i> Verify Password
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 

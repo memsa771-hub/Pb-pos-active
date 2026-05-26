@@ -1,0 +1,464 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Summary Report #{{ start_date|date:"Ymd" }}-{{ end_date|date:"Ymd" }}</title>
+    <style>
+        @page {
+            size: 70mm auto;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: "Courier New", Arial, monospace;
+            font-size: 10px;
+            line-height: 1.1;
+            width: 68mm;
+            margin: 0 auto;
+            padding: 0;
+            background-color: white;
+            color: black;
+            letter-spacing: 0.01em;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .receipt {
+            width: 100%;
+            max-width: 68mm;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .header h1 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0 0 2px 0;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+        .report-info {
+            margin: 6px 0;
+            font-size: 10px;
+        }
+        .report-info p {
+            margin: 2px 0;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            margin: 4px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 2px 0;
+        }
+        th {
+            font-weight: bold;
+        }
+        .right {
+            text-align: right;
+        }
+        .center {
+            text-align: center;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+        h2 {
+            font-size: 11px !important;
+            margin: 6px 0 3px 0 !important;
+            text-decoration: underline;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 9px;
+            padding-top: 4px;
+            border-top: 1px dashed #000;
+        }
+        .footer p {
+            margin: 2px 0;
+        }
+        .small-text {
+            font-size: 8px;
+            color: #000;
+            font-style: italic;
+        }
+        .negative-amount {
+            color: #000;
+            font-weight: bold;
+        }
+        .print-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+        }
+        .section-box {
+            border: 1px solid #000;
+            padding: 4px;
+            margin: 6px 0;
+            border-radius: 2px;
+        }
+        @media print {
+            body, html {
+                width: 70mm;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .receipt {
+                width: 68mm;
+                max-width: 68mm;
+                margin: 0 auto;
+                box-shadow: none;
+                border: none;
+                padding: 1mm;
+                min-height: auto !important;
+            }
+            nav, .sidebar, .main-content, .navbar, .notification-container {
+                display: none !important;
+            }
+            .receipt, .receipt * {
+                page-break-inside: avoid !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+            }
+            .divider, .section-box {
+                border-color: #000 !important;
+            }
+            .negative-amount, body, table, th, td, h1, h2, p {
+                color: #000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                -webkit-text-fill-color: #000 !important;
+                text-fill-color: #000 !important;
+            }
+            th, td, h2, .total-row, .report-info p {
+                font-weight: bold !important;
+            }
+            /* Thermal printer specific optimizations */
+            * {
+                text-rendering: optimizeSpeed !important;
+                -webkit-font-smoothing: none !important;
+                -moz-osx-font-smoothing: unset !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print controls - hidden when printing -->
+    {% comment %} <div class="print-controls">
+        <button onclick="window.print()"><i class="fas fa-print"></i> Print Receipt</button>
+        <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
+    </div> {% endcomment %}
+    
+    <div class="receipt">
+        <!-- Header -->
+        <div class="header">
+            {% if receipt_show_logo and business_logo %}
+            <div class="logo">
+                <img src="{{ business_logo }}" alt="{{ business_name }} Logo" style="max-width: 100%; max-height: 50px; margin-bottom: 8px;">
+            </div>
+            {% endif %}
+            <h1>{{ business_name|upper }}</h1>
+            {% if business_address %}<p>{{ business_address }}</p>{% endif %}
+            {% if business_phone %}<p>Tel: {{ business_phone }}</p>{% endif %}
+            
+            {% if receipt_header %}
+            <div class="receipt-header-text">
+                {{ receipt_header|linebreaks }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Report Info -->
+        <div class="report-info section-box">
+            <p style="font-size: 15px; text-align: center; margin-bottom: 6px;">
+                {% if filtered_user %}USER SALES REPORT{% else %}SALES SUMMARY REPORT{% endif %}
+            </p>
+            {% if filtered_user %}
+            <p style="text-align: center; margin-bottom: 6px;">
+                <strong>{{ filtered_user.get_full_name|default:filtered_user.username }}</strong>
+            </p>
+            {% endif %}
+            <p>Start: {{ start_date|pkt_datetime }}</p>
+            <p>End: {{ end_date|pkt_datetime }}</p>
+            <p>Printed: {{ now|pkt_datetime }}</p>
+            {% if request.user %}<p>Staff: {{ request.user.username }}</p>{% endif %}
+        </div>
+        
+        <!-- Sales -->
+        <h2>SALES SUMMARY</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Total Orders:</td>
+                    <td class="right"><strong>{{ completed_orders.count }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Completed Sales:</td>
+                    <td class="right"><strong>{{ currency_symbol }} {{ total_sales|floatformat:2 }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Service Charges:</td>
+                    <td class="right">{{ currency_symbol }} {{ total_service_charge|floatformat:2 }}</td>
+                </tr>
+
+            </tbody>
+        </table>
+        
+        <div class="divider"></div>
+        
+        <!-- Order Type Breakdown -->
+        <h2>ORDER TYPE BREAKDOWN</h2>
+        <div class="section-box">
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>Take Away:</strong></td>
+                        <td class="right">{{ takeaway_stats.count }} orders</td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ takeaway_stats.total_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dine In:</strong></td>
+                        <td class="right">{{ dinein_stats.count }} orders</td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ dinein_stats.total_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Delivery:</strong></td>
+                        <td class="right">{{ delivery_stats.count }} orders</td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ delivery_stats.total_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Delivery Person Breakdown -->
+        {% if delivery_person_stats %}
+        <h2>DELIVERY PERSON BREAKDOWN</h2>
+        <div class="section-box">
+            <table>
+                <tbody>
+                    {% for delivery_person in delivery_person_stats %}
+                    <tr>
+                        <td><strong>{{ delivery_person.delivery_person__name }}:</strong></td>
+                        <td class="right">{{ delivery_person.order_count }} orders</td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ delivery_person.total_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="divider"></div>
+        {% endif %}
+        
+        <!-- Adjustments -->
+        <h2>ADJUSTMENTS</h2>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Bill Adjustments:</td>
+                    <td class="right">{{ currency_symbol }} {{ total_bill_adjustments|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td>Advance Adjustments:</td>
+                    <td class="right">{{ currency_symbol }} {{ total_advance_adjustments|floatformat:2 }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Total Adjustments:</td>
+                    <td class="right"><strong>{{ currency_symbol }} {{ total_adjustments|floatformat:2 }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="divider"></div>
+        
+        <!-- Net Revenue -->
+        <h2>NET REVENUE CALCULATION</h2>
+        <div class="section-box">
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>Gross Sales:</strong></td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ total_sales|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 8px;">Less: Service Charges</td>
+                        <td class="right">-{{ currency_symbol }} {{ total_service_charge|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 8px;">Less: Discounts Given</td>
+                        <td class="right">-{{ currency_symbol }} {{ total_discounts|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 8px;">Less: Bill Adjustments</td>
+                        <td class="right">-{{ currency_symbol }} {{ total_bill_adjustments|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 8px;">Less: Advance Adjustments</td>
+                        <td class="right">-{{ currency_symbol }} {{ total_advance_adjustments|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 8px;">Less: Delivery Charges</td>
+                        <td class="right">-{{ currency_symbol }} {{ total_delivery_charges|floatformat:2 }}</td>
+                    </tr>
+                    <tr style="border-top: 2px solid #000; margin-top: 4px;" class="total-row">
+                        <td style="font-size: 14px;"><strong>NET REVENUE:</strong></td>
+                        <td class="right" style="font-size: 14px;"><strong>{{ currency_symbol }} {{ net_revenue|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% if is_shortage %}
+                    <tr>
+                        <td style="color: red;"><strong>SHORT AMOUNT:</strong></td>
+                        <td class="right negative-amount"><strong>{{ currency_symbol }} {{ shortage_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Detailed Financial Activity Breakdown -->
+        <h2>FINANCIAL ACTIVITY BREAKDOWN</h2>
+        <div class="section-box">
+            <table>
+                <tbody>
+                    <tr>
+                        <td colspan="2" style="font-weight: bold; text-decoration: underline;">REVENUE SOURCES</td>
+                    </tr>
+                    <tr>
+                        <td>Take Away Sales:</td>
+                        <td class="right">{{ currency_symbol }} {{ takeaway_stats.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Dine In Sales:</td>
+                        <td class="right">{{ currency_symbol }} {{ dinein_stats.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Delivery Sales:</td>
+                        <td class="right">{{ currency_symbol }} {{ delivery_stats.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>Total Revenue:</strong></td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ total_sales|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="font-weight: bold; text-decoration: underline;">DEDUCTIONS</td>
+                    </tr>
+                    <tr>
+                        <td>Service Charges:</td>
+                        <td class="right">{{ currency_symbol }} {{ total_service_charge|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Customer Discounts:</td>
+                        <td class="right">{{ currency_symbol }} {{ total_discounts|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Bill Adjustments:</td>
+                        <td class="right">{{ currency_symbol }} {{ total_bill_adjustments|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Advance Adjustments:</td>
+                        <td class="right">{{ currency_symbol }} {{ total_advance_adjustments|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Delivery Charges:</td>
+                        <td class="right">{{ currency_symbol }} {{ total_delivery_charges|floatformat:2 }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>Total Deductions:</strong></td>
+                        <td class="right"><strong>{{ currency_symbol }} {{ total_deductions|floatformat:2 }}</strong></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Products Sold -->
+        <h2>PRODUCTS SOLD</h2>
+        {% if products_sold %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ITEM</th>
+                    <th class="right">QTY</th>
+                    <th class="right">AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="3" class="divider"></td></tr>
+                {% for product in products_sold %}
+                <tr>
+                    <td>{{ product.product__name }}</td>
+                    <td class="right"><strong>{% if product.total_quantity %}{{ product.total_quantity }}{% else %}-{% endif %}</strong></td>
+                    <td class="right">{{ currency_symbol }} {{ product.total_sales|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+                <tr><td colspan="3" class="divider"></td></tr>
+            </tbody>
+        </table>
+        {% else %}
+        <p class="center">No products sold in this period.</p>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="footer">
+            {% if receipt_footer %}
+                {{ receipt_footer|linebreaks }}
+            {% else %}
+                <p>Thank you for your business!</p>
+            {% endif %}
+            
+            <p class="small-text">{{ now|pkt_datetime }} | POS System</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            window.print();
+            
+            {% if redirect_to %}
+            // Set up event listener for after print dialog closes
+            window.addEventListener('afterprint', function() {
+                // Redirect to the specified page after printing
+                window.location.href = '{% url redirect_to %}';
+            });
+            
+            // Fallback: If afterprint event doesn't fire, redirect after a delay
+            setTimeout(function() {
+                window.location.href = '{% url redirect_to %}';
+            }, 2000);
+            {% endif %}
+        }
+    </script>
+</body>
+</html> 

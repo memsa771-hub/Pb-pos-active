@@ -1,0 +1,261 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Active Sessions - POS System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .session-card {
+        transition: all 0.2s;
+        border-radius: 8px;
+    }
+    .session-card:hover {
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+        transform: translateY(-2px);
+    }
+    .online-indicator {
+        width: 10px;
+        height: 10px;
+        background-color: #28a745;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+    .role-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .session-info {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .force-logout-btn {
+        transition: all 0.2s;
+    }
+    .force-logout-btn:hover {
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-users-cog me-2"></i>Active Sessions with Today's Orders</h2>
+            <p class="text-muted mb-0">Monitor currently logged-in users and their order activity 
+                {% if last_end_day %}
+                    since last end day ({{ last_end_day.end_date|date:"M j, g:i A" }})
+                {% else %}
+                    for today
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-6">
+                <i class="fas fa-circle online-indicator me-1"></i>
+                {{ total_active }} Active User{{ total_active|pluralize }}
+            </span>
+            <a href="{% url 'user_list' %}" class="btn btn-secondary ms-2">
+                <i class="fas fa-arrow-left me-1"></i> Back to Users
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if active_users %}
+        <div class="row g-4">
+            {% for user_session in active_users %}
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <div class="card session-card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-container me-3">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                            <span class="fw-bold">{{ user_session.user.first_name|first|upper }}{{ user_session.user.last_name|first|upper }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <span class="online-indicator"></span>
+                                            {{ user_session.user.get_full_name|default:user_session.user.username }}
+                                        </h5>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <small class="text-muted me-2">@{{ user_session.user.username }}</small>
+                                            {% if user_session.user.is_superuser or user_session.user.is_staff %}
+                                                <span class="badge bg-danger role-badge">Admin</span>
+                                            {% elif user_session.user.profile.role %}
+                                                <span class="badge 
+                                                    {% if user_session.user.profile.role.name == 'Admin' %}bg-danger
+                                                    {% elif user_session.user.profile.role.name == 'Branch Manager' %}bg-warning
+                                                    {% else %}bg-info{% endif %} role-badge">
+                                                    {{ user_session.user.profile.role.name }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary role-badge">No Role</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if user_session.user != request.user %}
+                                <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to force logout this user?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="force_logout" value="1">
+                                    <input type="hidden" name="user_id" value="{{ user_session.user.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm force-logout-btn" title="Force Logout">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Today's Orders Section -->
+                            <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+                                <h6 class="text-primary mb-2">
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    Today's Orders 
+                                    {% if last_end_day %}
+                                        <small class="text-muted">(Since {{ last_end_day.end_date|date:"M j, g:i A" }})</small>
+                                    {% endif %}
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <div class="h5 mb-1 text-primary">{{ user_session.orders_today }}</div>
+                                            <small class="text-muted">Total Orders</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <div class="h5 mb-1 text-success">Rs. {{ user_session.revenue_today|floatformat:0 }}</div>
+                                            <small class="text-muted">Revenue</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-2 mt-1">
+                                    <div class="col-4">
+                                        <div class="text-center">
+                                            <div class="small text-success">{{ user_session.completed_orders_today }}</div>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Completed</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-center">
+                                            <div class="small text-warning">{{ user_session.pending_orders_today }}</div>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Pending</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-center">
+                                            <div class="small text-danger">{{ user_session.cancelled_orders_today }}</div>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Cancelled</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="session-info">
+                                <div class="mb-2">
+                                    <i class="fas fa-clock me-2"></i>
+                                    <strong>Login Time:</strong> {{ user_session.login_time|pkt_datetime }}
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-history me-2"></i>
+                                    <strong>Last Activity:</strong> {{ user_session.last_activity|timesince }} ago
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    <strong>IP Address:</strong> {{ user_session.ip_address|default:"Unknown" }}
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-desktop me-2"></i>
+                                    <strong>Session ID:</strong> 
+                                    <code class="text-muted">{{ user_session.session_key|slice:":8" }}...</code>
+                                </div>
+                                {% if user_session.user_agent %}
+                                <div class="mb-0">
+                                    <i class="fas fa-browser me-2"></i>
+                                    <strong>Browser:</strong>
+                                    <small class="text-truncate d-block" title="{{ user_session.user_agent }}">
+                                        {{ user_session.user_agent|truncatechars:40 }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer bg-light border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    {% if user_session.user == request.user %}
+                                        <i class="fas fa-user-check text-success me-1"></i>
+                                        Your current session
+                                    {% else %}
+                                        <i class="fas fa-user text-primary me-1"></i>
+                                        Remote session
+                                    {% endif %}
+                                </small>
+                                <a href="{% url 'user_detail' user_session.user.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i> View User
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-4 text-center">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> This system enforces single login per user. When a user logs in from a new device/browser, their previous session will be automatically terminated.
+            </div>
+        </div>
+        
+    {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-users-slash fa-5x text-muted"></i>
+            </div>
+            <h4 class="text-muted">No Active Sessions</h4>
+            <p class="text-muted">No users are currently logged in to the system.</p>
+            <a href="{% url 'user_list' %}" class="btn btn-primary">
+                <i class="fas fa-users me-1"></i> Manage Users
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Auto-refresh the page every 30 seconds to show current active sessions
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Show a subtle notification that auto-refresh is enabled
+document.addEventListener('DOMContentLoaded', function() {
+    // Add auto-refresh indicator
+    const indicator = document.createElement('div');
+    indicator.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Auto-refreshing every 30 seconds';
+    indicator.className = 'text-muted small position-fixed bottom-0 end-0 p-3';
+    indicator.style.zIndex = '1000';
+    document.body.appendChild(indicator);
+});
+</script>
+{% endblock %} 

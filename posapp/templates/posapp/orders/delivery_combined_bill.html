@@ -1,0 +1,369 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Delivery Bill - {{ delivery_person.name }}</title>
+    <style>
+        @page {
+            size: 70mm auto;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: "Courier New", "Arial", monospace;
+            font-size: 11px;
+            width: 68mm;
+            margin: 0 auto;
+            padding: 0;
+            background-color: white;
+            color: black;
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .receipt {
+            width: 100%;
+            max-width: 68mm;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .header h1 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0 0 3px 0;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+            clear: both;
+        }
+        .delivery-info {
+            margin: 6px 0;
+            font-size: 10px;
+        }
+        .delivery-info p {
+            margin: 2px 0;
+            line-height: 1.2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin: 4px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 2px 1px;
+            font-weight: normal;
+        }
+        th {
+            font-weight: bold;
+        }
+        .right {
+            text-align: right;
+        }
+        .center {
+            text-align: center;
+        }
+        .total-row {
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .highlight {
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 9px;
+        }
+        .footer p {
+            margin: 2px 0;
+        }
+        .small-text {
+            font-size: 9px;
+            color: #000;
+            font-style: italic;
+        }
+        .print-controls {
+            display: block;
+            margin-bottom: 15px;
+        }
+        .print-controls button {
+            padding: 8px 16px;
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .print-controls button i {
+            margin-right: 5px;
+        }
+        .print-controls button:hover {
+            background-color: #2e59d9;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .order-header {
+            font-weight: bold;
+            font-size: 11px;
+            margin: 4px 0 2px 0;
+        }
+        @media print {
+            body, html {
+                width: 70mm;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .receipt {
+                width: 68mm;
+                max-width: 68mm;
+                margin: 0 auto;
+                box-shadow: none;
+                border: none;
+                padding: 1mm;
+            }
+            .print-controls, nav, .sidebar, .main-content, .navbar {
+                display: none !important;
+            }
+            .receipt, .receipt * {
+                page-break-inside: avoid !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+            }
+            body, table, .small-text, th, td, p, h1 {
+                color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                -webkit-text-fill-color: black !important;
+                text-fill-color: black !important;
+            }
+            .divider {
+                border-top: 1px dashed #000 !important;
+            }
+            .bold, .total-row, .highlight, th {
+                font-weight: bold !important;
+            }
+            * {
+                text-rendering: optimizeSpeed !important;
+                -webkit-font-smoothing: none !important;
+                -moz-osx-font-smoothing: unset !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print controls - hidden when printing -->
+    <div class="print-controls">
+        <button onclick="window.print()">
+            <i class="fas fa-print"></i> Print Combined Bill
+        </button>
+    </div>
+
+    <div class="receipt">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ business_name }}</h1>
+            {% if business_address %}<p>{{ business_address }}</p>{% endif %}
+            {% if business_phone %}<p>Tel: {{ business_phone }}</p>{% endif %}
+            {% if business_email %}<p>{{ business_email }}</p>{% endif %}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Delivery Info -->
+        <div class="delivery-info">
+            <p class="bold center">COMBINED DELIVERY BILL</p>
+            <p>Delivery Person: {{ delivery_person.name }}</p>
+            {% if delivery_person.phone %}
+            <p>Contact: {{ delivery_person.phone }}</p>
+            {% endif %}
+            <p>Date: {{ orders.first.created_at|pkt_date }}</p>
+            <p>Total Orders: {{ total_orders }}</p>
+            <p>Generated: {% now "Y-m-d H:i" %}</p>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Detailed Orders -->
+        {% for order in orders %}
+        <div class="order-header">ORDER #{{ order.reference_number }}</div>
+        
+        <!-- Order Info -->
+        <div class="delivery-info">
+            <p>Time: {{ order.created_at|pkt_time }} | Status: {{ order.order_status }}</p>
+            {% if order.customer_name %}
+            <p>Customer: {{ order.customer_name }}</p>
+            {% endif %}
+            {% if order.customer_phone %}
+            <p>Phone: {{ order.customer_phone }}</p>
+            {% endif %}
+            {% if order.delivery_address %}
+            <p>Address: {{ order.delivery_address }}</p>
+            {% endif %}
+            {% if order.notes %}
+            <p>Notes: {{ order.notes }}</p>
+            {% endif %}
+        </div>
+        
+        <!-- Order Items Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ITEM</th>
+                    <th class="right">QTY</th>
+                    <th class="right">PRICE</th>
+                    <th class="right">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4" class="divider"></td></tr>
+                {% for order_item in order.orderitem_set.all %}
+                <tr>
+                    <td>{{ order_item.product.name }}</td>
+                    <td class="right bold">{{ order_item.quantity|stringformat:"g" }}</td>
+                    <td class="right">Rs{{ order_item.unit_price|floatformat:2 }}</td>
+                    <td class="right bold">Rs{{ order_item.unit_price|mul:order_item.quantity|floatformat:2 }}</td>
+                </tr>
+                {% if order_item.notes %}
+                <tr>
+                    <td colspan="4" class="small-text">Note: {{ order_item.notes }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                <tr><td colspan="4" class="divider"></td></tr>
+            </tbody>
+            <tfoot>
+                <!-- Order Calculations -->
+                <tr>
+                    <td colspan="3">Subtotal:</td>
+                    <td class="right">Rs:{{ order.subtotal|floatformat:2 }}</td>
+                </tr>
+                {% if order.discount_amount and order.discount_amount > 0 %}
+                <tr>
+                    <td colspan="3">Discount:</td>
+                    <td class="right">-Rs:{{ order.discount_amount|floatformat:2 }}</td>
+                </tr>
+                {% if order.discount %}
+                <tr>
+                    <td colspan="4" class="small-text">{{ order.discount.name }} ({{ order.discount.type }} - {{ order.discount.value }}{% if order.discount.type == 'Percentage' %}%{% endif %})</td>
+                </tr>
+                {% elif order.discount_code == 'MANUAL' %}
+                <tr>
+                    <td colspan="4" class="small-text">Manual Discount: {{ order.discount_value }}{% if order.discount_type == 'percentage' %}%{% else %} Rs.{% endif %}</td>
+                </tr>
+                {% endif %}
+                {% endif %}
+                {% if order.tax_amount and order.tax_amount > 0 %}
+                <tr>
+                    <td colspan="3">Tax:</td>
+                    <td class="right">Rs:{{ order.tax_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                {% if order.delivery_charges and order.delivery_charges > 0 %}
+                <tr>
+                    <td colspan="3">Delivery Charges:</td>
+                    <td class="right">Rs:{{ order.delivery_charges|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                {% if order.service_charge_amount and order.service_charge_amount > 0 %}
+                <tr>
+                    <td colspan="3">Service Charge ({{ order.service_charge_percent }}%):</td>
+                    <td class="right">Rs:{{ order.service_charge_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                <tr class="highlight">
+                    <td colspan="3">ORDER TOTAL:</td>
+                    <td class="right">Rs:{{ order.total_amount|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        {% if order.payment_method == 'Cash' and order.cash_given %}
+        <div class="delivery-info">
+            <p>Payment: {{ order.payment_method }}</p>
+            <p>Cash Given: Rs:{{ order.cash_given|floatformat:2 }}</p>
+            {% if order.change_amount and order.change_amount > 0 %}
+            <p>Change: Rs:{{ order.change_amount|floatformat:2 }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="divider"></div>
+        
+        {% endfor %}
+        
+        <!-- Grand Total Summary -->
+        <table>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3">TOTAL ORDERS:</td>
+                    <td class="right">{{ total_orders }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="3">TOTAL ITEMS:</td>
+                    <td class="right">{{ all_items|length }}</td>
+                </tr>
+                <tr class="highlight">
+                    <td colspan="3">GRAND TOTAL:</td>
+                    <td class="right">Rs:{{ total_amount|floatformat:2 }}</td>
+                </tr>
+                {% if total_delivery_charges > 0 %}
+                <tr>
+                    <td colspan="3">Total Delivery Charges:</td>
+                    <td class="right">-Rs:{{ total_delivery_charges|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                {% if commission_percentage > 0 %}
+                <tr>
+                    <td colspan="3">Commission ({{ commission_percentage }}%):</td>
+                    <td class="right">-Rs:{{ commission_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                {% if commission_percentage > 0 or total_delivery_charges > 0 %}
+                <tr class="total-row highlight">
+                    <td colspan="3">FINAL AMOUNT:</td>
+                    <td class="right">Rs:{{ final_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+            </tfoot>
+        </table>
+        
+        <div class="divider"></div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>Delivery Person: {{ delivery_person.name }}</p>
+            <p>Combined Bill Generated</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html> 

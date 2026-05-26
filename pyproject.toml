@@ -1,0 +1,35 @@
+[project]
+name = "pos-system"
+version = "0.1.0"
+description = "POS System (DRF-based)"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "Django==4.2.7",
+    "djangorestframework==3.14.0",
+    "django-cors-headers==4.3.0",
+    "django-crispy-forms==2.0",
+    "crispy-bootstrap5==0.7",
+    "django-filter==23.3",
+    "djangorestframework-simplejwt>=5.3.1",
+    "drf-yasg>=1.21.7",
+    "gunicorn==21.2.0",
+    "whitenoise==6.5.0",
+    "pillow==10.4.0",
+    "pandas>=2.2.3",
+    "openpyxl==3.1.2",
+    "python-dateutil==2.8.2",
+    "pytz==2023.3",
+    "reportlab==4.0.7",
+    "mysqlclient>=2.2.7",
+    "python-decouple>=3.8",
+    "django-widget-tweaks>=1.5.0",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = { include = ["posproject", "posapp"] }

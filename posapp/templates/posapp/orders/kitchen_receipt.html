@@ -1,0 +1,220 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Order #{{ order.reference_number }}</title>
+    <style>
+        @page {
+            size: 70mm auto;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: "Courier New", "Arial", monospace;
+            font-size: 12px;
+            width: 68mm;
+            margin: 0 auto;
+            padding: 1mm;
+            background-color: white;
+            color: #000000;
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .receipt {
+            width: 100%;
+            max-width: 68mm;
+            color: #000000;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 8px;
+            color: #000000;
+        }
+        .header h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+            color: #000000;
+        }
+        .header p {
+            font-size: 11px;
+            font-weight: bold;
+            margin: 2px 0;
+            color: #000000;
+        }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+            clear: both;
+        }
+        .item-block {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+            padding: 4px;
+            border: 1px solid #000;
+            background-color: white;
+            color: #000000;
+        }
+        .item-qty {
+            font-weight: bold;
+            font-size: 14px;
+            color: #000000;
+            min-width: 30px;
+            text-align: center;
+            margin-right: 8px;
+            border-right: 1px solid #000;
+            padding-right: 8px;
+        }
+        .item-name {
+            font-weight: bold;
+            font-size: 11px;
+            color: #000000;
+            flex: 1;
+        }
+        .print-controls {
+            display: block;
+            margin-bottom: 15px;
+        }
+        .print-controls button, .print-controls a {
+            padding: 8px 16px;
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .print-controls button i, .print-controls a i {
+            margin-right: 5px;
+        }
+        .print-controls button:hover, .print-controls a:hover {
+            background-color: #2e59d9;
+        }
+        @media print {
+            body, html {
+                width: 70mm;
+                margin: 0;
+                padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color: #000000 !important;
+            }
+            .receipt {
+                width: 68mm;
+                max-width: 68mm;
+                margin: 0 auto;
+                box-shadow: none;
+                border: none;
+                padding: 1mm;
+                color: #000000 !important;
+            }
+            .print-controls, nav, .sidebar, .main-content, .navbar, .notification-container {
+                display: none !important;
+            }
+            .receipt, .receipt * {
+                page-break-inside: avoid !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+                color: #000000 !important;
+            }
+            body, h1, p, .item-name, .item-qty {
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                -webkit-text-fill-color: #000000 !important;
+                text-fill-color: #000000 !important;
+            }
+            .divider, .item-block {
+                border-color: #000 !important;
+            }
+            .item-name, .item-qty, h1, .header p {
+                font-weight: bold !important;
+            }
+            /* Thermal printer specific optimizations */
+            * {
+                text-rendering: optimizeSpeed !important;
+                -webkit-font-smoothing: none !important;
+                -moz-osx-font-smoothing: unset !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print controls - hidden when printing -->
+    <div class="print-controls">
+        {% if auto_print %}
+        <button onclick="window.print()"><i class="fas fa-print"></i> Print Additional Items</button>
+        <a href="{{ redirect_url }}"><i class="fas fa-arrow-left"></i> Back to Order</a>
+        {% else %}
+        <button onclick="window.print()"><i class="fas fa-print"></i> Print Kitchen Copy</button>
+        <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
+        {% endif %}
+    </div>
+    
+    <div class="receipt">
+        <!-- Header -->
+        <div class="header">
+            {% if is_additional %}
+            <h1>ADDITIONAL ITEMS</h1>
+            <p>Order {{ order.daily_order_number }}</p>
+            {% else %}
+            <h1>Order {{ order.daily_order_number }}</h1>
+            {% endif %}
+            {% if order.order_type == 'Dine In' and order.table_number %}
+            <p>Table {{ order.table_number }}</p>
+            {% elif order.order_type == 'Delivery' %}
+            <p>Delivery</p>
+            {% endif %}
+            <p>{{ order.created_at|pkt_datetime }}</p>
+            {% if is_additional %}
+            <p><strong>Added: {{ "now"|pkt_time }}</strong></p>
+            {% endif %}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Order Items in Blocks -->
+        {% for item in order_items %}
+        <div class="item-block">
+            <div class="item-qty">{{ item.quantity|stringformat:"g" }}</div>
+            <div class="item-name">{{ item.product.name }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            window.print();
+            
+            {% if auto_print %}
+            // If this was auto-triggered by order save, redirect back after printing
+            setTimeout(function() {
+                window.location.href = '{{ redirect_url }}';
+            }, 2000); // Wait 2 seconds for print dialog to appear
+            {% endif %}
+        }
+        
+        {% if auto_print %}
+        // Also redirect after print dialog is closed
+        window.addEventListener('afterprint', function() {
+            setTimeout(function() {
+                window.location.href = '{{ redirect_url }}';
+            }, 500);
+        });
+        {% endif %}
+    </script>
+</body>
+</html> 

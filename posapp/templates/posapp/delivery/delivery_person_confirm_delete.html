@@ -1,0 +1,95 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{% url 'delivery_person_list' %}" class="btn btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-lg-8 col-md-10">
+            <div class="card shadow mb-4 border-danger">
+                <div class="card-header py-3 bg-danger text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-trash me-2"></i>Delete Delivery Person</h5>
+                        <p class="mb-0">Are you sure you want to delete <strong>"{{ delivery_person.name }}"</strong>?</p>
+                    </div>
+
+                    <!-- Delivery Person Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0 text-primary">Delivery Person Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Name:</strong></div>
+                                <div class="col-sm-8">{{ delivery_person.name }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Phone:</strong></div>
+                                <div class="col-sm-8">{{ delivery_person.phone|default:"--" }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    {% if delivery_person.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Created:</strong></div>
+                                <div class="col-sm-8">{{ delivery_person.created_at|pkt_datetime }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warning about orders -->
+                    {% if order_count > 0 %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Warning</h6>
+                            <p class="mb-0">
+                                This delivery person has <strong>{{ order_count }} order(s)</strong> associated with them. 
+                                Deleting this delivery person will remove the association but keep the orders.
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This delivery person has no orders associated with them and can be safely deleted.
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'delivery_person_list' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" 
+                                    {% if order_count > 0 %}
+                                        onclick="return confirm('This delivery person has {{ order_count }} orders. Are you sure you want to delete?')"
+                                    {% endif %}>
+                                <i class="fas fa-trash"></i> Delete Delivery Person
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

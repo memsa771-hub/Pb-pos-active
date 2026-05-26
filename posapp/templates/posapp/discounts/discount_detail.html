@@ -1,0 +1,172 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ discount.name }} - Discount Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Discount Details</h6>
+            <div>
+                <a href="{% url 'discount_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Discounts
+                </a>
+                <a href="{% url 'discount_edit' discount.id %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit me-1"></i> Edit
+                </a>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteDiscountModal">
+                    <i class="fas fa-trash me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="row">
+                <!-- Discount Information -->
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Discount Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 40%">Name:</th>
+                                        <td>{{ discount.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Code:</th>
+                                        <td><code>{{ discount.code }}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Type:</th>
+                                        <td>{{ discount.type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Value:</th>
+                                        <td>
+                                            {% if discount.type == 'Percentage' %}
+                                                {{ discount.value }}%
+                                            {% else %}
+                                                Rs.{{ discount.value }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status:</th>
+                                        <td>
+                                            {% if discount.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Valid From:</th>
+                                        <td>{{ discount.start_date|default:"Not specified" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Valid Until:</th>
+                                        <td>{{ discount.end_date|default:"Not specified" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Created:</th>
+                                        <td>{{ discount.created_at|pkt_datetime_short }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Updated:</th>
+                                        <td>{{ discount.updated_at|pkt_datetime_short }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Usage Information -->
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Recent Orders Using This Discount</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if orders %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Order #</th>
+                                                <th>Date</th>
+                                                <th>Customer</th>
+                                                <th>Total</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order in orders %}
+                                                <tr>
+                                                    <td>{{ order.reference_number }}</td>
+                                                    <td>{{ order.created_at|pkt_date }}</td>
+                                                    <td>{{ order.customer_name|default:"--" }}</td>
+                                                    <td>Rs.{{ order.total_amount }}</td>
+                                                    <td>
+                                                        <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-3">
+                                    <p class="text-muted mb-0">No orders have used this discount yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Discount Modal -->
+<div class="modal fade" id="deleteDiscountModal" tabindex="-1" aria-labelledby="deleteDiscountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteDiscountModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the discount <strong>{{ discount.name }}</strong>?
+                {% if orders %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i> This discount has been used in orders. Deleting it may affect order history.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'discount_delete' discount.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

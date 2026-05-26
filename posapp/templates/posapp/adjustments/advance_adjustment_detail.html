@@ -1,0 +1,83 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Advance Adjustment Details | POS System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Advance Adjustment Details</h1>
+        <div>
+            <a href="{% url 'advance_adjustment_edit' advance_adjustment.pk %}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> Edit
+            </a>
+            <a href="{% url 'advance_adjustment_list' %}" class="btn btn-secondary shadow-sm ml-2">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Advance Adjustment Information</h6>
+                    <div>
+                        <a href="{% url 'advance_adjustment_edit' advance_adjustment.pk %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                        {% if request.user.is_superuser or request.user.profile.role.name == 'Admin' %}
+                            {% load adjustment_tags %}
+                            {% if advance_adjustment|can_delete_adjustment %}
+                            <a href="{% url 'advance_adjustment_delete' advance_adjustment.pk %}" class="btn btn-danger btn-sm ml-2">
+                                <i class="fas fa-trash mr-1"></i> Delete
+                            </a>
+                            {% else %}
+                            <span class="btn btn-secondary btn-sm ml-2 disabled" title="Cannot delete - part of closed day">
+                                <i class="fas fa-lock mr-1"></i> Locked
+                            </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-sm text-muted">Name</p>
+                            <h5>{{ advance_adjustment.name }}</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1 text-sm text-muted">Amount</p>
+                            <h5>{{ advance_adjustment.amount }}</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1 text-sm text-muted">Date</p>
+                            <h5>{{ advance_adjustment.date|pkt_date }}</h5>
+                        </div>
+                    </div>
+
+                    {% if advance_adjustment.notes %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <p class="mb-1 text-sm text-muted">Notes</p>
+                            <p>{{ advance_adjustment.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-sm text-muted">Created By</p>
+                            <p>{{ advance_adjustment.created_by.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-sm text-muted">Created At</p>
+                            <p>{{ advance_adjustment.created_at|date:"F d, Y - H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

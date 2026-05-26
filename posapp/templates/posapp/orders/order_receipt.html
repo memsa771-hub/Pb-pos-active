@@ -1,0 +1,347 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt #{{ order.reference_number }}</title>
+    <style>
+        @page {
+            size: 70mm auto;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: "Courier New", "Arial", monospace;
+            font-size: 11px;
+            width: 68mm;
+            margin: 0 auto;
+            padding: 0;
+            background-color: white;
+            color: black;
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .receipt {
+            width: 100%;
+            max-width: 68mm;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .header h1 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0 0 3px 0;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+            clear: both;
+        }
+        .order-info {
+            margin: 6px 0;
+            font-size: 10px;
+        }
+        .order-info p {
+            margin: 2px 0;
+            line-height: 1.2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin: 4px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 2px 1px;
+            font-weight: normal;
+        }
+        th {
+            font-weight: bold;
+        }
+        .right {
+            text-align: right;
+        }
+        .center {
+            text-align: center;
+        }
+        .total-row {
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .highlight {
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 9px;
+        }
+        .footer p {
+            margin: 2px 0;
+        }
+        .small-text {
+            font-size: 9px;
+            color: #000;
+            font-style: italic;
+        }
+        .print-controls {
+            display: block;
+            margin-bottom: 15px;
+        }
+        .print-controls button, .print-controls a {
+            padding: 8px 16px;
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .print-controls button i, .print-controls a i {
+            margin-right: 5px;
+        }
+        .print-controls button:hover, .print-controls a:hover {
+            background-color: #2e59d9;
+        }
+        .logo img {
+            max-width: 100%;
+            max-height: 40px;
+            margin-bottom: 6px;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        @media print {
+            body, html {
+                width: 70mm;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .receipt {
+                width: 68mm;
+                max-width: 68mm;
+                margin: 0 auto;
+                box-shadow: none;
+                border: none;
+                padding: 1mm;
+            }
+            .print-controls, nav, .sidebar, .main-content, .navbar, .notification-container {
+                display: none !important;
+            }
+            .receipt, .receipt * {
+                page-break-inside: avoid !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+            }
+            body, table, .small-text, th, td, p, h1 {
+                color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                -webkit-text-fill-color: black !important;
+                text-fill-color: black !important;
+            }
+            .divider {
+                border-top: 1px dashed #000 !important;
+            }
+            .bold, .total-row, .highlight, th {
+                font-weight: bold !important;
+            }
+            /* Thermal printer specific optimizations */
+            * {
+                text-rendering: optimizeSpeed !important;
+                -webkit-font-smoothing: none !important;
+                -moz-osx-font-smoothing: unset !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print controls - hidden when printing -->
+    <div class="print-controls">
+        <button onclick="window.print()"><i class="fas fa-print"></i> Print Receipt</button>
+        <a href="{% url 'kitchen_receipt' order.id %}" target="_blank"><i class="fas fa-utensils"></i> Kitchen Copy</a>
+        <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
+    </div>
+    
+    <div class="receipt">
+        <!-- Header -->
+        <div class="header">
+            {% if receipt_show_logo and business_logo %}
+            <div class="logo">
+                <img src="{{ business_logo }}" alt="{{ business_name }} Logo">
+            </div>
+            {% endif %}
+            <h1>{{ business_name }}</h1>
+            {% if business_address %}<p>{{ business_address }}</p>{% endif %}
+            {% if business_phone %}<p>Tel: {{ business_phone }}</p>{% endif %}
+            
+            {% if receipt_header %}
+            <div class="receipt-header-text">
+                {{ receipt_header|linebreaks }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Order Info -->
+        <div class="order-info">
+            <p class="bold">ORDER #{{ order.daily_order_number }}</p>
+            <p>Receipt: {{ order.reference_number }}</p>
+                                <p>Date: {{ order.created_at|pkt_datetime }}</p>
+            {% if receipt_show_cashier %}<p>Cashier: {{ order.user.username }}</p>{% endif %}
+            <p>Status: {{ order.order_status }}</p>
+            <p>Payment: {{ order.payment_method }} ({{ order.payment_status }})</p>
+            {% if order.order_type %}<p>Order Type: {{ order.order_type }}</p>{% endif %}
+            {% if order.order_type == 'Dine In' and order.table_number %}<p class="bold">Table #: {{ order.table_number }}</p>{% endif %}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Order Items -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ITEM</th>
+                    <th class="right">QTY</th>
+                    <th class="right">PRICE</th>
+                    <th class="right">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4" class="divider"></td></tr>
+                {% for item in order_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td class="right bold">{{ item.quantity|stringformat:"g" }}</td>
+                    <td class="right">{{ item.unit_price|floatformat:2 }}</td>
+                    <td class="right bold">{{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+                <tr><td colspan="4" class="divider"></td></tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Subtotal:</td>
+                    <td class="right">{{ subtotal|floatformat:2 }}</td>
+                </tr>
+                {% if discount_amount > 0 %}
+                <tr>
+                    <td colspan="3">Discount:</td>
+                    <td class="right">{{ discount_amount|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="center small-text">
+                        {% if order.discount %}
+                            Discount: {{ order.discount.name }} ({{ order.discount.type }} - {{ order.discount.value }}{% if order.discount.type == 'Percentage' %}%{% endif %})
+                        {% elif order.discount_code == 'MANUAL' %}
+                            Manual Discount: {{ order.discount_value }}{% if order.discount_type == 'percentage' %}%{% else %} Rs.{% endif %}
+                        {% elif order.discount_code %}
+                            Discount Code: {{ order.discount_code }}
+                        {% else %}
+                            Discount Applied
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if order.tax_amount > 0 %}
+                <tr>
+                    <td colspan="3">{{ tax_name }} ({{ tax_rate }}%):</td>
+                    <td class="right">{{ order.tax_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                {% if order.order_type == 'Delivery' and order.delivery_charges > 0 %}
+                <tr>
+                    <td colspan="3">Delivery Charges:</td>
+                    <td class="right">{{ order.delivery_charges|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                {% if order.order_type == 'Dine In' and order.service_charge_amount > 0 %}
+                <tr class="highlight">
+                    <td colspan="3">Service Charge ({{ order.service_charge_percent }}%):</td>
+                    <td class="right">{{ order.service_charge_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                <tr class="total-row">
+                    <td colspan="3">TOTAL:</td>
+                    <td class="right">{{ order.total_amount|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        {% if order.payment_method == 'Cash' and order.cash_given %}
+        <div class="divider"></div>
+        
+        <!-- Cash Payment Details -->
+        <table>
+            <tbody>
+                <tr>
+                    <td colspan="3" class="bold">Cash Given:</td>
+                    <td class="right bold">{{ order.cash_given|floatformat:2 }}</td>
+                </tr>
+                {% if order.change_amount and order.change_amount > 0 %}
+                <tr>
+                    <td colspan="3" class="bold">Change:</td>
+                    <td class="right bold">{{ order.change_amount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% endif %}
+        
+        <div class="divider"></div>
+        
+        <!-- Notes if any -->
+        {% if order.notes %}
+        <div class="order-info">
+            <p><strong>Notes:</strong> {{ order.notes }}</p>
+        </div>
+        <div class="divider"></div>
+        {% endif %}
+        
+        <!-- Delivery Address if applicable -->
+        {% if order.order_type == 'Delivery' and order.delivery_address %}
+        <div class="order-info">
+            <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
+        </div>
+        <div class="divider"></div>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="footer">
+            {% if receipt_footer %}
+                {{ receipt_footer|linebreaks }}
+            {% else %}
+                <p>Thank you for your purchase!</p>
+                <p>Please come again!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html> 

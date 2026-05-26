@@ -1,0 +1,224 @@
+{% extends 'posapp/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ product.name }} - POS System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+    }
+    .product-info-item {
+        margin-bottom: 1rem;
+    }
+    .product-info-label {
+        font-weight: 600;
+        color: #555;
+    }
+    .product-actions {
+        margin-top: 2rem;
+    }
+    .no-image-placeholder {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Product Details</h2>
+        <div>
+            <a href="{% url 'product_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Products
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product Image</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if product.image %}
+                    <img src="{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" class="product-image" onerror="this.onerror=null; this.src='https://i.imgur.com/pTXpXpF.jpg';">
+                    {% else %}
+                    <div class="p-5 rounded text-center text-muted no-image-placeholder">
+                        <img src="https://i.imgur.com/pTXpXpF.jpg" alt="{{ product.name }}" class="product-image">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product Information</h6>
+                </div>
+                <div class="card-body">
+                    <h3 class="mb-4">{{ product.name }}</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="product-info-item">
+                                <div class="product-info-label">Category</div>
+                                <div>{{ product.category.name }}</div>
+                            </div>
+                            
+                            <div class="product-info-item">
+                                <div class="product-info-label">Price</div>
+                                <div>Rs.{{ product.price }}</div>
+                            </div>
+                            
+                            <div class="product-info-item">
+                                <div class="product-info-label">Product Code</div>
+                                <div>{% if product.product_code %}{{ product.product_code }}{% else %}-{% endif %}</div>
+                            </div>
+                            
+                            <div class="product-info-item">
+                                <div class="product-info-label">Stock</div>
+                                <div>
+                                    {% if product.running_item %}
+                                        <span title="Running item - unlimited stock">∞</span>
+                                    {% else %}
+                                        {{ product.stock_quantity }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="product-info-item">
+                                <div class="product-info-label">SKU</div>
+                                <div>{% if product.sku %}{{ product.sku }}{% else %}-{% endif %}</div>
+                            </div>
+                            
+                            <div class="product-info-item">
+                                <div class="product-info-label">Status</div>
+                                <div>
+                                    {% if product.is_archived %}
+                                    <span class="badge bg-secondary">Archived</span>
+                                    {% elif product.is_available %}
+                                    <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Unavailable</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-item">
+                                <div class="product-info-label">Created On</div>
+                                <div>{{ product.created_at|pkt_datetime }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if product.description %}
+                    <div class="product-info-item mt-3">
+                        <div class="product-info-label">Description</div>
+                        <div>{{ product.description }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="product-actions">
+                        <a href="{% url 'product_edit' product.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </a>
+                        
+                        {% if product.is_archived %}
+                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#archiveModal">
+                            <i class="fas fa-box-open me-1"></i> Restore Product
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#archiveModal" style="background-color: #3b7dd8; border-color: #3b7dd8;">
+                            <i class="fas fa-archive me-1"></i> Archive Product
+                        </button>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong>{{ product.name }}</strong>?
+                <p class="text-danger mt-2">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'product_delete' product.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archive Modal -->
+<div class="modal fade" id="archiveModal" tabindex="-1" aria-labelledby="archiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                {% if product.is_archived %}
+                <h5 class="modal-title" id="archiveModalLabel">Unarchive Product</h5>
+                {% else %}
+                <h5 class="modal-title" id="archiveModalLabel">Archive Product</h5>
+                {% endif %}
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if product.is_archived %}
+                Are you sure you want to unarchive <strong>{{ product.name }}</strong>?
+                <p class="text-success mt-2">This will make the product visible in active listings again.</p>
+                {% else %}
+                Are you sure you want to archive <strong>{{ product.name }}</strong>?
+                <p class="text-info mt-2">Archiving will hide this product from active listings but preserve its data and order history.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'product_archive' product.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    {% if product.is_archived %}
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="fas fa-box-open me-1"></i> Restore Product
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn btn-primary" style="background-color: #3b7dd8; border-color: #3b7dd8;">
+                        <i class="fas fa-archive me-1"></i> Archive Product
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

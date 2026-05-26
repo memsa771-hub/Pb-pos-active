@@ -1,0 +1,375 @@
+{% extends 'posapp/base.html' %}
+
+{% block title %}Products - POS System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .product-placeholder {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    .action-buttons .btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    .table-hover tbody tr:hover {
+        transition: all 0.2s;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    /* Archive Toggle Styles */
+    .archive-toggle-container {
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        min-width: 200px;
+    }
+    
+    .archive-toggle-container:hover {
+        background-color: #e9ecef;
+    }
+    
+    .form-check-input:checked {
+        background-color: #3b7dd8;
+        border-color: #3b7dd8;
+    }
+    
+    .form-switch .form-check-input {
+        cursor: pointer;
+        transform: scale(1.2);
+        margin-top: 0;
+        transition: transform 0.2s ease;
+    }
+    
+    .form-switch .form-check-input:hover {
+        transform: scale(1.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Products</h2>
+        <a href="{% url 'product_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add New Product
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Product List</h6>
+            <form id="searchForm" action="{% url 'product_list' %}" method="get" class="d-flex">
+                <div class="archive-toggle-container me-3 d-flex align-items-center">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" name="show_archived" id="showArchived" {% if show_archived %}checked{% endif %} style="width: 2.5em; height: 1.2em;">
+                        <label class="form-check-label ms-2" for="showArchived" style="font-weight: 500;">
+                            {% if show_archived %}
+                            <span class="text-secondary"><i class="fas fa-archive me-1"></i> Showing Archived</span>
+                            {% else %}
+                            <span><i class="fas fa-box me-1"></i> Show Archived</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                </div>
+                <input type="text" id="searchInput" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}" autocomplete="off">
+                <select id="categoryFilter" name="category" class="form-select" style="width: auto;">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="productsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Image</th>
+                            <th>Name</th>
+                            <th>Product Code</th>
+                            <th>Category</th>
+                            <th>SKU</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                {% if product.image %}
+                                <img src="{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" class="product-image" onerror="this.onerror=null; this.src='https://i.imgur.com/pTXpXpF.jpg';">
+                                {% else %}
+                                <div class="product-placeholder">
+                                    <img src="https://i.imgur.com/pTXpXpF.jpg" alt="{{ product.name }}" class="product-image">
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.name }}</td>
+                            <td>{% if product.product_code %}{{ product.product_code }}{% else %}-{% endif %}</td>
+                            <td>{% if product.category %}{{ product.category.name }}{% else %}-{% endif %}</td>
+                            <td>{% if product.sku %}{{ product.sku }}{% else %}-{% endif %}</td>
+                            <td>{{ currency_symbol }} {{ product.price }}</td>
+                            <td>
+                                <span class="{% if product.stock_quantity <= 5 %}text-danger{% elif product.stock_quantity <= 10 %}text-warning{% else %}text-success{% endif %}">
+                                    {% if product.running_item %}
+                                        <span title="Running item - unlimited stock">∞</span>
+                                    {% else %}
+                                    {{ product.stock_quantity }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if product.is_archived %}
+                                <span class="badge bg-secondary">Archived</span>
+                                {% elif product.is_available %}
+                                <span class="badge bg-success">Available</span>
+                                {% else %}
+                                <span class="badge bg-danger">Unavailable</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <a href="{% url 'product_detail' product.id %}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'product_edit' product.id %}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ product.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ product.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ product.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ product.id }}">Delete Product</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete {{ product.name }}?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{% url 'product_delete' product.id %}" method="post" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center">No products available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if show_archived %}&show_archived=on{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if show_archived %}&show_archived=on{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;&laquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in products.paginator.page_range %}
+                        {% if products.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% elif i > products.number|add:'-3' and i < products.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if show_archived %}&show_archived=on{% endif %}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if show_archived %}&show_archived=on{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if show_archived %}&show_archived=on{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;&raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const showArchivedCheckbox = document.getElementById('showArchived');
+        const searchForm = document.getElementById('searchForm');
+        const archiveToggleLabel = document.querySelector('label[for="showArchived"] span');
+        
+        // Focus on search input if it has a value
+        if (searchInput.value.length > 0) {
+            searchInput.focus();
+            // Place cursor at the end of text
+            const length = searchInput.value.length;
+            searchInput.setSelectionRange(length, length);
+        }
+        
+        // Function to update the archive toggle label
+        function updateArchiveToggleLabel() {
+            if (showArchivedCheckbox.checked) {
+                archiveToggleLabel.innerHTML = '<i class="fas fa-archive me-1"></i> Showing Archived';
+                archiveToggleLabel.classList.add('text-secondary');
+            } else {
+                archiveToggleLabel.innerHTML = '<i class="fas fa-box me-1"></i> Show Archived';
+                archiveToggleLabel.classList.remove('text-secondary');
+            }
+        }
+        
+        // Initialize the toggle label
+        updateArchiveToggleLabel();
+        
+        // Add event listener for the checkbox
+        showArchivedCheckbox.addEventListener('change', updateArchiveToggleLabel);
+        
+        // Function to perform the search with AJAX
+        function performSearch() {
+            // Store the cursor position
+            const cursorPosition = searchInput.selectionStart;
+            
+            // Build the query parameters
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (key === 'show_archived') {
+                    // Only add if checkbox is checked
+                    if (showArchivedCheckbox.checked) {
+                        params.append(key, 'on');
+                    }
+                } else if (value) {
+                    params.append(key, value);
+                }
+            }
+            
+            // Use AJAX to perform the search without page reload
+            fetch(`{% url 'product_list' %}?${params.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Update just the table content, not the entire page
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update the products table
+                const tableBody = doc.querySelector('#productsTable tbody');
+                if (tableBody) {
+                    document.querySelector('#productsTable tbody').innerHTML = tableBody.innerHTML;
+                }
+                
+                // Update pagination if it exists
+                const newPagination = doc.querySelector('nav[aria-label="Page navigation"]');
+                const currentPagination = document.querySelector('nav[aria-label="Page navigation"]');
+                
+                if (newPagination && currentPagination) {
+                    currentPagination.innerHTML = newPagination.innerHTML;
+                } else if (newPagination && !currentPagination) {
+                    document.querySelector('.card-body').appendChild(newPagination);
+                } else if (!newPagination && currentPagination) {
+                    currentPagination.remove();
+                }
+                
+                // Restore focus and cursor position for search input
+                if (document.activeElement === searchInput) {
+                    searchInput.focus();
+                    searchInput.setSelectionRange(cursorPosition, cursorPosition);
+                }
+                
+                // Update the URL without reloading the page
+                window.history.pushState({}, '', `{% url 'product_list' %}?${params.toString()}`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // If AJAX fails, fall back to traditional form submission
+                searchForm.submit();
+            });
+        }
+        
+        // Add event listeners
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(this.timer);
+                this.timer = setTimeout(performSearch, 500);
+            });
+        }
+        
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', performSearch);
+        }
+        
+        if (showArchivedCheckbox) {
+            showArchivedCheckbox.addEventListener('change', performSearch);
+        }
+    });
+</script>
+{% endblock %} 
