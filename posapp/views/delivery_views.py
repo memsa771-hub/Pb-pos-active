@@ -19,13 +19,9 @@ def is_branch_manager(user):
     return hasattr(user, 'profile') and user.profile and user.profile.role and user.profile.role.name == 'Branch Manager'
 
 @login_required
+@management_required
 def delivery_person_list(request):
     """List all delivery persons - Admin and Branch Manager can view"""
-    # Allow admin and branch manager to view delivery persons
-    if not (is_admin(request.user) or is_branch_manager(request.user)):
-        messages.error(request, "You don't have permission to view delivery persons.")
-        return redirect('dashboard')
-    """List all delivery persons"""
     search_query = request.GET.get('search', '')
     
     # Filter delivery persons based on search query
@@ -134,12 +130,9 @@ def delivery_person_delete(request, person_id):
     return render(request, 'posapp/delivery/delivery_person_confirm_delete.html', context)
 
 @login_required
+@management_required
 def delivery_person_detail(request, person_id):
     """Show delivery person details and their orders - Admin and Branch Manager can view"""
-    # Allow admin and branch manager to view delivery details
-    if not (is_admin(request.user) or is_branch_manager(request.user)):
-        messages.error(request, "You don't have permission to view delivery details.")
-        return redirect('dashboard')
     delivery_person = get_object_or_404(DeliveryPerson, id=person_id)
     
     # Get date range for filtering orders

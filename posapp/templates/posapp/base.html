@@ -235,10 +235,11 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'product_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'product_list' %}">Products Menu</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'category_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'category_list' %}">Categories Menu</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'discount_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'discount_list' %}">Discounts</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'delivery_person_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'delivery_person_list' %}">Delivery Staff</a>
                     {% endif %}
                     <a class="nav-link {% if request.resolver_match.url_name == 'pos' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'pos' %}">Open POS Terminal</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'order_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'order_list' %}">Orders History</a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'delivery_person_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'delivery_person_list' %}">Delivery Staff</a>
+
                 </div>
             </div>
         </li>
