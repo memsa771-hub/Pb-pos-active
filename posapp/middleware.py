@@ -1,3 +1,4 @@
+import pytz
 from django.utils import timezone
 from django.contrib.auth.models import AnonymousUser
 from .models import UserSession
@@ -83,4 +84,27 @@ class SingleSessionMiddleware:
                         
         except Exception as e:
             # Log the error but don't break the request
-            logger.error(f"Error checking session validity: {str(e)}") 
+            logger.error(f"Error checking session validity: {str(e)}")
+
+
+class TimezoneMiddleware:
+    """
+    Middleware to activate the timezone configured in system settings.
+    Defaults to Asia/Karachi (Pakistan Standard Time) if not set.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        try:
+            from .models import Setting
+            tz_name = Setting.get_value('timezone', 'Asia/Karachi')
+            tz = pytz.timezone(tz_name)
+        except Exception:
+            tz = pytz.timezone('Asia/Karachi')
+
+        timezone.activate(tz)
+        response = self.get_response(request)
+        timezone.deactivate()
+        return response 

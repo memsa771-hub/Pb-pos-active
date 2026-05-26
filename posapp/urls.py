@@ -39,6 +39,7 @@ from .views.settings_views import (
     business_settings,
     receipt_settings,
     theme_settings,
+    system_settings,
 )
 from .views.adjustment_views import (
     adjustment_dashboard, adjustment_report,
@@ -151,6 +152,7 @@ urlpatterns = [
     path('settings/business/', business_settings, name='business_settings'),
     path('settings/receipt/', receipt_settings, name='receipt_settings'),
     path('settings/theme/', theme_settings, name='theme_settings'),
+    path('settings/system/', system_settings, name='system_settings'),
     
     # Delivery Person Management
     path('delivery-persons/', delivery_person_list, name='delivery_person_list'),

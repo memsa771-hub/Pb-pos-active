@@ -342,4 +342,50 @@ def theme_settings(request):
         'current_theme': initial_data.get('theme_color', 'default')
     }
     
-    return render(request, 'posapp/settings/theme_form.html', context) 
+    return render(request, 'posapp/settings/theme_form.html', context)
+
+
+@login_required
+def system_settings(request):
+    """System settings including timezone"""
+    import pytz
+
+    if not is_admin(request.user):
+        messages.error(request, "You don't have permission to edit settings.")
+        return redirect('dashboard')
+
+    timezone_choices = [(tz, tz) for tz in pytz.common_timezones]
+
+    system_settings_fields = {
+        'timezone': {
+            'type': 'select',
+            'required': True,
+            'help_text': 'Timezone used for all timestamps, receipts, and reports',
+            'choices': timezone_choices,
+            'value': Setting.get_value('timezone', 'Asia/Karachi'),
+        },
+    }
+
+    settings = get_or_create_settings(system_settings_fields.keys(), system_settings_fields)
+    initial_data = {key: settings[key].setting_value for key in system_settings_fields.keys()}
+
+    for key in system_settings_fields:
+        system_settings_fields[key]['value'] = initial_data.get(key, '')
+
+    if request.method == 'POST':
+        form = SettingsForm(request.POST, settings=system_settings_fields)
+        if form.is_valid():
+            update_settings(form.cleaned_data)
+            messages.success(request, "System settings updated successfully.")
+            return redirect('system_settings')
+    else:
+        form = SettingsForm(initial=initial_data, settings=system_settings_fields)
+
+    context = {
+        'title': 'System Settings',
+        'form': form,
+        'settings_section': 'system',
+        'current_timezone': initial_data.get('timezone', 'Asia/Karachi'),
+    }
+
+    return render(request, 'posapp/settings/system_form.html', context)
