@@ -177,9 +177,8 @@
             {% elif order.order_type == 'Delivery' %}
             <p>Delivery</p>
             {% endif %}
-            <p>{{ order.created_at|pkt_datetime }}</p>
             {% if is_additional %}
-            <p><strong>Added: {{ now_pkt }}</strong></p>
+            <p><strong>Additional Items</strong></p>
             {% endif %}
         </div>
         
