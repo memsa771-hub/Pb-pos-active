@@ -241,7 +241,7 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'delivery_person_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'delivery_person_list' %}">Delivery Staff</a>
                     {% endif %}
 
-                    <a class="nav-link {% if request.resolver_match.url_name == 'pos' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'pos' %}">Open POS Terminal</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'pos' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'pos' %}">POS Terminal</a>
                     <a class="nav-link {% if request.resolver_match.url_name == 'order_list' and request.resolver_match.namespace != 'inventory' %}active{% endif %}" href="{% url 'order_list' %}">Orders History</a>
 
                 </div>

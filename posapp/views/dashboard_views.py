@@ -57,8 +57,8 @@ def dashboard(request):
         return redirect('pos')
     
     # Check if user is admin or branch manager
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
-    is_branch_manager = hasattr(request.user, 'profile') and request.user.profile.role.name == 'Branch Manager'
+    user_is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
+    user_is_branch_manager = hasattr(request.user, 'profile') and request.user.profile.role.name == 'Branch Manager'
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
@@ -82,7 +82,7 @@ def dashboard(request):
     total_users = User.objects.count()
     
     # Filter orders based on role and last end day
-    if is_admin:
+    if user_is_admin:
         # Admin sees all orders
         all_orders = Order.objects.all()
         active_orders = Order.objects.filter(order_status='Pending').count()
@@ -144,7 +144,7 @@ def dashboard(request):
         'users': users,
         'business_settings': business_settings,
         'last_end_day': last_end_day,
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
         'end_day_completed': end_day_completed,
         'end_day_timestamp': end_day_timestamp,
         'sales_receipt_url': sales_receipt_url,
