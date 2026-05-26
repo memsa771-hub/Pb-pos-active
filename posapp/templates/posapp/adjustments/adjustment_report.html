@@ -147,7 +147,7 @@
                     <tbody>
                         {% for adjustment in bill_adjustments %}
                         <tr>
-                            <td>{{ adjustment.created_at|date:"M d, Y H:i:s" }}</td>
+                            <td>{{ adjustment.created_at|pkt_datetime }}</td>
                             <td>{{ adjustment.name }}</td>
                             <td>{{ adjustment.quantity|default:'-' }}</td>
                             <td>{{ adjustment.price }}</td>
@@ -184,7 +184,7 @@
                     <tbody>
                         {% for adjustment in advance_adjustments %}
                         <tr>
-                            <td>{{ adjustment.created_at|date:"M d, Y H:i:s" }}</td>
+                            <td>{{ adjustment.created_at|pkt_datetime }}</td>
                             <td>{{ adjustment.name }}</td>
                             <td class="negative-amount">-{{ adjustment.amount|floatformat:2 }}</td>
                             <td>{{ adjustment.created_by.username }}</td>

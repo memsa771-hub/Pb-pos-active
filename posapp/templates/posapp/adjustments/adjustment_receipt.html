@@ -170,7 +170,7 @@
                 <tr><td colspan="4" class="divider"></td></tr>
                 {% for adjustment in bill_adjustments %}
                 <tr>
-                    <td>{{ adjustment.created_at|date:"m/d/y H:i" }}</td>
+                    <td>{{ adjustment.created_at|pkt_datetime }}</td>
                     <td>{{ adjustment.name }}</td>
                     <td class="right">{{ adjustment.quantity|default:'-' }}</td>
                     <td class="right">-{{ adjustment.price|floatformat:2 }}</td>
@@ -206,7 +206,7 @@
                 <tr><td colspan="3" class="divider"></td></tr>
                 {% for adjustment in advance_adjustments %}
                 <tr>
-                    <td>{{ adjustment.created_at|date:"m/d/y H:i" }}</td>
+                    <td>{{ adjustment.created_at|pkt_datetime }}</td>
                     <td>{{ adjustment.name }}</td>
                     <td class="right">-{{ adjustment.amount|floatformat:2 }}</td>
                 </tr>

@@ -70,7 +70,7 @@
                         {% for order in orders %}
                         <tr>
                             <td>#{{ order.order_number }}</td>
-                            <td>{{ order.created_at|date:"M d, Y h:i A" }}</td>
+                            <td>{{ order.created_at|pkt_datetime }}</td>
                             <td>{{ order.customer_name|default:"-" }}</td>
                             <td>
                                 {% if order.order_status == 'Completed' %}

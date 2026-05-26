@@ -1,9 +1,20 @@
 from django import template
 from decimal import Decimal, InvalidOperation
-from django.utils import timezone
 from django.utils.dateformat import format
+import pytz
 
 register = template.Library()
+
+PKT = pytz.timezone('Asia/Karachi')
+
+def _to_pkt(value):
+    """Convert any datetime to Asia/Karachi (PKT, UTC+5) regardless of server timezone."""
+    if value is None:
+        return None
+    if hasattr(value, 'tzinfo') and value.tzinfo is not None:
+        return value.astimezone(PKT)
+    # Naive datetime — assume UTC
+    return pytz.utc.localize(value).astimezone(PKT)
 
 @register.filter
 def multiply(value, arg):
@@ -36,11 +47,8 @@ def pkt_time(value):
     if not value:
         return ''
     try:
-        # Convert to PKT timezone
-        pkt_time = timezone.localtime(value)
-        # Format as 12-hour with AM/PM
-        return format(pkt_time, 'g:i A')
-    except:
+        return format(_to_pkt(value), 'g:i A')
+    except Exception:
         return str(value)
 
 @register.filter
@@ -49,11 +57,8 @@ def pkt_date(value):
     if not value:
         return ''
     try:
-        # Convert to PKT timezone
-        pkt_time = timezone.localtime(value)
-        # Format as d/m/Y
-        return format(pkt_time, 'd/m/Y')
-    except:
+        return format(_to_pkt(value), 'd/m/Y')
+    except Exception:
         return str(value)
 
 @register.filter
@@ -62,11 +67,8 @@ def pkt_datetime(value):
     if not value:
         return ''
     try:
-        # Convert to PKT timezone
-        pkt_time = timezone.localtime(value)
-        # Format as d/m/Y g:i A
-        return format(pkt_time, 'd/m/Y g:i A')
-    except:
+        return format(_to_pkt(value), 'd/m/Y g:i A')
+    except Exception:
         return str(value)
 
 @register.filter
@@ -75,9 +77,6 @@ def pkt_datetime_short(value):
     if not value:
         return ''
     try:
-        # Convert to PKT timezone
-        pkt_time = timezone.localtime(value)
-        # Format as d/m g:i A (without year)
-        return format(pkt_time, 'd/m g:i A')
-    except:
+        return format(_to_pkt(value), 'd/m g:i A')
+    except Exception:
         return str(value)

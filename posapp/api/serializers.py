@@ -113,8 +113,10 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_order_time(self, obj):
-        from django.utils.timezone import localtime
-        local_dt = localtime(obj.created_at)
+        import pytz
+        pkt = pytz.timezone('Asia/Karachi')
+        # obj.created_at is always UTC (USE_TZ=True); convert directly to PKT
+        local_dt = obj.created_at.astimezone(pkt)
         return local_dt.strftime('%d/%m/%Y %H:%M:%S')
     
     def create(self, validated_data):
