@@ -106,10 +106,16 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
-    
+    order_time = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = '__all__'
+
+    def get_order_time(self, obj):
+        from django.utils.timezone import localtime
+        local_dt = localtime(obj.created_at)
+        return local_dt.strftime('%d/%m/%Y %H:%M:%S')
     
     def create(self, validated_data):
         items_data = self.context.get('items', [])
