@@ -703,6 +703,12 @@ def order_edit(request, order_id):
             
 
             
+            # If no items remain after save, delete the order to free the table
+            if not OrderItem.objects.filter(order=order_instance).exists():
+                order_instance.delete()
+                messages.success(request, "All items removed — order deleted and table freed.")
+                return redirect('order_list')
+
             if additional_items_data:
                 # There are additional items - redirect to print them
                 messages.success(request, "Order updated successfully! Opening kitchen receipt for additional items...")
@@ -1602,12 +1608,11 @@ def create_order_api(request):
         table_number = data.get('table_number', '')
         
         if order_type == 'Dine In' and table_number:
-            # Check if table already has a pending order with items
+            # Check if table already has a pending order
             existing_table_order = Order.objects.filter(
                 order_type='Dine In',
                 order_status='Pending',
-                table_number=table_number,
-                orderitem__isnull=False
+                table_number=table_number
             ).exists()
             
             if existing_table_order:
@@ -2077,8 +2082,7 @@ def get_active_tables(request):
     active_tables = Order.objects.filter(
         order_type='Dine In', 
         order_status='Pending',
-        table_number__isnull=False,
-        orderitem__isnull=False
+        table_number__isnull=False
     ).exclude(table_number='').values_list('table_number', flat=True).distinct()
     
     # Convert to a list
