@@ -1,0 +1,20 @@
+[Unit]
+Description=PB POS Gunicorn
+After=network.target mysql.service
+
+[Service]
+User=posapp
+Group=www-data
+WorkingDirectory=/var/www/pb-pos
+EnvironmentFile=/var/www/pb-pos/.env
+Environment="PATH=/var/www/pb-pos/.venv/bin"
+ExecStart=/var/www/pb-pos/.venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    posproject.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

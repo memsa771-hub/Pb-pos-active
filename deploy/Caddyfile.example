@@ -1,0 +1,10 @@
+cbk.pik-bug.shop {
+    encode gzip
+
+    handle_path /media/* {
+        root * /var/www/pb-pos/media
+        file_server
+    }
+
+    reverse_proxy 127.0.0.1:8000
+}
