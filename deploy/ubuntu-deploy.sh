@@ -56,24 +56,28 @@ if [[ -z "$SECRET_KEY" ]]; then
 fi
 
 export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+export UCF_FORCE_CONFFNEW=1
 
 # --- System packages ---
 log "Installing system packages..."
 apt-get update -qq
-apt-get upgrade -y -qq
+apt-get upgrade -y -qq \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" || true
 apt-get install -y -qq \
-    python3.12 python3.12-venv python3.12-dev \
+    python3 python3-venv python3-dev \
     build-essential pkg-config \
     default-libmysqlclient-dev \
     mysql-server \
     git curl ufw
 
-# uv (Python package manager)
+# uv (Python package manager) — also installs Python 3.12 on Ubuntu 22.04
 if ! command -v uv >/dev/null 2>&1; then
     log "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 fi
-export PATH="/root/.local/bin:${PATH}"
+export PATH="/usr/local/bin:${PATH}"
 
 # Caddy
 if ! command -v caddy >/dev/null 2>&1; then
@@ -140,8 +144,10 @@ chmod 600 "$APP_DIR/.env"
 # --- Python deps, migrate, static ---
 log "Installing Python dependencies..."
 sudo -u "$APP_USER" bash -lc "
+    export PATH=\"/usr/local/bin:\$PATH\"
     cd '$APP_DIR'
-    uv venv
+    uv python install 3.12
+    uv venv --python 3.12
     source .venv/bin/activate
     uv pip install -e .
 "
