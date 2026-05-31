@@ -11,7 +11,8 @@
 set -euo pipefail
 
 # --- Configuration (edit these) ---
-DOMAIN="${DOMAIN:-cbk.pik-bug.shop}"
+DOMAIN="${DOMAIN:-rev1.pick-bug.shop}"
+SERVER_IP="${SERVER_IP:-95.182.86.121}"
 APP_USER="${APP_USER:-posapp}"
 APP_DIR="${APP_DIR:-/var/www/pb-pos}"
 REPO_URL="${REPO_URL:-https://github.com/memsa771-hub/Pb-pos-active.git}"
@@ -129,7 +130,7 @@ log "Writing .env..."
 cat >"$APP_DIR/.env" <<EOF
 SECRET_KEY=${SECRET_KEY}
 DEBUG=False
-ALLOWED_HOSTS=${DOMAIN},localhost,127.0.0.1
+ALLOWED_HOSTS=${DOMAIN},${SERVER_IP},localhost,127.0.0.1
 CSRF_TRUSTED_ORIGINS=https://${DOMAIN}
 
 DB_NAME=${DB_NAME}

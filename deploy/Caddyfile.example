@@ -1,4 +1,4 @@
-cbk.pik-bug.shop {
+rev1.pick-bug.shop {
     encode gzip
 
     handle_path /media/* {

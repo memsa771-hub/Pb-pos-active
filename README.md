@@ -88,7 +88,7 @@ Open your browser at **http://127.0.0.1:8000**
 
 ## Production deployment (Ubuntu + Caddy)
 
-Target example: **https://cbk.pik-bug.shop** on Ubuntu with Caddy, Gunicorn, and MySQL.
+Target example: **https://rev1.pick-bug.shop** on Ubuntu with Caddy, Gunicorn, and MySQL.
 
 ### Quick deploy (one command on the server)
 
@@ -116,7 +116,7 @@ Optional variables:
 
 | Variable | Default |
 |----------|---------|
-| `DOMAIN` | `cbk.pik-bug.shop` |
+| `DOMAIN` | `rev1.pick-bug.shop` |
 | `ADMIN_USERNAME` | `admin` |
 | `ADMIN_EMAIL` | `admin@example.com` |
 | `APP_DIR` | `/var/www/pb-pos` |
