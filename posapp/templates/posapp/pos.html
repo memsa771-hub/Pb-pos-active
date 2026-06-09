@@ -2362,55 +2362,16 @@
             modal.modal('hide');
         });
 
-        // Payment Modal
+        // Payment Modal — open immediately (table validation happens on submit via server)
         $('#btn-payment').click(function() {
             updateTotals();
-            
-            // For dine-in orders, check if the table is already in use
-            if (selectedOrderType === 'Dine In') {
-                const tableNumber = $('#tableNumber').val();
-                if (tableNumber) {
-                    // Check table availability before opening payment modal
-                    fetchActiveTables().then(response => {
-                        const activeTables = response.active_tables || [];
-                        
-                        if (activeTables.includes(tableNumber)) {
-                            // Table is already in use, show warning
-                            $('#tableNumber').addClass('is-invalid border-danger');
-                            
-                            // Add invalid feedback if it doesn't exist
-                            if (!$('#tableNumber').next('.invalid-feedback').length) {
-                                $('#tableNumber').after(`<div class="invalid-feedback">This table already has a pending order. Please select a different table.</div>`);
-                            }
-                            
-                            // Show error modal instead of payment modal
-                            $('#errorModalTitle').text('Table Already In Use');
-                            $('#errorModalContent').html(`
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Table #${tableNumber} already has a pending order. Please select a different table or complete/cancel the existing order first.
-                                </div>
-                            `);
-                            $('#errorModal').modal('show');
-                        } else {
-                            // Table is available, show payment modal
-                            $('#tableNumber').removeClass('is-invalid border-danger');
-                            $('#tableNumber').next('.invalid-feedback').remove();
-                            $('#paymentModal').modal('show');
-                        }
-                    }).catch(error => {
-                        console.error('Error checking table availability:', error);
-                        // If the check fails, still allow opening the payment modal
-                        $('#paymentModal').modal('show');
-                    });
-                } else {
-                    // No table number specified, show the modal
-                    $('#paymentModal').modal('show');
-                }
-            } else {
-                // Not a dine-in order, show the modal without checking
-                $('#paymentModal').modal('show');
+            $('#discount-message').empty();
+            $('#manual-discount-message').empty();
+            if (!discountCode) {
+                $('#discount-code').val('');
+                $('#manual-discount-value').val('');
             }
+            $('#paymentModal').modal('show');
         });
         
         // Select payment method
@@ -2523,65 +2484,30 @@
         
         // Complete payment
         $('#completePaymentBtn').click(function() {
+            const $payBtn = $('#completePaymentBtn');
+            if ($payBtn.prop('disabled')) {
+                return;
+            }
+            const payBtnOriginalHtml = $payBtn.html();
+
             const orderNotes = $('#orderNotes').val();
             const customerName = $('#customerName').val();
             const customerPhone = $('#customerPhone').val();
             const total = parseFloat($('#summary-total').text().replace('Rs.', ''));
-            
-            // Process all orders normally (cash handling will be done at completion)
-            // Validate table number for Dine In orders
+
             if (selectedOrderType === 'Dine In') {
                 const tableNumber = $('#tableNumber').val();
                 if (!tableNumber) {
-                    // Show validation error
                     $('#tableNumber').addClass('is-invalid');
                     $('#tableNumberError').removeClass('d-none');
-                    return; // Prevent form submission
-                } else {
-                    // Clear validation error if previously set
-                    $('#tableNumber').removeClass('is-invalid');
-                    $('#tableNumberError').addClass('d-none');
-                    
-                    // Check if table is already in use
-                    fetchActiveTables().then(response => {
-                        const activeTables = response.active_tables || [];
-                        
-                        if (activeTables.includes(tableNumber)) {
-                            // Table is already in use, show warning
-                            $('#tableNumber').addClass('is-invalid border-danger');
-                            
-                            // Add invalid feedback if it doesn't exist
-                            if (!$('#tableNumber').next('.invalid-feedback').length) {
-                                $('#tableNumber').after(`<div class="invalid-feedback">This table already has a pending order. Please select a different table.</div>`);
-                            }
-                            
-                            // Show error modal
-                            $('#errorModalTitle').text('Table Already In Use');
-                            $('#errorModalContent').html(`
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Table #${tableNumber} already has a pending order. Please select a different table or complete/cancel the existing order first.
-                                </div>
-                            `);
-                            $('#errorModal').modal('show');
-                            return; // Prevent form submission
-                        } else {
-                            // Table is available, proceed with order submission
-                            processOrder();
-                        }
-                    }).catch(error => {
-                        console.error('Error checking table availability:', error);
-                        
-                        // If the check fails, still allow submitting the order
-                        processOrder();
-                    });
+                    return;
                 }
-            } else {
-                // Not a dine-in order, proceed directly
-                processOrder();
+                $('#tableNumber').removeClass('is-invalid');
+                $('#tableNumberError').addClass('d-none');
             }
-            
-            // Function to process the order after validation
+
+            processOrder();
+
             function processOrder() {
                 // Validate the delivery address, person, and charges for delivery orders
                 if (selectedOrderType === 'Delivery') {
@@ -2670,6 +2596,11 @@
                     table_number: selectedOrderType === 'Dine In' ? $('#tableNumber').val() : ''
                 };
                 
+                $payBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+
+                const savedTableNumber = $('#tableNumber').val();
+                const savedOrderType = selectedOrderType;
+
                 // Save order to server
                 $.ajax({
                     url: '/api/orders/',
@@ -2678,68 +2609,16 @@
                     data: JSON.stringify(orderData),
                     dataType: 'json',
                     success: function(response) {
-                        console.log('Order saved:', response);
-                        
-                        // Close payment modal
-                        $('#paymentModal').modal('hide');
-                        
-                        // Store order number for reference
+                        $payBtn.prop('disabled', false).html(payBtnOriginalHtml);
+
                         const orderNumber = response.reference_number;
                         const orderNumberDisplay = response.display_number || '0';
-                        
-                        console.log("DEBUG: Order details received:", response);
-                        console.log("DEBUG: Order display number:", orderNumberDisplay);
 
-                        // Calculate discount amount for display
-                        let discountAmount = 0;
-                        if (discountType === 'percentage') {
-                            discountAmount = subtotal * (discount / 100);
-                        } else {
-                            discountAmount = discount;
-                        }
-                        
-                        // Calculate tax amount for display
-                        const taxAmount = parseFloat(orderData.tax_amount);
-                        const total = parseFloat(orderData.total_amount);
-                        
-                        // Create thermal printer optimized kitchen receipt - 70mm width
-                        const receiptHTML = `
-                            <div id="receipt-container" class="print-only">
-                                <div class="receipt-preview" style="width: 70mm; padding: 1mm; font-family: 'Courier New', 'Arial', monospace; font-size: 12px; line-height: 1.1; color: #000000;">
-                                    <!-- Header -->
-                                    <div style="text-align: center; margin-bottom: 8px; color: #000000;">
-                                        <h1 style="font-size: 16px; font-weight: bold; margin: 0; color: #000000;">Order ${orderNumberDisplay}</h1>
-                                        ${selectedOrderType === 'Dine In' && $('#tableNumber').val() ? 
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Table ${$('#tableNumber').val()}</p>` : 
-                                         selectedOrderType === 'Delivery' ? 
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Delivery</p>` : ''}
-                                    </div>
-                                    
-                                    <div style="border-top: 1px dashed #000; margin: 6px 0; clear: both;"></div>
-                                    
-                                    <!-- Order Items in Blocks -->
-                                    ${cart.map(item => `
-                                        <div style="display: flex; align-items: center; margin: 4px 0; padding: 4px; border: 1px solid #000; background-color: white; color: #000000;">
-                                            <div style="font-weight: bold; font-size: 14px; color: #000000; min-width: 30px; text-align: center; margin-right: 8px; border-right: 1px solid #000; padding-right: 8px;">${item.quantity}</div>
-                                            <div style="font-weight: bold; font-size: 11px; color: #000000; flex: 1;">${item.name}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Add the receipt to the body
-                        $('body').append(receiptHTML);
-                        
-                        // Trigger print
-                        window.print();
-                        
-                        // Remove the receipt element after printing
-                        setTimeout(() => {
-                            $('#receipt-container').remove();
-                        }, 1000);
-                        
-                        // Show success message with link to orders
+                        $('#paymentModal').modal('hide');
+
+                        cart = [];
+                        updateCart();
+
                         $('#successModalContent').html(`
                             <div class="text-center mb-4">
                                 <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
@@ -2747,9 +2626,9 @@
                                 <p>The order has been processed successfully.</p>
                                 <p>Order #: <strong>${orderNumberDisplay}</strong></p>
                                 <p>Receipt #: <strong>${orderNumber}</strong></p>
-                                <p>Order Type: <strong>${selectedOrderType}</strong></p>
-                                ${selectedOrderType === 'Dine In' && $('#tableNumber').val() ? 
-                                    `<p>Table #: <strong>${$('#tableNumber').val()}</strong></p>` : ''}
+                                <p>Order Type: <strong>${savedOrderType}</strong></p>
+                                ${savedOrderType === 'Dine In' && savedTableNumber ?
+                                    `<p>Table #: <strong>${savedTableNumber}</strong></p>` : ''}
                                 <div class="mt-4">
                                     <a href="/orders/" class="btn btn-primary">View in Orders</a>
                                 </div>
@@ -2757,11 +2636,15 @@
                         `);
                         
                         $('#successModal').modal('show');
-                        
-                        // Clear cart
-                        cart = [];
-                        updateCart();
-                        
+
+                        if (response.order_id) {
+                            window.open(
+                                '/orders/' + response.order_id + '/kitchen/',
+                                'kitchen_' + response.order_id,
+                                'width=400,height=600,noopener'
+                            );
+                        }
+
                         // Reset order form
                         $('#tableNumber').val('');  // Clear table number
                         $('#customerName').val('');  // Clear customer name
@@ -2782,6 +2665,7 @@
                         resetDiscount();
                     },
                     error: function(xhr, status, error) {
+                        $payBtn.prop('disabled', false).html(payBtnOriginalHtml);
                         console.error('Error saving order:', error);
                         
                         // Try to get detailed error message from response
@@ -3028,16 +2912,6 @@
             // Hide discount details
             $('#discount-details').addClass('d-none');
         }
-        
-        // Reset discount message when modal is opened
-        $('#btn-payment').click(function() {
-            $('#discount-message').empty();
-            $('#manual-discount-message').empty();
-            if (!discountCode) {
-                $('#discount-code').val('');
-                $('#manual-discount-value').val('');
-            }
-        });
         
         // Listen for table number input changes to reset validation
         $('#tableNumber').on('input', function() {
