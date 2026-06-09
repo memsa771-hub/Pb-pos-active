@@ -2,432 +2,330 @@
 {% load custom_filters %}
 
 {% block title %}Dashboard - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
-<style>
-    .card {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        transition: all 0.3s;
-        margin-bottom: 20px;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-    }
-    .card-counter {
-        padding: 20px 15px;
-        background-color: #fff;
-        height: 100px;
-        border-radius: 5px;
-    }
-    .card-counter.primary {
-        background-color: #007bff;
-        color: #FFF;
-    }
-    .card-counter.danger {
-        background-color: #ef5350;
-        color: #FFF;
-    }
-    .card-counter.success {
-        background-color: #66bb6a;
-        color: #FFF;
-    }
-    .card-counter.info {
-        background-color: #26c6da;
-        color: #FFF;
-    }
-    .card-counter i {
-        font-size: 4em;
-        opacity: 0.3;
-    }
-    .card-counter .count-numbers {
-        position: absolute;
-        right: 35px;
-        top: 20px;
-        font-size: 32px;
-        display: block;
-    }
-    .card-counter .count-name {
-        position: absolute;
-        right: 35px;
-        top: 65px;
-        opacity: 0.8;
-        display: block;
-        font-size: 14px;
-    }
-</style>
+{% include 'posapp/partials/admin_page_styles.html' %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Business Info -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">{{ business_settings.business_name|default:"PickBug Solutions" }}</h5>
-                <a href="{% url 'end_day' %}" class="btn btn-danger btn-sm">
-                    <i class="fas fa-calendar-check me-1"></i> End Day
-                </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-chart-line me-2"></i>Dashboard</h1>
+                <p>{{ business_settings.business_name|default:"PickBug Solutions" }} — overview and quick actions</p>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-9">
-                    <p><i class="fas fa-map-marker-alt me-2"></i> {{ business_settings.business_address|default:"123 Main St" }}</p>
-                </div>
-                <div class="col-md-3">
-                    <p><i class="fas fa-phone me-2"></i> {{ business_settings.business_phone|default:"(555) 123-4567" }}</p>
-                </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'pos' %}" class="btn btn-light">
+                <i class="fas fa-cash-register me-1"></i> Open POS
+            </a>
+            <a href="{% url 'order_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-receipt me-1"></i> Orders
+            </a>
+            <a href="{% url 'end_day' %}" class="btn btn-danger">
+                <i class="fas fa-calendar-check me-1"></i> End Day
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-business-bar">
+        <div>
+            <div class="business-name">{{ business_settings.business_name|default:"PickBug Solutions" }}</div>
+            <div class="business-meta mt-1">
+                <span><i class="fas fa-map-marker-alt me-1"></i>{{ business_settings.business_address|default:"123 Main St" }}</span>
+                <span><i class="fas fa-phone me-1"></i>{{ business_settings.business_phone|default:"(555) 123-4567" }}</span>
             </div>
         </div>
     </div>
 
     {% if end_day_completed %}
-    <div class="alert alert-success mb-4">
-        <i class="fas fa-check-circle me-2"></i> <strong>End Day Complete!</strong> 
-        Day has been successfully ended at {{ end_day_timestamp }}. You can view reports for the completed period in the reports section.
+    <div class="admin-success-banner">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>End Day Complete!</strong>
+        Day ended at {{ end_day_timestamp }}. View reports for the completed period in the reports section.
     </div>
     {% endif %}
 
     {% if not is_admin and last_end_day %}
-    <div class="alert alert-info mb-4">
-        <i class="fas fa-info-circle me-2"></i> <strong>Current Period Data:</strong> 
-        The dashboard is showing data since the last day end ({{ last_end_day.end_date|pkt_datetime }}). 
-        
+    <div class="admin-info-banner">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Current Period Data:</strong>
+        Showing data since the last day end ({{ last_end_day.end_date|pkt_datetime }}).
     </div>
     {% endif %}
 
-    <!-- Summary Cards -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Products</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_products }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-box fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="admin-stats">
+        <div class="admin-stat-card primary">
+            <i class="fas fa-box stat-icon"></i>
+            <div class="stat-label">Total Products</div>
+            <div class="stat-value">{{ total_products }}</div>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                {% if not is_admin and last_end_day %}
-                                Pending Orders Since Last End Day
-                                {% else %}
-                                Pending Orders
-                                {% endif %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_orders }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="admin-stat-card warning">
+            <i class="fas fa-shopping-cart stat-icon"></i>
+            <div class="stat-label">
+                {% if not is_admin and last_end_day %}Pending (Since End Day){% else %}Pending Orders{% endif %}
             </div>
+            <div class="stat-value">{{ active_orders }}</div>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                {% if not is_admin and last_end_day %}
-                                Orders Since Last End Day
-                                {% else %}
-                                Total Orders
-                                {% endif %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_orders }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="admin-stat-card success">
+            <i class="fas fa-clipboard-list stat-icon"></i>
+            <div class="stat-label">
+                {% if not is_admin and last_end_day %}Orders (Since End Day){% else %}Total Orders{% endif %}
             </div>
+            <div class="stat-value">{{ total_orders }}</div>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Total Categories
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_categories }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-folder fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="admin-stat-card info">
+            <i class="fas fa-folder stat-icon"></i>
+            <div class="stat-label">Categories</div>
+            <div class="stat-value">{{ total_categories }}</div>
         </div>
-    </div>
-
-    <!-- Additional Stats Row -->
-    <div class="row">
         {% if is_admin %}
-        <div class="col-xl-4 col-md-4 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Users</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="admin-stat-card primary">
+            <i class="fas fa-users stat-icon"></i>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">{{ total_users }}</div>
         </div>
         {% endif %}
     </div>
 
-    <div class="row">
-        <!-- Recent Products Column -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Products</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Price</th>
-                                    <th>Stock</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for product in recent_products %}
-                                <tr>
-                                    <td>{{ product.name }}</td>
-                                    <td>{{ product.category.name }}</td>
-                                    <td>Rs.{{ product.price }}</td>
-                                    <td>
-                                        {% if product.running_item %}
-                                            <span title="Running item - unlimited stock">∞</span>
-                                        {% else %}
-                                            {{ product.stock_quantity }}
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">No products available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2><i class="fas fa-bolt me-2 text-primary"></i>Quick Links</h2>
+        </div>
+        <div class="admin-quick-links">
+            <a href="{% url 'product_list' %}" class="admin-quick-link"><i class="fas fa-box"></i> Products</a>
+            <a href="{% url 'category_list' %}" class="admin-quick-link"><i class="fas fa-folder"></i> Categories</a>
+            <a href="{% url 'delivery_person_list' %}" class="admin-quick-link"><i class="fas fa-motorcycle"></i> Delivery Staff</a>
+            <a href="{% url 'order_list' %}" class="admin-quick-link"><i class="fas fa-receipt"></i> Orders</a>
+            <a href="{% url 'pos' %}" class="admin-quick-link"><i class="fas fa-cash-register"></i> POS Terminal</a>
+        </div>
+    </div>
+
+    <div class="admin-grid-2">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-chart-area me-2 text-primary"></i>Daily Sales</h2>
+            </div>
+            <div class="admin-chart-wrap">
+                <canvas id="salesChart" height="220"></canvas>
             </div>
         </div>
-
-        <!-- Recent Orders Column -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        {% if not is_admin and last_end_day %}
-                        Recent Orders (Since Last End Day)
-                        {% else %}
-                        Recent Orders
-                        {% endif %}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Order #</th>
-                                    <th>Customer</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for order in recent_orders %}
-                                <tr>
-                                    <td>{{ order.reference_number }}</td>
-                                    <td>{{ order.customer_name|default:"Walk-in Customer" }}</td>
-                                    <td>Rs.{{ order.total_amount }}</td>
-                                    <td>
-                                        <span class="badge {% if order.order_status == 'Completed' %}bg-success{% else %}bg-warning{% endif %}">
-                                            {{ order.order_status }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">No orders available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-chart-pie me-2 text-primary"></i>Sales by Category</h2>
+            </div>
+            <div class="admin-chart-wrap">
+                <canvas id="categoryChart" height="220"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Top Products and Categories -->
-    <div class="row">
-        <!-- Top Products -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Most Expensive Products</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Category</th>
-                                    <th>Price</th>
-                                    <th>Stock</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for product in top_products %}
-                                <tr>
-                                    <td>{{ product.name }}</td>
-                                    <td>{{ product.category.name }}</td>
-                                    <td>Rs.{{ product.price }}</td>
-                                    <td>
-                                        {% if product.running_item %}
-                                            <span title="Running item - unlimited stock">∞</span>
-                                        {% else %}
-                                            {{ product.stock_quantity }}
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">No products available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="admin-grid-2">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2>Recent Products</h2>
+                <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="focus-table-wrap admin-panel-body">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in recent_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>Rs.{{ product.price }}</td>
+                            <td>
+                                {% if product.running_item %}
+                                <span title="Running item - unlimited stock">∞</span>
+                                {% else %}
+                                {{ product.stock_quantity }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No products available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Categories -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">All Categories</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Products</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in categories %}
-                                <tr>
-                                    <td>{{ category.name }}</td>
-                                    <td>{{ category.description|truncatechars:50 }}</td>
-                                    <td>{{ category.product_set.count }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No categories available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2>
+                    {% if not is_admin and last_end_day %}Recent Orders (Since End Day){% else %}Recent Orders{% endif %}
+                </h2>
+                <a href="{% url 'order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="focus-table-wrap admin-panel-body">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td><span class="admin-link">{{ order.reference_number }}</span></td>
+                            <td>{{ order.customer_name|default:"Walk-in Customer" }}</td>
+                            <td>Rs.{{ order.total_amount }}</td>
+                            <td>
+                                {% if order.order_status == 'Completed' %}
+                                <span class="admin-status-badge success">{{ order.order_status }}</span>
+                                {% else %}
+                                <span class="admin-status-badge warning">{{ order.order_status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No orders available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Users -->
+    <div class="admin-grid-2">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2>Most Expensive Products</h2>
+            </div>
+            <div class="focus-table-wrap admin-panel-body">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in top_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>Rs.{{ product.price }}</td>
+                            <td>
+                                {% if product.running_item %}
+                                <span title="Running item - unlimited stock">∞</span>
+                                {% else %}
+                                {{ product.stock_quantity }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No products available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2>All Categories</h2>
+                <a href="{% url 'category_list' %}" class="btn btn-sm btn-outline-primary">Manage</a>
+            </div>
+            <div class="focus-table-wrap admin-panel-body">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Products</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>{{ category.description|truncatechars:50 }}</td>
+                            <td>{{ category.product_set.count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">No categories available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     {% if is_admin %}
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">System Users</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Full Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Last Login</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.get_full_name|default:"-" }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>
-                                        {% if user.is_superuser %}
-                                            Admin
-                                        {% elif user.profile.role %}
-                                            {{ user.profile.role.name }}
-                                        {% else %}
-                                            No Role
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ user.last_login|pkt_datetime_short|default:"-" }}</td>
-                                    <td>
-                                        <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="6" class="text-center">No users available</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2>System Users</h2>
+        </div>
+        <div class="focus-table-wrap admin-panel-body">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Last Login</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.get_full_name|default:"-" }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_superuser %}
+                            Admin
+                            {% elif user.profile.role %}
+                            {{ user.profile.role.name }}
+                            {% else %}
+                            No Role
+                            {% endif %}
+                        </td>
+                        <td>{{ user.last_login|pkt_datetime_short|default:"-" }}</td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="admin-status-badge success">Active</span>
+                            {% else %}
+                            <span class="admin-status-badge danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No users available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
     {% endif %}
@@ -438,88 +336,94 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Sales Chart
-        const salesCanvas = document.getElementById('salesChart').getContext('2d');
-        const salesData = JSON.parse('{{ daily_sales_data|escapejs }}');
-        
-        const salesChart = new Chart(salesCanvas, {
-            type: 'line',
-            data: {
-                labels: salesData.map(function(item) { return item.date; }),
-                datasets: [{
-                    label: 'Daily Sales',
-                    data: salesData.map(function(item) { return item.sales; }),
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    borderColor: 'rgba(0, 123, 255, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(0, 123, 255, 1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Rs.' + context.raw.toFixed(2);
-                            }
-                        }
-                    }
+        const menuToggle = document.getElementById('focusMenuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-open');
+            });
+        }
+
+        const salesCanvas = document.getElementById('salesChart');
+        if (salesCanvas) {
+            const salesData = JSON.parse('{{ daily_sales_data|escapejs }}');
+            new Chart(salesCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: salesData.map(function(item) { return item.date; }),
+                    datasets: [{
+                        label: 'Daily Sales',
+                        data: salesData.map(function(item) { return item.sales; }),
+                        backgroundColor: 'rgba(43, 108, 176, 0.1)',
+                        borderColor: 'rgba(43, 108, 176, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(43, 108, 176, 1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'Rs.' + value;
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Rs.' + context.raw.toFixed(2);
+                                }
                             }
                         }
-                    }
-                }
-            }
-        });
-        
-        // Category Chart
-        const categoryCanvas = document.getElementById('categoryChart').getContext('2d');
-        const categoryData = JSON.parse('{{ category_sales|escapejs }}');
-        
-        const categoryChart = new Chart(categoryCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: categoryData.map(function(item) { return item.category; }),
-                datasets: [{
-                    data: categoryData.map(function(item) { return item.sales; }),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right'
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': Rs.' + context.raw.toFixed(2);
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rs.' + value;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
+
+        const categoryCanvas = document.getElementById('categoryChart');
+        if (categoryCanvas) {
+            const categoryData = JSON.parse('{{ category_sales|escapejs }}');
+            new Chart(categoryCanvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: categoryData.map(function(item) { return item.category; }),
+                    datasets: [{
+                        data: categoryData.map(function(item) { return item.sales; }),
+                        backgroundColor: [
+                            'rgba(43, 108, 176, 0.8)',
+                            'rgba(56, 161, 105, 0.8)',
+                            'rgba(214, 158, 46, 0.8)',
+                            'rgba(49, 151, 149, 0.8)',
+                            'rgba(221, 107, 32, 0.8)',
+                            'rgba(159, 122, 234, 0.8)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': Rs.' + context.raw.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     });
 </script>
-{% endblock %} 
+{% endblock %}

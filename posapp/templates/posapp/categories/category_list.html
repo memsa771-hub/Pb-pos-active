@@ -1,80 +1,90 @@
 {% extends 'posapp/base.html' %}
 
 {% block title %}Categories - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
-<style>
-    .category-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .category-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-</style>
+{% include 'posapp/partials/admin_page_styles.html' %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Categories</h2>
-        <a href="{% url 'category_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Add New Category
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-folder me-2"></i>Categories</h1>
+                <p>Organize products into menu categories</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'product_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-box me-1"></i> Products
+            </a>
+            <a href="{% url 'category_create' %}" class="btn btn-light">
+                <i class="fas fa-plus me-1"></i> Add Category
+            </a>
+        </div>
     </div>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
     {% endif %}
 
-    <!-- Search Area -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="mb-0" id="searchForm">
-                <div class="input-group">
-                    <input type="text" name="search" id="searchInput" class="form-control" placeholder="Search categories..." value="{{ search_query }}" autocomplete="off">
-                    {% if search_query %}
-                        <a href="{% url 'category_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
-                    {% endif %}
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0" id="searchForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label" for="searchInput">Search Categories</label>
+                    <div class="admin-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" id="searchInput" class="form-control" placeholder="Search categories..." value="{{ search_query }}" autocomplete="off">
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
+                {% if search_query %}
+                <div class="col-md-auto">
+                    <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </form>
 
-    <div class="row">
-        {% for category in categories %}
-        <div class="col-md-4 mb-4">
-            <div class="card category-card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">{{ category.name }}</h5>
+        <div id="categoryGrid" class="admin-category-grid">
+            {% for category in categories %}
+            <div class="admin-category-card">
+                <div class="admin-category-card-header">
+                    <h3>{{ category.name }}</h3>
                 </div>
-                <div class="card-body">
-                    <p class="card-text">{{ category.description|default:"No description available" }}</p>
-                    <p class="text-muted small mb-0">Products: {{ category.product_set.count }}</p>
+                <div class="admin-category-card-body">
+                    <p class="mb-0">{{ category.description|default:"No description available" }}</p>
+                    <div class="admin-category-card-meta">
+                        <i class="fas fa-box me-1"></i>{{ category.product_set.count }} product{{ category.product_set.count|pluralize }}
+                    </div>
                 </div>
-                <div class="card-footer bg-transparent d-flex justify-content-between">
+                <div class="admin-category-card-footer">
                     <a href="{% url 'category_detail' category.id %}" class="btn btn-sm btn-info">
                         <i class="fas fa-eye"></i> View
                     </a>
-                    <div>
-                        <a href="{% url 'category_edit' category.id %}" class="btn btn-sm btn-warning me-1">
-                            <i class="fas fa-edit"></i> Edit
+                    <div class="admin-action-btns">
+                        <a href="{% url 'category_edit' category.id %}" class="btn btn-sm btn-warning admin-action-btn" title="Edit">
+                            <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ category.id }}">
-                            <i class="fas fa-trash"></i> Delete
+                        <button type="button" class="btn btn-sm btn-danger admin-action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal{{ category.id }}" title="Delete">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            
-            <!-- Delete Modal -->
+
             <div class="modal fade" id="deleteModal{{ category.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ category.id }}" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -85,155 +95,146 @@
                         <div class="modal-body">
                             <p>Are you sure you want to delete the category "{{ category.name }}"?</p>
                             {% if category.product_set.count > 0 %}
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    This category has {{ category.product_set.count }} product(s). 
-                                    You cannot delete a category that has products.
-                                </div>
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                This category has {{ category.product_set.count }} product(s).
+                                You cannot delete a category that has products.
+                            </div>
                             {% endif %}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <form action="{% url 'category_delete' category.id %}" method="post" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger" {% if category.product_set.count > 0 %}disabled{% endif %}>
-                                    Delete
-                                </button>
+                                <button type="submit" class="btn btn-danger" {% if category.product_set.count > 0 %}disabled{% endif %}>Delete</button>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                No categories found. {% if search_query %}Try a different search term or {% endif %}create a new category.
+            {% empty %}
+            <div class="admin-empty" style="grid-column: 1 / -1;">
+                <i class="fas fa-folder-open"></i>
+                No categories found.
+                {% if search_query %}Try a different search term.{% else %}Create your first category to get started.{% endif %}
+                <div class="mt-3">
+                    <a href="{% url 'category_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add Category
+                    </a>
+                </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <!-- Pagination -->
-    {% if categories.has_other_pages %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center mt-4">
-            {% if categories.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">&laquo;&laquo;</span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">&laquo;</span>
-            </li>
-            {% endif %}
-            
-            {% for i in categories.paginator.page_range %}
-                {% if categories.number == i %}
-                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                {% elif i > categories.number|add:'-3' and i < categories.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a></li>
-                {% endif %}
             {% endfor %}
-            
-            {% if categories.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ categories.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">&raquo;</span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">&raquo;&raquo;</span>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
+        </div>
+
+        {% if categories.has_other_pages %}
+        <nav class="admin-pagination" aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if categories.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+
+                {% for i in categories.paginator.page_range %}
+                    {% if categories.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% elif i > categories.number|add:'-3' and i < categories.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if categories.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Real-time search
+        const menuToggle = document.getElementById('focusMenuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-open');
+            });
+        }
+
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
-        
-        // Focus on search input if it has a value
+        const categoryGrid = document.getElementById('categoryGrid');
+
         if (searchInput.value.length > 0) {
             searchInput.focus();
-            // Place cursor at the end of text
             const length = searchInput.value.length;
             searchInput.setSelectionRange(length, length);
         }
-        
+
         searchInput.addEventListener('input', function() {
-            // Short delay to prevent too many submissions while typing
             clearTimeout(this.timer);
             this.timer = setTimeout(function() {
-                // Store the cursor position
                 const cursorPosition = searchInput.selectionStart;
                 const searchValue = searchInput.value;
-                
-                // Use AJAX to perform the search without page reload
+
                 fetch(`{% url 'category_list' %}?search=${encodeURIComponent(searchValue)}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => response.text())
                 .then(html => {
-                    // Update just the content area, not the entire page
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    document.querySelector('.row:not(.mb-4)').innerHTML = doc.querySelector('.row:not(.mb-4)').innerHTML;
-                    
-                    // Update pagination if it exists
+
+                    const newGrid = doc.getElementById('categoryGrid');
+                    if (newGrid && categoryGrid) {
+                        categoryGrid.innerHTML = newGrid.innerHTML;
+                    }
+
                     const newPagination = doc.querySelector('nav[aria-label="Page navigation"]');
                     const currentPagination = document.querySelector('nav[aria-label="Page navigation"]');
-                    
+
                     if (newPagination && currentPagination) {
                         currentPagination.innerHTML = newPagination.innerHTML;
                     } else if (newPagination && !currentPagination) {
-                        document.querySelector('.container-fluid').appendChild(newPagination);
+                        document.querySelector('.admin-panel').appendChild(newPagination);
                     } else if (!newPagination && currentPagination) {
                         currentPagination.remove();
                     }
-                    
-                    // Restore focus and cursor position
+
                     searchInput.focus();
                     searchInput.setSelectionRange(cursorPosition, cursorPosition);
-                    
-                    // Update the URL without reloading the page
                     window.history.pushState({}, '', `{% url 'category_list' %}?search=${encodeURIComponent(searchValue)}`);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    // If AJAX fails, fall back to traditional form submission
                     searchForm.submit();
                 });
-            }, 500); // Submit after 500ms of no typing
+            }, 500);
         });
     });
 </script>
-{% endblock %} 
+{% endblock %}
