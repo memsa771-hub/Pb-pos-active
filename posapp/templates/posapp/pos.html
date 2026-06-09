@@ -1217,6 +1217,277 @@
         padding: 1rem !important;
     }
 
+    /* ===== PROCESS ORDER MODAL ===== */
+    #paymentModal .modal-content {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+    }
+
+    #paymentModal .modal-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        border: none;
+        padding: 1rem 1.25rem;
+    }
+
+    #paymentModal .modal-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    #paymentModal .modal-body {
+        background: #eef2f7;
+        padding: 1.15rem 1.25rem 1.25rem;
+    }
+
+    #paymentModal .pos-modal-section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    #paymentModal .pos-modal-section-header {
+        padding: 0.75rem 1rem;
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    #paymentModal .pos-modal-section-header i {
+        color: #2b6cb0;
+    }
+
+    #paymentModal .pos-modal-section-body {
+        padding: 1rem;
+    }
+
+    #paymentModal .pos-modal-info {
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        color: #2c5282;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+
+    #paymentModal .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.4rem;
+    }
+
+    #paymentModal .form-control,
+    #paymentModal .form-select,
+    #paymentModal .input-group-text {
+        border-color: #e2e8f0;
+        border-radius: 10px;
+        min-height: 42px;
+    }
+
+    #paymentModal .input-group > .form-control {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    #paymentModal .input-group > .input-group-text {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        background: #f8fafc;
+        color: #718096;
+    }
+
+    #paymentModal .input-group > .input-group-text.rounded-start-3 {
+        border-top-left-radius: 10px !important;
+        border-bottom-left-radius: 10px !important;
+    }
+
+    #paymentModal .input-group > .form-control.rounded-end-3 {
+        border-top-right-radius: 10px !important;
+        border-bottom-right-radius: 10px !important;
+    }
+
+    #paymentModal .order-type,
+    #paymentModal .payment-method {
+        cursor: pointer;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        background: #fff !important;
+        padding: 0.85rem 0.5rem !important;
+        box-shadow: none !important;
+        transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+        min-height: 88px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #paymentModal .order-type:hover,
+    #paymentModal .payment-method:hover {
+        transform: translateY(-2px);
+        border-color: #90cdf4 !important;
+        box-shadow: 0 6px 14px rgba(44, 82, 130, 0.1) !important;
+    }
+
+    #paymentModal .order-type.selected,
+    #paymentModal .payment-method.selected {
+        border-color: #2b6cb0 !important;
+        background: #ebf8ff !important;
+        box-shadow: 0 0 0 1px rgba(43, 108, 176, 0.35) !important;
+    }
+
+    #paymentModal .order-type i,
+    #paymentModal .payment-method i {
+        color: #2b6cb0 !important;
+        font-size: 1.45rem !important;
+        margin-bottom: 0.4rem !important;
+    }
+
+    #paymentModal .order-type.selected i,
+    #paymentModal .payment-method.selected i {
+        color: #1e3a5f !important;
+    }
+
+    #paymentModal .order-type .fw-bold,
+    #paymentModal .payment-method .fw-bold {
+        font-size: 0.82rem;
+        color: #2d3748;
+    }
+
+    #paymentModal .pos-modal-summary {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #paymentModal .pos-modal-summary-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: #fff;
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    #paymentModal .pos-modal-summary-body {
+        padding: 1rem;
+        flex: 1;
+    }
+
+    #paymentModal .pos-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.65rem;
+        font-size: 0.88rem;
+        color: #4a5568;
+    }
+
+    #paymentModal .pos-summary-row .value {
+        font-weight: 700;
+        color: #1a202c;
+    }
+
+    #paymentModal .pos-summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 0;
+        margin: 0.5rem 0 0.75rem;
+        border-top: 1px solid #edf2f7;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    #paymentModal .pos-summary-total .label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a202c;
+    }
+
+    #paymentModal .pos-summary-total .value {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #2b6cb0;
+    }
+
+    #paymentModal .discount-code-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #edf2f7;
+    }
+
+    #paymentModal #discountTabs {
+        border-bottom: none;
+        gap: 0.35rem;
+        margin-bottom: 0.85rem !important;
+    }
+
+    #paymentModal #discountTabs .nav-link {
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        color: #4a5568;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.4rem 0.85rem;
+        background: #fff;
+    }
+
+    #paymentModal #discountTabs .nav-link.active {
+        background: #2b6cb0;
+        border-color: #2b6cb0;
+        color: #fff;
+    }
+
+    #paymentModal #apply-discount-btn,
+    #paymentModal #apply-manual-discount-btn {
+        background: #2b6cb0;
+        border-color: #2b6cb0;
+        font-weight: 600;
+        border-radius: 0 10px 10px 0 !important;
+        min-height: 42px;
+    }
+
+    #paymentModal .modal-footer {
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+    }
+
+    #paymentModal .modal-footer .btn-outline-secondary {
+        border-radius: 10px;
+        min-height: 44px;
+        font-weight: 600;
+        border-color: #cbd5e0;
+        color: #4a5568;
+    }
+
+    #paymentModal #completePaymentBtn {
+        background: linear-gradient(135deg, #2f855a 0%, #38a169 100%);
+        border: none;
+        border-radius: 10px;
+        min-height: 44px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(56, 161, 105, 0.25);
+    }
+
+    #paymentModal #completePaymentBtn:hover {
+        background: linear-gradient(135deg, #276749 0%, #2f855a 100%);
+    }
+
     @media (min-width: 1024px) and (max-width: 1440px) {
         body.pos-page .product-grid {
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
@@ -1482,21 +1753,18 @@
 <!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header bg-primary text-white py-3">
+        <div class="modal-content">
+            <div class="modal-header text-white">
                 <h5 class="modal-title" id="paymentModalLabel"><i class="fas fa-shopping-bag me-2"></i>Process Order</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-3 p-lg-4">
+            <div class="modal-body">
                 <div class="row g-3 g-lg-4">
-                    <!-- Left Column: Customer Information -->
+                    <!-- Left Column -->
                     <div class="col-lg-7">
-                        <!-- Customer Information Card -->
-                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
-                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-user-circle me-2 text-primary"></i>Customer Information</h6>
-                            </div>
-                            <div class="card-body px-3 px-lg-4">
+                        <div class="pos-modal-section">
+                            <h6 class="pos-modal-section-header"><i class="fas fa-user-circle me-2"></i>Customer Information</h6>
+                            <div class="pos-modal-section-body">
                                 <div class="mb-3">
                                     <label for="customerName" class="form-label">Customer Name (Optional)</label>
                                     <div class="input-group">
@@ -1513,35 +1781,31 @@
                                 </div>
                             </div>
                         </div>
-                
-                        <!-- Service Charge Info -->
-                        <div class="alert alert-info mb-3" id="service-charge-info">
+
+                        <div class="pos-modal-info" id="service-charge-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <small>A service charge of <strong>{{ default_service_charge }}%</strong> will be applied to Dine In orders with total value above <strong>Rs.1000</strong>.</small>
+                            A service charge of <strong>{{ default_service_charge }}%</strong> will be applied to Dine In orders with total value above <strong>Rs.1000</strong>.
                         </div>
-                
-                        <!-- Order Type Selection -->
-                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
-                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-utensils me-2 text-primary"></i>Order Type</h6>
-                            </div>
-                            <div class="card-body px-3 px-lg-4">
+
+                        <div class="pos-modal-section">
+                            <h6 class="pos-modal-section-header"><i class="fas fa-utensils me-2"></i>Order Type</h6>
+                            <div class="pos-modal-section-body">
                                 <div class="row g-2 g-md-3">
                                     <div class="col-4">
-                                        <div class="order-type selected rounded-4 border p-2 p-md-3 text-center shadow-sm" data-type="Dine In">
-                                            <i class="fas fa-utensils fa-2x mb-2 text-info"></i>
+                                        <div class="order-type selected text-center" data-type="Dine In">
+                                            <i class="fas fa-utensils"></i>
                                             <div class="fw-bold">Dine In</div>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="order-type rounded-4 border p-2 p-md-3 text-center shadow-sm" data-type="Takeaway">
-                                            <i class="fas fa-shopping-bag fa-2x mb-2 text-success"></i>
+                                        <div class="order-type text-center" data-type="Takeaway">
+                                            <i class="fas fa-shopping-bag"></i>
                                             <div class="fw-bold">Takeaway</div>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="order-type rounded-4 border p-2 p-md-3 text-center shadow-sm" data-type="Delivery">
-                                            <i class="fas fa-motorcycle fa-2x mb-2 text-warning"></i>
+                                        <div class="order-type text-center" data-type="Delivery">
+                                            <i class="fas fa-motorcycle"></i>
                                             <div class="fw-bold">Delivery</div>
                                         </div>
                                     </div>
@@ -1579,39 +1843,33 @@
                                 </div>
                             </div>
                         </div>
-                
-                        <!-- Order Notes Card -->
-                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
-                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-sticky-note me-2 text-primary"></i>Order Notes</h6>
-                            </div>
-                            <div class="card-body px-3 px-lg-4">
-                                <textarea class="form-control rounded-3" id="orderNotes" rows="2" placeholder="Add any special instructions or notes"></textarea>
+
+                        <div class="pos-modal-section">
+                            <h6 class="pos-modal-section-header"><i class="fas fa-sticky-note me-2"></i>Order Notes</h6>
+                            <div class="pos-modal-section-body">
+                                <textarea class="form-control" id="orderNotes" rows="2" placeholder="Add any special instructions or notes"></textarea>
                             </div>
                         </div>
-                
-                        <!-- Payment Method Selection -->
-                        <div class="card mb-3 mb-lg-4 shadow-sm border-0 rounded-4 bg-light">
-                            <div class="card-header bg-light py-3 rounded-top-4 border-0">
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-credit-card me-2 text-primary"></i>Payment Method</h6>
-                            </div>
-                            <div class="card-body px-3 px-lg-4">
+
+                        <div class="pos-modal-section mb-0">
+                            <h6 class="pos-modal-section-header"><i class="fas fa-credit-card me-2"></i>Payment Method</h6>
+                            <div class="pos-modal-section-body">
                                 <div class="row g-2 g-md-3">
                                     <div class="col-4">
-                                        <div class="payment-method selected rounded-4 border p-2 p-md-3 text-center shadow-sm" data-method="Cash">
-                                            <i class="fas fa-money-bill-wave fa-2x mb-2 text-success"></i>
+                                        <div class="payment-method selected text-center" data-method="Cash">
+                                            <i class="fas fa-money-bill-wave"></i>
                                             <div class="fw-bold">Cash</div>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="payment-method rounded-4 border p-2 p-md-3 text-center shadow-sm" data-method="Card">
-                                            <i class="fas fa-credit-card fa-2x mb-2 text-primary"></i>
+                                        <div class="payment-method text-center" data-method="Card">
+                                            <i class="fas fa-credit-card"></i>
                                             <div class="fw-bold">Card</div>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="payment-method rounded-4 border p-2 p-md-3 text-center shadow-sm" data-method="Mobile">
-                                            <i class="fas fa-mobile-alt fa-2x mb-2 text-danger"></i>
+                                        <div class="payment-method text-center" data-method="Mobile">
+                                            <i class="fas fa-mobile-alt"></i>
                                             <div class="fw-bold">Mobile</div>
                                         </div>
                                     </div>
@@ -1619,47 +1877,41 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Right Column: Order Summary -->
                     <div class="col-lg-5">
-                        <div class="card shadow border-0 rounded-4 h-100">
-                            <div class="card-header bg-primary text-white py-3 rounded-top-4">
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-shopping-basket me-2"></i>Order Summary</h6>
-                            </div>
-                            <div class="card-body p-3 p-lg-4">
-                                <!-- Summary Details -->
-                                <div class="d-flex justify-content-between mb-3">
-                                    <span class="text-muted">Subtotal:</span>
-                                    <span id="summary-subtotal" class="fw-bold">Rs.0.00</span>
+                        <div class="pos-modal-summary">
+                            <h6 class="pos-modal-summary-header"><i class="fas fa-shopping-basket me-2"></i>Order Summary</h6>
+                            <div class="pos-modal-summary-body">
+                                <div class="pos-summary-row">
+                                    <span>Subtotal</span>
+                                    <span id="summary-subtotal" class="value">Rs.0.00</span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-3">
-                                    <span class="text-muted">Tax (<span id="summary-tax-rate-display">15</span>%):</span>
-                                    <span id="summary-tax" class="fw-bold">Rs.0.00</span>
+                                <div class="pos-summary-row">
+                                    <span>Tax (<span id="summary-tax-rate-display">15</span>%)</span>
+                                    <span id="summary-tax" class="value">Rs.0.00</span>
                                 </div>
                                 
-                                <!-- Service Charge Row (Only for Dine In) -->
-                                <div class="d-flex justify-content-between mb-3" id="service-charge-row">
-                                    <span class="text-muted">Service Charge</span>
-                                    <div class="d-flex align-items-center">
-                                        <div class="input-group input-group-sm me-2" style="width: 100px;">
+                                <div class="pos-summary-row" id="service-charge-row">
+                                    <span>Service Charge</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="input-group input-group-sm" style="width: 96px;">
                                             <input type="number" class="form-control" id="serviceChargePercent" value="{{ default_service_charge }}" min="0" max="100" step="1">
                                             <span class="input-group-text">%</span>
                                         </div>
-                                        <span id="summary-service-charge" class="fw-bold">Rs.0.00</span>
+                                        <span id="summary-service-charge" class="value">Rs.0.00</span>
                                     </div>
                                 </div>
-                                
-                                <!-- Delivery Charges Row -->
-                                <div class="d-flex justify-content-between mb-3" id="delivery-charges-row">
-                                    <span class="text-muted">Delivery Charges:</span>
-                                    <span id="summary-delivery-charges" class="fw-bold">Rs.0.00</span>
+
+                                <div class="pos-summary-row" id="delivery-charges-row">
+                                    <span>Delivery Charges</span>
+                                    <span id="summary-delivery-charges" class="value">Rs.0.00</span>
                                 </div>
-                                
-                                <!-- Discount Row -->
-                                <div class="d-flex justify-content-between mb-3 discount-row">
-                                    <span class="text-muted">Discount:</span>
+
+                                <div class="pos-summary-row discount-row">
+                                    <span>Discount</span>
                                     <div class="text-end">
-                                        <span id="summary-discount" class="fw-bold">Rs.0.00</span>
+                                        <span id="summary-discount" class="value">Rs.0.00</span>
                                         <div id="discount-details" class="small text-success mt-1 d-none">
                                             <span id="discount-type-display"></span>
                                             <button class="btn btn-sm text-danger p-0 remove-discount ms-2" title="Remove discount">
@@ -1668,19 +1920,17 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Total Line -->
-                                <div class="d-flex justify-content-between py-3 my-3 border-top border-bottom total-line">
-                                    <span class="fw-bold fs-5">Total:</span>
-                                    <span id="summary-total" class="fw-bold fs-5 text-primary">Rs.0.00</span>
+
+                                <div class="pos-summary-total">
+                                    <span class="label">Total</span>
+                                    <span id="summary-total" class="value">Rs.0.00</span>
                                 </div>
                                 
                                 <!-- Discount Code Section -->
                                 {% if user_permissions.can_apply_discount_codes or user_permissions.can_apply_manual_discounts %}
-                                <div class="discount-code-section mt-4">
-                                    <label class="form-label fw-bold">
-                                        <i class="fas fa-tag me-2 text-primary"></i>
-                                        Apply Discount
+                                <div class="discount-code-section">
+                                    <label class="form-label">
+                                        <i class="fas fa-tag me-2"></i>Apply Discount
                                     </label>
                                     
                                     <!-- Discount Tabs -->
@@ -1743,10 +1993,9 @@
                                 {% endif %}
                                 
                                 <!-- Table Number Section (Only visible for Dine In orders) -->
-                                <div id="table-number-section" class="mt-4">
-                                    <label class="form-label fw-bold">
-                                        <i class="fas fa-table me-2 text-primary"></i>
-                                        Table Number <span class="text-danger">*</span>
+                                <div id="table-number-section" class="mt-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-table me-2"></i>Table Number <span class="text-danger">*</span>
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text rounded-start-3 bg-white"><i class="fas fa-chair"></i></span>
@@ -1761,11 +2010,11 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light border-0 px-4 py-3 rounded-bottom-4">
-                <button type="button" class="btn btn-lg btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-lg btn-success rounded-3 px-4" id="completePaymentBtn">
+                <button type="button" class="btn btn-success px-4" id="completePaymentBtn">
                     <i class="fas fa-check-circle me-2"></i> Process Order
                 </button>
             </div>
