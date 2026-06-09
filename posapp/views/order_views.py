@@ -42,12 +42,14 @@ def order_list(request):
         status_filter = request.GET.get('history_status', '')
         date_from = request.GET.get('history_date_from', '')
         date_to = request.GET.get('history_date_to', '')
+        type_filter = request.GET.get('history_type', '')
     else:
         # Parameters for regular view
         search_query = request.GET.get('search', '')
         status_filter = request.GET.get('status', '')
         date_from = request.GET.get('date_from', '')
         date_to = request.GET.get('date_to', '')
+        type_filter = request.GET.get('type', '')
     
     # Check user roles for permissions
     user_is_admin = is_admin(request.user)
@@ -114,35 +116,38 @@ def order_list(request):
     if date_to:
         date_to_obj = datetime.datetime.strptime(date_to, '%Y-%m-%d').date()
         orders = orders.filter(created_at__date__lte=date_to_obj)
+
+    orders_for_stats = orders
+
+    if type_filter:
+        orders = orders.filter(order_type=type_filter)
+
+    orders = orders.select_related('user', 'delivery_person')
+
+    order_stats = {
+        'total': orders_for_stats.count(),
+        'pending': orders_for_stats.filter(order_status='Pending').count(),
+        'completed': orders_for_stats.filter(order_status='Completed').count(),
+        'takeaway': orders_for_stats.filter(order_type='Takeaway').count(),
+        'dine_in': orders_for_stats.filter(order_type='Dine In').count(),
+        'delivery': orders_for_stats.filter(order_type='Delivery').count(),
+    }
     
-    # Separate orders by type
-    takeaway_orders = []
-    dine_in_orders = []
-    delivery_orders = []
-    
-    for order in orders:
-        if order.order_type == 'Takeaway':
-            takeaway_orders.append(order)
-        elif order.order_type == 'Dine In':
-            dine_in_orders.append(order)
-        elif order.order_type == 'Delivery':
-            delivery_orders.append(order)
-    
-    # Pagination for all orders combined
-    paginator = Paginator(orders, 10)  # Show 10 orders per page
+    # Pagination
+    paginator = Paginator(orders, 15)
     page_number = request.GET.get('page')
     orders_page = paginator.get_page(page_number)
     
     context = {
         'orders': orders_page,
-        'takeaway_orders': takeaway_orders,
-        'dine_in_orders': dine_in_orders,
-        'delivery_orders': delivery_orders,
+        'order_stats': order_stats,
         'search_query': search_query,
         'status_filter': status_filter,
+        'type_filter': type_filter,
         'date_from': date_from,
         'date_to': date_to,
         'order_status_choices': Order.ORDER_STATUS_CHOICES,
+        'order_type_choices': ['Takeaway', 'Dine In', 'Delivery'],
         'is_admin': user_is_admin,
         'is_branch_manager': user_is_branch_manager,
         'show_history': show_history,

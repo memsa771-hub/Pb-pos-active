@@ -3,464 +3,659 @@
 
 {% block title %}Orders - POS System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .orders-page {
+        padding: 0.25rem 0 1.5rem;
+    }
+
+    .orders-toolbar {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: #fff;
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 14px rgba(30, 58, 95, 0.18);
+    }
+
+    .orders-toolbar h1 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .orders-toolbar p {
+        margin: 0.15rem 0 0;
+        font-size: 0.85rem;
+        opacity: 0.85;
+    }
+
+    .orders-toolbar-actions .btn {
+        min-height: 40px;
+        font-weight: 600;
+        border-radius: 10px;
+    }
+
+    .orders-toolbar-actions .btn-light {
+        color: #1e3a5f;
+    }
+
+    .orders-info-banner {
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        color: #2c5282;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .orders-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .orders-stat-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+
+    .orders-stat-card .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .orders-stat-card .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1.2;
+        margin-top: 0.15rem;
+    }
+
+    .orders-stat-card.pending .stat-value { color: #d69e2e; }
+    .orders-stat-card.completed .stat-value { color: #38a169; }
+    .orders-stat-card.takeaway .stat-value { color: #319795; }
+    .orders-stat-card.dine-in .stat-value { color: #3182ce; }
+    .orders-stat-card.delivery .stat-value { color: #dd6b20; }
+
+    .orders-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    .orders-filters {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #f8fafc;
+    }
+
+    .orders-filters .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.35rem;
+    }
+
+    .orders-filters .form-control,
+    .orders-filters .form-select {
+        border-radius: 10px;
+        border-color: #e2e8f0;
+        min-height: 42px;
+    }
+
+    .orders-search-wrap {
+        position: relative;
+    }
+
+    .orders-search-wrap i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+        z-index: 2;
+    }
+
+    .orders-search-wrap input {
+        padding-left: 2.25rem;
+    }
+
+    .orders-type-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #fff;
+    }
+
+    .orders-type-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+        background: #fff;
+        transition: all 0.15s ease;
+    }
+
+    .orders-type-pill:hover {
+        border-color: #90cdf4;
+        color: #2b6cb0;
+        background: #ebf8ff;
+    }
+
+    .orders-type-pill.active {
+        background: #2b6cb0;
+        border-color: #2b6cb0;
+        color: #fff;
+    }
+
+    .orders-type-pill .pill-count {
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 999px;
+        padding: 0.1rem 0.45rem;
+        font-size: 0.72rem;
+    }
+
+    .orders-type-pill.active .pill-count {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .orders-table-wrap {
+        padding: 0;
+    }
+
+    .orders-table {
+        margin: 0;
+        font-size: 0.88rem;
+    }
+
+    .orders-table thead th {
+        background: #f8fafc;
+        color: #4a5568;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.85rem 1rem;
+        white-space: nowrap;
+    }
+
+    .orders-table tbody td {
+        padding: 0.85rem 1rem;
+        vertical-align: middle;
+        border-color: #edf2f7;
+    }
+
+    .orders-table tbody tr:hover {
+        background: #f7fafc;
+    }
+
+    .order-ref {
+        font-weight: 700;
+        color: #2b6cb0;
+    }
+
+    .order-customer-sub {
+        font-size: 0.75rem;
+        color: #718096;
+        margin-top: 0.1rem;
+    }
+
+    .order-type-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+    }
+
+    .order-type-badge.takeaway { background: #e6fffa; color: #234e52; }
+    .order-type-badge.dine-in { background: #ebf8ff; color: #2c5282; }
+    .order-type-badge.delivery { background: #fffaf0; color: #9c4221; }
+
+    .order-status-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+    }
+
+    .order-status-badge.pending { background: #fefcbf; color: #744210; }
+    .order-status-badge.completed { background: #c6f6d5; color: #22543d; }
+    .order-status-badge.cancelled { background: #fed7d7; color: #822727; }
+
+    .order-total {
+        font-weight: 700;
+        color: #1a202c;
+        white-space: nowrap;
+    }
+
+    .order-actions {
+        display: inline-flex;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+    }
+
+    .order-action-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+
+    .orders-empty {
+        padding: 3rem 1.5rem;
+        text-align: center;
+        color: #718096;
+    }
+
+    .orders-empty i {
+        font-size: 2.5rem;
+        color: #cbd5e0;
+        margin-bottom: 0.75rem;
+    }
+
+    .orders-pagination {
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #edf2f7;
+        background: #f8fafc;
+    }
+
+    .orders-pagination .page-link {
+        border-radius: 8px;
+        margin: 0 2px;
+        color: #4a5568;
+        border-color: #e2e8f0;
+    }
+
+    .orders-pagination .page-item.active .page-link {
+        background: #2b6cb0;
+        border-color: #2b6cb0;
+    }
+
+    @media (max-width: 992px) {
+        .orders-table-wrap {
+            overflow-x: auto;
+        }
+        .orders-table {
+            min-width: 900px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Orders</h6>
-            <!-- Removed the "Add Order" button as orders should only be created from POS section -->
+<div class="container-fluid orders-page">
+    <div class="orders-toolbar">
+        <div>
+            <h1><i class="fas fa-receipt me-2"></i>Orders</h1>
+            <p>Manage and track all orders from the POS terminal</p>
         </div>
-        <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                    {% if 'Cannot end day: There are' not in message|stringformat:"s" and 'has been marked as completed' not in message|stringformat:"s" %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+        <div class="orders-toolbar-actions d-flex gap-2 flex-wrap">
+            <a href="{% url 'pos' %}" class="btn btn-light">
+                <i class="fas fa-cash-register me-1"></i> Open POS
+            </a>
+            {% if is_admin %}
+                {% if show_history %}
+                <a href="{% url 'order_list' %}" class="btn btn-outline-light">
+                    <i class="fas fa-clock me-1"></i> Current Session
+                </a>
+                {% else %}
+                <a href="{% url 'order_list' %}?history=1" class="btn btn-outline-light">
+                    <i class="fas fa-history me-1"></i> Full History
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'Cannot end day: There are' not in message|stringformat:"s" and 'has been marked as completed' not in message|stringformat:"s" %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if show_history %}
+    <div class="orders-info-banner">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Order History:</strong> Showing complete order history including all orders before day-end events.
+    </div>
+    {% elif last_end_day %}
+    <div class="orders-info-banner">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Current Session:</strong> Showing orders since last day end ({{ last_end_day.end_date|pkt_datetime }}).
+    </div>
+    {% endif %}
+
+    <div class="orders-stats">
+        <div class="orders-stat-card">
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value">{{ order_stats.total }}</div>
+        </div>
+        <div class="orders-stat-card pending">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">{{ order_stats.pending }}</div>
+        </div>
+        <div class="orders-stat-card completed">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value">{{ order_stats.completed }}</div>
+        </div>
+        <div class="orders-stat-card takeaway">
+            <div class="stat-label">Takeaway</div>
+            <div class="stat-value">{{ order_stats.takeaway }}</div>
+        </div>
+        <div class="orders-stat-card dine-in">
+            <div class="stat-label">Dine In</div>
+            <div class="stat-value">{{ order_stats.dine_in }}</div>
+        </div>
+        <div class="orders-stat-card delivery">
+            <div class="stat-label">Delivery</div>
+            <div class="stat-value">{{ order_stats.delivery }}</div>
+        </div>
+    </div>
+
+    <div class="orders-panel">
+        <div class="orders-filters">
+            <form method="get" action="{% url 'order_list' %}" id="searchForm">
+                {% if show_history %}<input type="hidden" name="history" value="1">{% endif %}
+                {% if type_filter %}
+                    {% if show_history %}
+                    <input type="hidden" name="history_type" value="{{ type_filter }}">
+                    {% else %}
+                    <input type="hidden" name="type" value="{{ type_filter }}">
                     {% endif %}
-                {% endfor %}
-            {% endif %}
-            
-            {% if show_history %}
-            <div class="alert alert-info mb-4">
-                <i class="fas fa-info-circle me-2"></i> <strong>Order History:</strong> Showing the complete order history, including all orders before day end events.
-            </div>
-            {% elif last_end_day %}
-            <div class="alert alert-info mb-4">
-                <i class="fas fa-info-circle me-2"></i> <strong>Current Orders:</strong> Showing orders since the last day end ({{ last_end_day.end_date|pkt_datetime }}).
-            </div>
-            {% endif %}
-            
-            <!-- Search and Filter Form -->
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <form method="get" action="{% url 'order_list' %}" class="row g-3" id="searchForm">
-                                {% if show_history %}
-                                <input type="hidden" name="history" value="1">
-                                <div class="col-md-3">
-                                    <label for="searchInput" class="form-label">Search</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0 rounded-start-3">
-                                            <i class="fas fa-search text-primary"></i>
-                                        </span>
-                                        <input type="text" class="form-control border-0 rounded-end-3" id="searchInput" name="history_search" placeholder="Reference # (PB1234), Customer Name, Phone, Table #" value="{{ search_query }}" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" id="status" name="history_status" onchange="document.getElementById('searchForm').submit();">
-                                        <option value="" {% if status_filter == '' %}selected{% endif %}>All Statuses</option>
-                                        {% for status_code, status_label in order_status_choices %}
-                                        <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="date_from" class="form-label">Date From</label>
-                                    <input type="date" class="form-control" id="date_from" name="history_date_from" value="{{ date_from }}" onchange="document.getElementById('searchForm').submit();">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="date_to" class="form-label">Date To</label>
-                                    <input type="date" class="form-control" id="date_to" name="history_date_to" value="{{ date_to }}" onchange="document.getElementById('searchForm').submit();">
-                                </div>
-                                {% else %}
-                                <div class="col-md-3">
-                                    <label for="searchInput" class="form-label">Search</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0 rounded-start-3">
-                                            <i class="fas fa-search text-primary"></i>
-                                        </span>
-                                        <input type="text" class="form-control border-0 rounded-end-3" id="searchInput" name="search" placeholder="Reference # (PB1234), Customer Name, Phone, Table #" value="{{ search_query }}" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" id="status" name="status" onchange="document.getElementById('searchForm').submit();">
-                                        <option value="" {% if status_filter == '' %}selected{% endif %}>All Statuses</option>
-                                        {% for status_code, status_label in order_status_choices %}
-                                        <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="date_from" class="form-label">Date From</label>
-                                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}" onchange="document.getElementById('searchForm').submit();">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="date_to" class="form-label">Date To</label>
-                                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}" onchange="document.getElementById('searchForm').submit();">
-                                </div>
-                                {% endif %}
-                            </form>
+                {% endif %}
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-4 col-md-6">
+                        <label for="searchInput" class="form-label">Search</label>
+                        <div class="orders-search-wrap">
+                            <i class="fas fa-search"></i>
+                            {% if show_history %}
+                            <input type="text" class="form-control" id="searchInput" name="history_search" placeholder="Reference #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
+                            {% else %}
+                            <input type="text" class="form-control" id="searchInput" name="search" placeholder="Reference #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
+                            {% endif %}
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Order Type Sections -->
-            
-            <!-- Takeaway Orders -->
-            {% if takeaway_orders %}
-            <div class="mb-4">
-                <h5 class="text-success mb-3">
-                    <i class="fas fa-shopping-bag me-2"></i>Takeaway Orders ({{ takeaway_orders|length }})
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-success">
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in takeaway_orders %}
-                            <tr>
-                                <td>{{ order.reference_number }}</td>
-                                <td>{{ order.customer_name|default:"--" }}</td>
-                                <td>Rs.{{ order.total_amount|floatformat:2 }}</td>
-                                <td>
-                                    {% if order.order_status == 'Pending' %}
-                                    <span class="badge bg-warning">Pending</span>
-                                    {% elif order.order_status == 'Completed' %}
-                                    <span class="badge bg-success">Completed</span>
-                                    {% elif order.order_status == 'Cancelled' %}
-                                    <span class="badge bg-danger">Cancelled</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ order.created_at|pkt_datetime_short }}</td>
-                                <td class="text-center">
-                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'order_edit' order.id %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'order_receipt' order.id %}" class="btn btn-sm btn-success" target="_blank">
-                                        <i class="fas fa-print"></i>
-                                    </a>
-                                </td>
-                            </tr>
+                    <div class="col-lg-2 col-md-3 col-6">
+                        <label for="status" class="form-label">Status</label>
+                        {% if show_history %}
+                        <select class="form-select" id="status" name="history_status" onchange="document.getElementById('searchForm').submit();">
+                        {% else %}
+                        <select class="form-select" id="status" name="status" onchange="document.getElementById('searchForm').submit();">
+                        {% endif %}
+                            <option value="" {% if status_filter == '' %}selected{% endif %}>All Statuses</option>
+                            {% for status_code, status_label in order_status_choices %}
+                            <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_label }}</option>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-6">
+                        <label for="date_from" class="form-label">Date From</label>
+                        {% if show_history %}
+                        <input type="date" class="form-control" id="date_from" name="history_date_from" value="{{ date_from }}" onchange="document.getElementById('searchForm').submit();">
+                        {% else %}
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}" onchange="document.getElementById('searchForm').submit();">
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-6">
+                        <label for="date_to" class="form-label">Date To</label>
+                        {% if show_history %}
+                        <input type="date" class="form-control" id="date_to" name="history_date_to" value="{{ date_to }}" onchange="document.getElementById('searchForm').submit();">
+                        {% else %}
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}" onchange="document.getElementById('searchForm').submit();">
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
-            {% endif %}
+            </form>
+        </div>
 
-            <!-- Dine In Orders -->
-            {% if dine_in_orders %}
-            <div class="mb-4">
-                <h5 class="text-primary mb-3">
-                    <i class="fas fa-utensils me-2"></i>Dine In Orders ({{ dine_in_orders|length }})
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Table #</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in dine_in_orders %}
-                            <tr>
-                                <td>{{ order.reference_number }}</td>
-                                <td>{{ order.customer_name|default:"--" }}</td>
-                                <td>{{ order.table_number|default:"--" }}</td>
-                                <td>Rs.{{ order.total_amount|floatformat:2 }}</td>
-                                <td>
-                                    {% if order.order_status == 'Pending' %}
-                                    <span class="badge bg-warning">Pending</span>
-                                    {% elif order.order_status == 'Completed' %}
-                                    <span class="badge bg-success">Completed</span>
-                                    {% elif order.order_status == 'Cancelled' %}
-                                    <span class="badge bg-danger">Cancelled</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ order.created_at|pkt_datetime_short }}</td>
-                                <td class="text-center">
-                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'order_edit' order.id %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'order_receipt' order.id %}" class="btn btn-sm btn-success" target="_blank">
-                                        <i class="fas fa-print"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="orders-type-pills" id="ordersTypePills">
+            {% if show_history %}
+            <a href="?history=1{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if not type_filter %}active{% endif %}">
+                All <span class="pill-count">{{ order_stats.total }}</span>
+            </a>
+            <a href="?history=1&history_type=Takeaway{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if type_filter == 'Takeaway' %}active{% endif %}">
+                <i class="fas fa-shopping-bag"></i> Takeaway <span class="pill-count">{{ order_stats.takeaway }}</span>
+            </a>
+            <a href="?history=1&history_type={{ 'Dine In'|urlencode }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if type_filter == 'Dine In' %}active{% endif %}">
+                <i class="fas fa-utensils"></i> Dine In <span class="pill-count">{{ order_stats.dine_in }}</span>
+            </a>
+            <a href="?history=1&history_type=Delivery{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if type_filter == 'Delivery' %}active{% endif %}">
+                <i class="fas fa-motorcycle"></i> Delivery <span class="pill-count">{{ order_stats.delivery }}</span>
+            </a>
+            {% else %}
+            <a href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter|urlencode }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if not type_filter %}active{% endif %}">
+                All <span class="pill-count">{{ order_stats.total }}</span>
+            </a>
+            <a href="?type=Takeaway{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if type_filter == 'Takeaway' %}active{% endif %}">
+                <i class="fas fa-shopping-bag"></i> Takeaway <span class="pill-count">{{ order_stats.takeaway }}</span>
+            </a>
+            <a href="?type={{ 'Dine In'|urlencode }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if type_filter == 'Dine In' %}active{% endif %}">
+                <i class="fas fa-utensils"></i> Dine In <span class="pill-count">{{ order_stats.dine_in }}</span>
+            </a>
+            <a href="?type=Delivery{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+               class="orders-type-pill {% if type_filter == 'Delivery' %}active{% endif %}">
+                <i class="fas fa-motorcycle"></i> Delivery <span class="pill-count">{{ order_stats.delivery }}</span>
+            </a>
             {% endif %}
+        </div>
 
-            <!-- Delivery Orders -->
-            {% if delivery_orders %}
-            <div class="mb-4">
-                <h5 class="text-warning mb-3">
-                    <i class="fas fa-motorcycle me-2"></i>Delivery Orders ({{ delivery_orders|length }})
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-warning">
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Delivery Person</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in delivery_orders %}
-                            <tr>
-                                <td>{{ order.reference_number }}</td>
-                                <td>{{ order.customer_name|default:"--" }}</td>
-                                <td>
-                                    {% if order.delivery_person %}
-                                        <a href="{% url 'delivery_person_detail' order.delivery_person.id %}" class="text-decoration-none">
-                                            {{ order.delivery_person.name }}
-                                        </a>
-                                    {% else %}
-                                        <span class="text-muted">Not Assigned</span>
-                                    {% endif %}
-                                </td>
-                                <td>Rs.{{ order.total_amount|floatformat:2 }}</td>
-                                <td>
-                                    {% if order.order_status == 'Pending' %}
-                                    <span class="badge bg-warning">Pending</span>
-                                    {% elif order.order_status == 'Completed' %}
-                                    <span class="badge bg-success">Completed</span>
-                                    {% elif order.order_status == 'Cancelled' %}
-                                    <span class="badge bg-danger">Cancelled</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ order.created_at|pkt_datetime_short }}</td>
-                                <td class="text-center">
-                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'order_edit' order.id %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'order_receipt' order.id %}" class="btn btn-sm btn-success" target="_blank">
-                                        <i class="fas fa-print"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- All Orders Combined (for pagination) -->
-            <h5 class="text-secondary mb-3">
-                <i class="fas fa-list me-2"></i>All Orders (Paginated)
-            </h5>
-            <div class="table-responsive">
-                <table class="table table-bordered" id="ordersTable" width="100%" cellspacing="0">
+        <div id="ordersResults">
+            <div class="orders-table-wrap">
+                <table class="table orders-table" id="ordersTable">
                     <thead>
                         <tr>
-                            <th>Order #</th>
+                            <th>Order</th>
+                            <th>Type</th>
                             <th>Customer</th>
-                            <th>Table #</th>
+                            <th>Table / Rider</th>
                             <th>Total</th>
                             <th>Status</th>
                             <th>Date</th>
-                            <th>Created By</th>
-                            <th>Actions</th>
+                            <th>Staff</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for order in orders %}
                         <tr>
+                            <td><span class="order-ref">{{ order.reference_number }}</span></td>
                             <td>
-                                {{ order.reference_number }}
+                                {% if order.order_type == 'Takeaway' %}
+                                <span class="order-type-badge takeaway">Takeaway</span>
+                                {% elif order.order_type == 'Dine In' %}
+                                <span class="order-type-badge dine-in">Dine In</span>
+                                {% elif order.order_type == 'Delivery' %}
+                                <span class="order-type-badge delivery">Delivery</span>
+                                {% else %}
+                                <span class="order-type-badge">{{ order.order_type|default:"--" }}</span>
+                                {% endif %}
                             </td>
-                            <td>{{ order.customer_name|default:"--" }}</td>
-                            <td>{% if order.order_type == 'Dine In' and order.table_number %}{{ order.table_number }}{% else %}--{% endif %}</td>
-                            <td>Rs.{{ order.total_amount|floatformat:2 }}</td>
+                            <td>
+                                <div>{{ order.customer_name|default:"Walk-in" }}</div>
+                                {% if order.customer_phone %}
+                                <div class="order-customer-sub">{{ order.customer_phone }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.order_type == 'Dine In' and order.table_number %}
+                                    <i class="fas fa-chair text-muted me-1"></i>Table {{ order.table_number }}
+                                {% elif order.order_type == 'Delivery' %}
+                                    {% if order.delivery_person %}
+                                    <a href="{% url 'delivery_person_detail' order.delivery_person.id %}" class="text-decoration-none">
+                                        <i class="fas fa-motorcycle text-muted me-1"></i>{{ order.delivery_person.name }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="text-muted">--</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="order-total">Rs.{{ order.total_amount|floatformat:2 }}</span></td>
                             <td>
                                 {% if order.order_status == 'Pending' %}
-                                <span class="badge bg-warning">Pending</span>
+                                <span class="order-status-badge pending">Pending</span>
                                 {% elif order.order_status == 'Completed' %}
-                                <span class="badge bg-success">Completed</span>
+                                <span class="order-status-badge completed">Completed</span>
                                 {% elif order.order_status == 'Cancelled' %}
-                                <span class="badge bg-danger">Cancelled</span>
+                                <span class="order-status-badge cancelled">Cancelled</span>
                                 {% endif %}
                             </td>
                             <td>{{ order.created_at|pkt_datetime_short }}</td>
                             <td>{{ order.user.get_full_name|default:order.user.username }}</td>
-                            <td class="text-center">
-                                <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if user_permissions.can_edit_orders %}
-                                <a href="{% url 'order_edit' order.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% else %}
-                                <span class="btn btn-sm btn-secondary disabled" title="Access Restricted: You don't have permission to edit orders">
-                                    <i class="fas fa-lock"></i>
-                                </span>
-                                {% endif %}
-                                <a href="{% url 'order_receipt' order.id %}" class="btn btn-sm btn-success" target="_blank">
-                                    <i class="fas fa-print"></i>
-                                </a>
-                                {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' %}
-                                    {% if user_permissions.can_cancel_orders %}
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">
-                                        <i class="fas fa-ban"></i>
-                                    </button>
+                            <td class="text-end">
+                                <div class="order-actions">
+                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-secondary order-action-btn" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user_permissions.can_edit_orders %}
+                                    <a href="{% url 'order_edit' order.id %}" class="btn btn-outline-primary order-action-btn" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                     {% else %}
-                                    <span class="btn btn-sm btn-secondary disabled" title="Access Restricted: You don't have permission to cancel orders">
+                                    <span class="btn btn-outline-secondary order-action-btn disabled" title="No edit permission">
                                         <i class="fas fa-lock"></i>
                                     </span>
                                     {% endif %}
-                                    
-                                    <!-- Cancel Confirmation Modal -->
-                                    <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderModalLabel{{ order.id }}" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="cancelOrderModalLabel{{ order.id }}">Confirm Cancellation</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body text-start">
-                                                    Are you sure you want to cancel order <strong>{{ order.reference_number }}</strong>? This action cannot be undone.
-                                                    <div class="alert alert-info mt-2">
-                                                        <i class="fas fa-info-circle"></i> Note: Only Branch Managers and Administrators can cancel orders.
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
-                                                    <form action="{% url 'order_cancel' order.id %}" method="post" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger">Yes, Cancel Order</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endif %}
+                                    <a href="{% url 'order_receipt' order.id %}" class="btn btn-outline-success order-action-btn" title="Print" target="_blank">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' %}
+                                        {% if user_permissions.can_cancel_orders %}
+                                        <button type="button" class="btn btn-outline-danger order-action-btn" title="Cancel" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center">No orders found.</td>
+                            <td colspan="9">
+                                <div class="orders-empty">
+                                    <div><i class="fas fa-inbox d-block"></i></div>
+                                    <strong>No orders found</strong>
+                                    <div class="mt-1">Try adjusting your search or filters.</div>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Pagination -->
+
+            {% for order in orders %}
+                {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' and user_permissions.can_cancel_orders %}
+                <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderModalLabel{{ order.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cancelOrderModalLabel{{ order.id }}">Confirm Cancellation</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-start">
+                                Cancel order <strong>{{ order.reference_number }}</strong>? This cannot be undone.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Order</button>
+                                <form action="{% url 'order_cancel' order.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Cancel Order</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+
             {% if orders.has_other_pages %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if orders.has_previous %}
-                    <li class="page-item">
-                        {% if show_history %}
-                        <a class="page-link" href="?history=1&page=1{% if search_query %}&history_search={{ search_query }}{% endif %}{% if status_filter %}&history_status={{ status_filter }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}" aria-label="First">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?history=1&page={{ orders.previous_page_number }}{% if search_query %}&history_search={{ search_query }}{% endif %}{% if status_filter %}&history_status={{ status_filter }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+            <div class="orders-pagination">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if orders.has_previous %}
+                        <li class="page-item">
+                            {% if show_history %}
+                            <a class="page-link" href="?history=1&page={{ orders.previous_page_number }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">&laquo;</a>
+                            {% else %}
+                            <a class="page-link" href="?page={{ orders.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&laquo;</a>
+                            {% endif %}
+                        </li>
                         {% else %}
-                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="First">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ orders.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
                         {% endif %}
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="First">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for i in orders.paginator.page_range %}
-                        {% if orders.number == i %}
-                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
-                        {% elif i > orders.number|add:'-3' and i < orders.number|add:'3' %}
-                        {% if show_history %}
-                        <li class="page-item"><a class="page-link" href="?history=1&page={{ i }}{% if search_query %}&history_search={{ search_query }}{% endif %}{% if status_filter %}&history_status={{ status_filter }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">{{ i }}</a></li>
+
+                        {% for i in orders.paginator.page_range %}
+                            {% if orders.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                            {% elif i > orders.number|add:'-3' and i < orders.number|add:'3' %}
+                            <li class="page-item">
+                                {% if show_history %}
+                                <a class="page-link" href="?history=1&page={{ i }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">{{ i }}</a>
+                                {% else %}
+                                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ i }}</a>
+                                {% endif %}
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if orders.has_next %}
+                        <li class="page-item">
+                            {% if show_history %}
+                            <a class="page-link" href="?history=1&page={{ orders.next_page_number }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">&raquo;</a>
+                            {% else %}
+                            <a class="page-link" href="?page={{ orders.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&raquo;</a>
+                            {% endif %}
+                        </li>
                         {% else %}
-                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ i }}</a></li>
+                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
                         {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if orders.has_next %}
-                    <li class="page-item">
-                        {% if show_history %}
-                        <a class="page-link" href="?history=1&page={{ orders.next_page_number }}{% if search_query %}&history_search={{ search_query }}{% endif %}{% if status_filter %}&history_status={{ status_filter }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?history=1&page={{ orders.paginator.num_pages }}{% if search_query %}&history_search={{ search_query }}{% endif %}{% if status_filter %}&history_status={{ status_filter }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}" aria-label="Last">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
-                        {% else %}
-                        <a class="page-link" href="?page={{ orders.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Last">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
-                        {% endif %}
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Last">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
+                    </ul>
+                </nav>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -470,104 +665,67 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Real-time search
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
         const isHistoryView = {% if show_history %}true{% else %}false{% endif %};
-        
-        // Focus on search input if it has a value
+
         if (searchInput.value.length > 0) {
             searchInput.focus();
-            // Place cursor at the end of text
             const length = searchInput.value.length;
             searchInput.setSelectionRange(length, length);
         }
-        
-        // Function to perform the search
+
         function performSearch() {
-            // Store the cursor position
             const cursorPosition = searchInput.selectionStart;
-            
-            // Build the query parameters
             const formData = new FormData(searchForm);
             const params = new URLSearchParams();
             for (const [key, value] of formData.entries()) {
                 if (value) params.append(key, value);
             }
-            
-            // Always include history parameter if we're in history view
+
             if (isHistoryView && !params.has('history')) {
                 params.append('history', '1');
             }
-            
-            // Use AJAX to perform the search without page reload
+
             fetch(`{% url 'order_list' %}?${params.toString()}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(response => response.text())
             .then(html => {
-                // Update just the table content, not the entire page
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-                
-                // Update the orders table
-                const tableBody = doc.querySelector('#ordersTable tbody');
-                if (tableBody) {
-                    document.querySelector('#ordersTable tbody').innerHTML = tableBody.innerHTML;
+
+                const newResults = doc.querySelector('#ordersResults');
+                const currentResults = document.querySelector('#ordersResults');
+                if (newResults && currentResults) {
+                    currentResults.innerHTML = newResults.innerHTML;
                 }
-                
-                // Update pagination if it exists
-                const newPagination = doc.querySelector('nav[aria-label="Page navigation"]');
-                const currentPagination = document.querySelector('nav[aria-label="Page navigation"]');
-                
-                if (newPagination && currentPagination) {
-                    currentPagination.innerHTML = newPagination.innerHTML;
-                } else if (newPagination && !currentPagination) {
-                    document.querySelector('.card-body').appendChild(newPagination);
-                } else if (!newPagination && currentPagination) {
-                    currentPagination.remove();
+
+                const newStats = doc.querySelector('.orders-stats');
+                const currentStats = document.querySelector('.orders-stats');
+                if (newStats && currentStats) {
+                    currentStats.innerHTML = newStats.innerHTML;
                 }
-                
-                // Restore focus and cursor position
+
+                const newPills = doc.querySelector('#ordersTypePills');
+                const currentPills = document.querySelector('#ordersTypePills');
+                if (newPills && currentPills) {
+                    currentPills.innerHTML = newPills.innerHTML;
+                }
+
                 searchInput.focus();
                 searchInput.setSelectionRange(cursorPosition, cursorPosition);
-                
-                // Update the URL without reloading the page
                 window.history.pushState({}, '', `{% url 'order_list' %}?${params.toString()}`);
             })
-            .catch(error => {
-                console.error('Error:', error);
-                // If AJAX fails, fall back to traditional form submission
-                searchForm.submit();
-            });
+            .catch(() => searchForm.submit());
         }
-        
+
         searchInput.addEventListener('input', function() {
-            // Get the current search value
             const searchValue = searchInput.value.trim();
-            
-            // Check if the input is a table number (only digits)
             const isTableNumber = /^\d+$/.test(searchValue);
-            
-            // If it's a table number, perform search immediately with shorter delay
-            if (isTableNumber) {
-                clearTimeout(this.timer);
-                this.timer = setTimeout(performSearch, 100); // Fast response for table numbers
-            } else {
-                // For regular text searches, use slightly longer delay
-                clearTimeout(this.timer);
-                this.timer = setTimeout(performSearch, 300); // 300ms delay for other searches
-            }
+            clearTimeout(this.timer);
+            this.timer = setTimeout(performSearch, isTableNumber ? 100 : 300);
         });
-        
-        // Perform search on page load if there's already a search value
-        if (searchInput.value.trim().length > 0) {
-            performSearch();
-        }
     });
-
-
 </script>
-{% endblock %} 
+{% endblock %}
