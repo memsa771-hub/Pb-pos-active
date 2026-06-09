@@ -14,15 +14,13 @@ from datetime import datetime, timedelta
 
 from posapp.decorators import management_required
 from posapp.models import BillAdjustment, BillAdjustmentImage, AdvanceAdjustment, EndDay, Setting, BusinessLogo
+from posapp.permissions import is_admin, can_access_management
 
 # Custom mixin to check if user is admin only
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        if not self.request.user.is_authenticated:
-            return False
-        return (self.request.user.is_superuser or
-                self.request.user.profile.role.name == 'Admin')
-                
+        return is_admin(self.request.user)
+
     def handle_no_permission(self):
         messages.error(self.request, "You don't have permission to access this page. Admin access required.")
         return redirect('pos')
@@ -30,11 +28,7 @@ class AdminRequiredMixin(UserPassesTestMixin):
 # Custom mixin to check if user is admin or branch manager
 class AdminOrBranchManagerRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        if not self.request.user.is_authenticated:
-            return False
-        return (self.request.user.is_superuser or
-                self.request.user.profile.role.name == 'Admin' or
-                self.request.user.profile.role.name == 'Branch Manager')
+        return can_access_management(self.request.user)
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have permission to access this page. Management access required.")
@@ -63,11 +57,9 @@ class BillAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequiredMix
         start_date = self.request.GET.get('start_date', '')
         end_date = self.request.GET.get('end_date', '')
         
-        # Check if user is admin or branch manager
-        is_admin = self.request.user.is_superuser or self.request.user.profile.role.name == 'Admin'
-        
-        # For branch managers, only show current day adjustments after end day
-        if not is_admin:
+        user_is_admin = is_admin(self.request.user)
+
+        if not user_is_admin:
             # Get the last end day timestamp
             last_end_day = EndDay.get_last_end_day()
             if last_end_day:
@@ -82,7 +74,7 @@ class BillAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequiredMix
             )
         
         # Apply date filters (for admins only)
-        if is_admin:
+        if user_is_admin:
             if start_date:
                 try:
                     start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -104,7 +96,8 @@ class BillAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequiredMix
         context['search'] = self.request.GET.get('search', '')
         context['start_date'] = self.request.GET.get('start_date', '')
         context['end_date'] = self.request.GET.get('end_date', '')
-        context['is_admin'] = self.request.user.is_superuser or self.request.user.profile.role.name == 'Admin'
+        context['is_admin'] = is_admin(self.request.user)
+        context['last_end_day'] = EndDay.get_last_end_day()
         return context
 
 class BillAdjustmentDetailView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DetailView):
@@ -243,11 +236,9 @@ class AdvanceAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequired
         start_date = self.request.GET.get('start_date', '')
         end_date = self.request.GET.get('end_date', '')
         
-        # Check if user is admin or branch manager
-        is_admin = self.request.user.is_superuser or self.request.user.profile.role.name == 'Admin'
-        
-        # For branch managers, only show current day adjustments after end day
-        if not is_admin:
+        user_is_admin = is_admin(self.request.user)
+
+        if not user_is_admin:
             # Get the last end day timestamp
             last_end_day = EndDay.get_last_end_day()
             if last_end_day:
@@ -262,7 +253,7 @@ class AdvanceAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequired
             )
         
         # Apply date filters (for admins only)
-        if is_admin:
+        if user_is_admin:
             if start_date:
                 try:
                     start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -284,7 +275,8 @@ class AdvanceAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequired
         context['search'] = self.request.GET.get('search', '')
         context['start_date'] = self.request.GET.get('start_date', '')
         context['end_date'] = self.request.GET.get('end_date', '')
-        context['is_admin'] = self.request.user.is_superuser or self.request.user.profile.role.name == 'Admin'
+        context['is_admin'] = is_admin(self.request.user)
+        context['last_end_day'] = EndDay.get_last_end_day()
         return context
 
 class AdvanceAdjustmentDetailView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DetailView):
@@ -353,10 +345,10 @@ class AdvanceAdjustmentDeleteView(LoginRequiredMixin, AdminOrBranchManagerRequir
 @management_required
 def adjustment_dashboard(request):
     # Check if user is admin or branch manager
-    is_admin = request.user.is_superuser or request.user.profile.role.name == 'Admin'
+    user_is_admin = is_admin(request.user)
     
     # For branch managers, only show adjustments since last end day
-    if not is_admin:
+    if not user_is_admin:
         # Get the last end day timestamp
         last_end_day = EndDay.get_last_end_day()
         if last_end_day:
@@ -375,9 +367,10 @@ def adjustment_dashboard(request):
     context = {
         'bill_adjustments': bill_adjustments,
         'advance_adjustments': advance_adjustments,
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
+        'last_end_day': EndDay.get_last_end_day(),
     }
-    
+
     return render(request, 'posapp/adjustments/adjustment_dashboard.html', context)
 
 # Adjustment Report
@@ -385,7 +378,7 @@ def adjustment_dashboard(request):
 @management_required
 def adjustment_report(request):
     # Check if user is admin or branch manager
-    is_admin = request.user.is_superuser or request.user.profile.role.name == 'Admin'
+    user_is_admin = is_admin(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
@@ -432,7 +425,7 @@ def adjustment_report(request):
             end_date = timezone.make_aware(datetime.combine(today.date(), datetime.max.time()))
     
     # For branch managers, further limit by last end day if needed
-    if not is_admin and last_end_day_time:
+    if not user_is_admin and last_end_day_time:
         # For branch managers, only show adjustments since the last end day
         # Override the date range to be from last end day to now
         start_date = last_end_day_time
@@ -466,7 +459,7 @@ def adjustment_report(request):
         'end_date': end_date,
         'start_date_str': start_date.strftime('%Y-%m-%d %H:%M:%S'),
         'end_date_str': end_date.strftime('%Y-%m-%d %H:%M:%S'),
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
         'last_end_day': last_end_day,
     }
     
@@ -482,7 +475,7 @@ def adjustment_receipt(request):
         return redirect('dashboard')
     
     # Check if user is admin or branch manager
-    is_admin = request.user.is_superuser or request.user.profile.role.name == 'Admin'
+    user_is_admin = is_admin(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
@@ -529,7 +522,7 @@ def adjustment_receipt(request):
             end_date = timezone.make_aware(datetime.combine(today.date(), datetime.max.time()))
     
     # For branch managers, further limit by last end day if needed
-    if not is_admin and last_end_day_time:
+    if not user_is_admin and last_end_day_time:
         # For branch managers, only show adjustments since the last end day
         # Override the date range to be from last end day to now
         start_date = last_end_day_time
@@ -595,7 +588,7 @@ def adjustment_receipt(request):
         'business_email': business_settings['business_email'],
         'business_logo': logo_url,
         'currency_symbol': currency_symbol,
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
         'last_end_day': last_end_day,
         'receipt_show_logo': receipt_show_logo,
         'receipt_header': receipt_header,

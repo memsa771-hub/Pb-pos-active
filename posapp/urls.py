@@ -60,7 +60,10 @@ from .views.delivery_views import (
     delivery_person_delete, delivery_person_detail, delivery_report
 )
 
+from django.contrib.auth.decorators import login_required
+
 # Simple profile view function
+@login_required
 def profile_view(request):
     return render(request, 'posapp/profile.html')
 

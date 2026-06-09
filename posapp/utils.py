@@ -115,50 +115,13 @@ def ensure_defaults(order_data):
     return result 
 
 def has_permission(user, permission):
-    """
-    Check if user has a specific permission
-    Args:
-        user: Django User object
-        permission: Permission name (e.g., 'can_create_orders')
-    Returns:
-        Boolean indicating if user has the permission
-    """
-    try:
-        if user.is_superuser:
-            return True
-            
-        if hasattr(user, 'profile') and user.profile.role:
-            return user.profile.role.has_permission(permission)
-            
-        return False
-    except Exception:
-        return False
+    from .permissions import has_permission as check_permission
+    return check_permission(user, permission)
+
 
 def get_user_permissions(user):
-    """
-    Get all permissions for a user
-    Args:
-        user: Django User object
-    Returns:
-        Dictionary of all permissions
-    """
-    try:
-        if user.is_superuser:
-            # Superuser has all permissions
-            from .models import UserRole
-            dummy_role = UserRole()
-            all_permissions = {}
-            for field in dummy_role._meta.fields:
-                if field.name.startswith('can_'):
-                    all_permissions[field.name] = True
-            return all_permissions
-            
-        if hasattr(user, 'profile') and user.profile.role:
-            return user.profile.role.get_all_permissions()
-            
-        return {}
-    except Exception:
-        return {}
+    from .permissions import get_user_permissions as get_permissions
+    return get_permissions(user)
 
 def require_permission(permission):
     """

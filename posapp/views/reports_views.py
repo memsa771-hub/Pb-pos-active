@@ -14,6 +14,7 @@ from django.db.models import Q
 from django.core.cache import cache
 import logging
 from ..decorators import management_required, admin_required
+from ..permissions import is_admin, is_branch_manager, can_access_management
 from ..models import Order, OrderItem, PosProduct, PosCategory, BusinessSettings, BillAdjustment, AdvanceAdjustment, BusinessLogo, Setting, EndDay
 
 import io
@@ -125,7 +126,7 @@ def reports_dashboard(request):
     """Main reports dashboard with overview of available reports"""
     
     # Check if user is admin or branch manager
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
+    user_is_admin = is_admin(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
@@ -135,7 +136,7 @@ def reports_dashboard(request):
     business_ranges = get_business_day_ranges()
     
     # Base query for filtering orders
-    if is_admin or not last_end_day_time:
+    if user_is_admin or not last_end_day_time:
         # Admin sees all orders, or if no end day exists, show all
         base_query = Order.objects.all()
     else:
@@ -172,7 +173,7 @@ def reports_dashboard(request):
         'revenue_total': revenue_total,
         'categories': categories,
         'excel_export_available': EXCEL_EXPORT_AVAILABLE,
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
         'last_end_day': last_end_day,
         # Add business day range info for template display
         'business_ranges': business_ranges,
@@ -190,7 +191,7 @@ def sales_report(request):
     """Sales report with charts and data"""
     
     # Check if user is admin or branch manager
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
+    user_is_admin = is_admin(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
@@ -251,7 +252,7 @@ def sales_report(request):
     # For branch managers, further limit by last end day if needed
     base_filter = Q(created_at__date__gte=start_date, created_at__date__lte=end_date)
     
-    if not is_admin and last_end_day_time:
+    if not user_is_admin and last_end_day_time:
         # Add condition for branch managers to only see data since last end day
         base_filter &= Q(created_at__gte=last_end_day_time)
     
@@ -332,7 +333,7 @@ def sales_report(request):
         'total_sales': sum(chart_sales),
         'total_orders': sum(chart_orders),
         'excel_export_available': EXCEL_EXPORT_AVAILABLE,
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
         'last_end_day': last_end_day,
         'is_business_day_range': is_business_day_range,
         'range_description': range_description,
@@ -588,11 +589,7 @@ def export_order_items_excel(request):
 @login_required
 def sales_receipt(request):
     """Display a printable receipt for sales summary report"""
-    if not (request.user.is_superuser or 
-            hasattr(request.user, 'profile') and 
-            hasattr(request.user.profile, 'role') and
-            (request.user.profile.role.name == 'Admin' or 
-            request.user.profile.role.name == 'Branch Manager')):
+    if not can_access_management(request.user):
         messages.error(request, 'You do not have permission to access this page.')
         return redirect('dashboard')
     
@@ -954,7 +951,7 @@ def sales_receipt(request):
 @management_required
 def end_day_reports(request):
     """Display list of all end day reports"""
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
+    user_is_admin = is_admin(request.user)
     
     # Get all end days ordered by oldest first
     end_days = list(EndDay.objects.all().order_by('end_date'))
@@ -962,7 +959,7 @@ def end_day_reports(request):
     # Date filter (admin only)
     start_date = request.GET.get('start_date', '')
     end_date = request.GET.get('end_date', '')
-    if is_admin:
+    if user_is_admin:
         if start_date:
             try:
                 start_date_dt = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -1027,6 +1024,6 @@ def end_day_reports(request):
     
     context = {
         'end_days_data': end_days_with_periods,
-        'is_admin': is_admin,
+        'is_admin': user_is_admin,
     }
     return render(request, 'posapp/reports/end_day_reports.html', context) 

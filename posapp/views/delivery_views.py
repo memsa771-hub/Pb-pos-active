@@ -10,13 +10,7 @@ from django.utils import timezone
 from ..models import DeliveryPerson, Order
 from ..forms import DeliveryPersonForm
 from ..decorators import management_required
-from ..views.user_views import is_admin
-
-def is_branch_manager(user):
-    """Check if user is a branch manager"""
-    if not user.is_authenticated:
-        return False
-    return hasattr(user, 'profile') and user.profile and user.profile.role and user.profile.role.name == 'Branch Manager'
+from ..permissions import is_admin, is_branch_manager
 
 @login_required
 @management_required

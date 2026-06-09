@@ -55,7 +55,7 @@ def pending_orders_processor(request):
 
 def user_permissions_processor(request):
     """Context processor to add user permissions to template context"""
-    from .decorators import get_user_permissions, has_permission
+    from .permissions import get_user_permissions, has_permission, get_base_role_name
     
     if request.user.is_authenticated:
         # Superusers automatically have all permissions
@@ -79,13 +79,7 @@ def user_permissions_processor(request):
             def check_perm(permission):
                 return has_permission(request.user, permission)
             
-            # Get user role name
-            user_role = None
-            try:
-                if hasattr(request.user, 'profile') and request.user.profile and request.user.profile.role:
-                    user_role = request.user.profile.role.name
-            except:
-                pass
+            user_role = get_base_role_name(request.user)
         
         return {
             'user_permissions': permissions,

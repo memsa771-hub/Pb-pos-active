@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 
+from ..decorators import management_required
 from ..models import PosProduct, BusinessLogo, BillAdjustmentImage
 
 def serve_product_image(request, product_id):
@@ -26,6 +27,8 @@ def serve_business_logo(request, logo_id):
     response['Content-Disposition'] = f'inline; filename="{logo.image_name or "logo.jpg"}"'
     return response
 
+@login_required
+@management_required
 def serve_bill_adjustment_image(request, image_id):
     """Serve a bill adjustment image from the database"""
     image = get_object_or_404(BillAdjustmentImage, id=image_id)

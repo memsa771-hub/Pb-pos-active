@@ -9,46 +9,9 @@ from datetime import timedelta
 from decimal import Decimal
 from ..models import PosCategory, PosProduct, Order, UserProfile, Setting, BusinessSettings, EndDay, BillAdjustment, AdvanceAdjustment, OrderItem
 
+from ..permissions import is_admin, is_branch_manager, can_access_management
+
 __all__ = ['is_admin', 'is_branch_manager', 'can_access_management', 'dashboard', 'pos', 'end_day', 'sales_summary']
-
-# Helper function to check if user is admin
-def is_admin(user):
-    """Check if a user has admin privileges"""
-    # Superusers always have admin privileges
-    if user.is_superuser:
-        return True
-    
-    # Check for user profile and role
-    try:
-        # Try to get the user's profile and check if their role is 'Admin'
-        profile = UserProfile.objects.get(user=user)
-        if profile.role and profile.role.name == 'Admin':
-            return True
-    except (UserProfile.DoesNotExist, AttributeError):
-        # If there's no profile or role, they're not an admin
-        pass
-    
-    return False
-
-# Helper function to check if user is a branch manager
-def is_branch_manager(user):
-    """Check if a user has branch manager privileges"""
-    # Check for user profile and role
-    try:
-        # Try to get the user's profile and check if their role is 'Branch Manager'
-        profile = UserProfile.objects.get(user=user)
-        if profile.role and profile.role.name == 'Branch Manager':
-            return True
-    except (UserProfile.DoesNotExist, AttributeError):
-        # If there's no profile or role, they're not a branch manager
-        pass
-    
-    return False
-
-# Helper function to check if user can access management features (admin or branch manager)
-def can_access_management(user):
-    """Check if a user can access management features (admin or branch manager)"""
-    return is_admin(user) or is_branch_manager(user)
 
 @login_required
 def dashboard(request):
@@ -57,8 +20,8 @@ def dashboard(request):
         return redirect('pos')
     
     # Check if user is admin or branch manager
-    user_is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
-    user_is_branch_manager = hasattr(request.user, 'profile') and request.user.profile.role.name == 'Branch Manager'
+    user_is_admin = is_admin(request.user)
+    user_is_branch_manager = is_branch_manager(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()

@@ -11,8 +11,9 @@
 
     {% if not is_admin %}
     <div class="alert alert-info mb-4">
-        <i class="fas fa-info-circle me-2"></i> <strong>Current Period Data:</strong> 
-        As a branch manager, you are only seeing adjustments since the last day end operation.
+        <i class="fas fa-info-circle me-2"></i> <strong>Current business period only:</strong>
+        As a Branch Manager, you only see bill and advance adjustments created
+        {% if last_end_day %}since the last End Day on <strong>{{ last_end_day.end_date|date:"d/m/Y g:i A" }}</strong>{% else %}from the start of operations (no End Day completed yet){% endif %}.
     </div>
     {% endif %}
 

@@ -5,8 +5,9 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from ..models import (
     UserRole, UserProfile, PosCategory, PosProduct, 
-    Order, OrderItem, Discount, Setting
+    Order, OrderItem, Discount, Setting, EndDay
 )
+from ..permissions import is_admin, is_branch_manager, has_permission
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer,
     OrderSerializer, OrderItemSerializer, DiscountSerializer,
@@ -14,22 +15,24 @@ from .serializers import (
 )
 from django_filters.rest_framework import DjangoFilterBackend
 
-class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Custom permission to only allow admin users to edit objects.
-    """
+
+class IsAdminOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        # Allow GET, HEAD, OPTIONS requests
+        return request.user.is_authenticated and is_admin(request.user)
+
+
+class IsAuthenticatedReadOnlyAdminWrite(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
         if request.method in permissions.SAFE_METHODS:
             return True
-        
-        # Check if user has admin role
-        return request.user.is_authenticated and request.user.profile.role.name == 'Admin'
+        return is_admin(request.user)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['username', 'first_name', 'last_name', 'email']
     
@@ -55,7 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = PosCategory.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticatedReadOnlyAdminWrite]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description']
 
@@ -69,7 +72,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     filterset_fields = ['category', 'is_available']
     search_fields = ['name', 'sku', 'description']
     ordering_fields = ['name', 'price', 'stock_quantity', 'created_at']
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticatedReadOnlyAdminWrite]
     
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -120,11 +123,41 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all().order_by('-created_at')
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['reference_number', 'customer_name', 'customer_phone']
+
+    def get_queryset(self):
+        queryset = Order.objects.all().order_by('-created_at')
+        user = self.request.user
+        if is_admin(user) or is_branch_manager(user):
+            if is_branch_manager(user) and not is_admin(user):
+                last_end_day = EndDay.get_last_end_day()
+                if last_end_day:
+                    queryset = queryset.filter(created_at__gte=last_end_day.end_date)
+            return queryset
+        return queryset.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        if not (is_admin(request.user) or is_branch_manager(request.user) or has_permission(request.user, 'can_edit_orders')):
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        order = self.get_object()
+        if not (is_admin(request.user) or is_branch_manager(request.user)) and order.user != request.user:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not (is_admin(request.user) or is_branch_manager(request.user) or has_permission(request.user, 'can_cancel_orders')):
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        order = self.get_object()
+        if not (is_admin(request.user) or is_branch_manager(request.user)) and order.user != request.user:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
     
     @action(detail=False, methods=['get'])
     def today(self, request):
@@ -163,7 +196,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
         
         try:
-            product = Product.objects.get(id=product_id)
+            product = PosProduct.objects.get(id=product_id)
             quantity = float(quantity)
             unit_price = float(unit_price)
             
@@ -190,7 +223,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             # Return the updated order with its items
             serializer = self.get_serializer(order)
             return Response(serializer.data)
-        except Product.DoesNotExist:
+        except PosProduct.DoesNotExist:
             return Response(
                 {"error": "Product not found"},
                 status=status.HTTP_404_NOT_FOUND
@@ -281,7 +314,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 class DiscountViewSet(viewsets.ModelViewSet):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticatedReadOnlyAdminWrite]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'code']
     
@@ -324,7 +357,7 @@ class DiscountViewSet(viewsets.ModelViewSet):
 class SettingViewSet(viewsets.ModelViewSet):
     queryset = Setting.objects.all()
     serializer_class = SettingSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOnly]
     
     @action(detail=False, methods=['get'])
     def by_key(self, request):

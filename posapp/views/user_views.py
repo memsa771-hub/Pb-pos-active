@@ -10,6 +10,7 @@ from django.db import transaction
 import django.db.models.deletion
 
 from ..models import UserProfile, UserRole, UserSession
+from ..permissions import is_admin
 from ..session_manager import get_active_users, force_logout_user
 
 # Custom Forms
@@ -143,25 +144,6 @@ class UserCreationWithRoleForm(UserCreationForm):
             raise forms.ValidationError("This email is already in use. Please use a different email.")
         
         return email
-
-# Helper function to check if user is admin
-def is_admin(user):
-    """Check if a user has admin privileges"""
-    # Superusers always have admin privileges
-    if user.is_superuser:
-        return True
-    
-    # Check for user profile and role
-    try:
-        # Try to get the user's profile and check if their role is 'Admin'
-        profile = UserProfile.objects.get(user=user)
-        if profile.role and profile.role.name == 'Admin':
-            return True
-    except (UserProfile.DoesNotExist, AttributeError):
-        # If there's no profile or role, they're not an admin
-        pass
-    
-    return False
 
 @login_required
 def user_list(request):
@@ -367,20 +349,26 @@ def user_create(request):
                     
                     custom_role.save()
                     
-                    # Create user profile with the custom role
+                    profile_defaults = {
+                        'phone': form.cleaned_data['phone'],
+                        'role': custom_role,
+                        'is_active': True,
+                    }
+                    if not user.is_superuser:
+                        for field in permission_fields:
+                            profile_defaults[field] = form.cleaned_data.get(field, False)
+
                     profile, created = UserProfile.objects.get_or_create(
                         user=user,
-                        defaults={
-                            'phone': form.cleaned_data['phone'],
-                            'role': custom_role,
-                            'is_active': True
-                        }
+                        defaults=profile_defaults,
                     )
-                    
-                    # If profile exists but wasn't created now, update it
+
                     if not created:
                         profile.phone = form.cleaned_data['phone']
                         profile.role = custom_role
+                        if not user.is_superuser:
+                            for field in permission_fields:
+                                setattr(profile, field, form.cleaned_data.get(field, False))
                         profile.save()
                         
                 messages.success(request, f'User {user.username} created successfully with custom permissions.')

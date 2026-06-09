@@ -21,6 +21,7 @@ from django.db import transaction
 import logging
 
 from ..models import Order, OrderItem, PosProduct, Setting, PosCategory, Discount, BusinessLogo, EndDay, DeliveryPerson
+from ..permissions import is_admin, is_branch_manager
 from ..forms import OrderForm
 from ..views.settings_views import get_or_create_settings
 from ..decorators import management_required, can_edit_orders_required, can_cancel_orders_required
@@ -49,15 +50,15 @@ def order_list(request):
         date_to = request.GET.get('date_to', '')
     
     # Check user roles for permissions
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
-    is_branch_manager = hasattr(request.user, 'profile') and request.user.profile.role.name == 'Branch Manager'
+    user_is_admin = is_admin(request.user)
+    user_is_branch_manager = is_branch_manager(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
     last_end_day_time = last_end_day.end_date if last_end_day else None
     
     # Start with all orders for admins or branch managers, or only user's orders for regular users
-    if is_admin:
+    if user_is_admin:
         # Admins can see all orders (especially with history=1)
         if show_history:
             orders = Order.objects.all().order_by('-created_at')
@@ -67,7 +68,7 @@ def order_list(request):
                 orders = Order.objects.filter(created_at__gte=last_end_day_time).order_by('-created_at')
             else:
                 orders = Order.objects.all().order_by('-created_at')
-    elif is_branch_manager:
+    elif user_is_branch_manager:
         # Branch managers can only see orders since last end day
         if last_end_day_time:
             orders = Order.objects.filter(created_at__gte=last_end_day_time).order_by('-created_at')
@@ -142,8 +143,8 @@ def order_list(request):
         'date_from': date_from,
         'date_to': date_to,
         'order_status_choices': Order.ORDER_STATUS_CHOICES,
-        'is_admin': is_admin,
-        'is_branch_manager': is_branch_manager,
+        'is_admin': user_is_admin,
+        'is_branch_manager': user_is_branch_manager,
         'show_history': show_history,
         'last_end_day': last_end_day,
     }
@@ -160,10 +161,10 @@ def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     # Check if the user has permission to view this order
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
-    is_branch_manager = hasattr(request.user, 'profile') and request.user.profile.role.name == 'Branch Manager'
+    user_is_admin = is_admin(request.user)
+    user_is_branch_manager = is_branch_manager(request.user)
     
-    if not (is_admin or is_branch_manager) and order.user != request.user:
+    if not (user_is_admin or user_is_branch_manager) and order.user != request.user:
         messages.error(request, "You don't have permission to view this order.")
         return redirect('order_list')
     
@@ -222,8 +223,8 @@ def order_detail(request, order_id):
         'service_charge_amount': service_charge_amount,
         'delivery_charges': delivery_charges,
         'total': total,
-        'is_admin': is_admin,
-        'is_branch_manager': is_branch_manager,
+        'is_admin': user_is_admin,
+        'is_branch_manager': user_is_branch_manager,
     }
     
     return render(request, 'posapp/orders/order_detail.html', context)
@@ -275,10 +276,10 @@ def order_edit(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     # Check if the user has permission to edit this order
-    is_admin = request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role.name == 'Admin')
-    is_branch_manager = hasattr(request.user, 'profile') and request.user.profile.role.name == 'Branch Manager'
+    user_is_admin = is_admin(request.user)
+    user_is_branch_manager = is_branch_manager(request.user)
     
-    if not (is_admin or is_branch_manager) and order.user != request.user:
+    if not (user_is_admin or user_is_branch_manager) and order.user != request.user:
         messages.error(request, "You don't have permission to edit this order.")
         return redirect('order_list')
     
@@ -2111,13 +2112,13 @@ def verify_admin_password(request):
         from django.contrib.auth import authenticate
         from django.contrib.auth.models import User
         
-        # Get all admin users (superusers)
-        admin_users = User.objects.filter(is_superuser=True)
-        
+        from ..permissions import is_admin as user_is_admin
+
         password_verified = False
-        for admin in admin_users:
-            # Try to authenticate with this admin's username and the provided password
-            auth_user = authenticate(username=admin.username, password=password)
+        for candidate in User.objects.filter(is_active=True):
+            if not user_is_admin(candidate):
+                continue
+            auth_user = authenticate(username=candidate.username, password=password)
             if auth_user:
                 password_verified = True
                 break
