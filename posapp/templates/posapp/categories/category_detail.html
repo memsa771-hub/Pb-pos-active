@@ -2,194 +2,206 @@
 {% load custom_filters %}
 
 {% block title %}{{ category.name }} - Category Details - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-folder me-2"></i>{{ category.name }}</h1>
+                <p>Category details and linked products</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'category_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Categories
+            </a>
+            <a href="{% url 'category_edit' category.id %}" class="btn btn-light">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
     {% endif %}
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Category Details</h6>
-            <div>
-                <a href="{% url 'category_edit' category.id %}" class="btn btn-warning btn-sm me-2">
-                    <i class="fas fa-edit"></i> Edit
-                </a>
-                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" {% if category.product_set.count > 0 %}disabled{% endif %}>
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            </div>
+    <div class="admin-stats">
+        <div class="admin-stat-card primary">
+            <i class="fas fa-box stat-icon"></i>
+            <div class="stat-label">Products</div>
+            <div class="stat-value">{{ category.product_set.count }}</div>
         </div>
-        <div class="card-body">
-            <div class="mb-4">
-                <h5 class="fw-bold">Name</h5>
-                <p>{{ category.name }}</p>
-            </div>
-            
-            <div class="mb-4">
-                <h5 class="fw-bold">Description</h5>
-                <p>{{ category.description|default:"No description available" }}</p>
-            </div>
-            
-            <div class="mb-4">
-                <h5 class="fw-bold">Created On</h5>
-                <p>{{ category.created_at|pkt_date }}</p>
-            </div>
+        <div class="admin-stat-card info">
+            <i class="fas fa-calendar stat-icon"></i>
+            <div class="stat-label">Created</div>
+            <div class="stat-value" style="font-size: 1rem;">{{ category.created_at|pkt_date }}</div>
         </div>
     </div>
-    
-    <!-- Products in this Category -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Products in this Category</h6>
-            <a href="{% url 'product_create' %}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus"></i> Add New Product
+
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2>Category Information</h2>
+            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" {% if category.product_set.count > 0 %}disabled{% endif %}>
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+        <div class="admin-detail-grid">
+            <div class="admin-detail-item">
+                <div class="label">Name</div>
+                <div class="value">{{ category.name }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Product Count</div>
+                <div class="value">{{ category.product_set.count }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Created On</div>
+                <div class="value">{{ category.created_at|pkt_date }}</div>
+            </div>
+        </div>
+        {% if category.description %}
+        <div class="admin-detail-description">
+            <div class="label mb-1" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#718096;">Description</div>
+            {{ category.description }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2>Products in this Category</h2>
+            <a href="{% url 'product_create' %}" class="btn btn-sm btn-primary" style="background:linear-gradient(135deg,#1e3a5f,#2c5282);border:none;">
+                <i class="fas fa-plus me-1"></i> Add Product
             </a>
         </div>
-        <div class="card-body">
+        <div class="admin-panel-body">
             {% if products %}
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product in products %}
-                                <tr>
-                                    <td>{{ product.name }}</td>
-                                    <td>Rs.{{ product.price }}</td>
-                                    <td>
-                                        {% if product.running_item %}
-                                            <span title="Running item - unlimited stock">∞</span>
-                                        {% else %}
-                                            {{ product.stock_quantity }}
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if product.is_available %}
-                                            <span class="badge bg-success">Available</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Unavailable</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'product_detail' product.id %}" class="btn btn-info btn-sm">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{% url 'product_edit' product.id %}" class="btn btn-warning btn-sm">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                {% if products.has_other_pages %}
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center mt-4">
-                        {% if products.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">&laquo;&laquo;</span>
-                        </li>
-                        <li class="page-item disabled">
-                            <span class="page-link">&laquo;</span>
-                        </li>
-                        {% endif %}
-                        
-                        {% for i in products.paginator.page_range %}
-                            {% if products.number == i %}
-                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                            {% elif i > products.number|add:'-3' and i < products.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                            {% endif %}
+            <div class="focus-table-wrap admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>Rs.{{ product.price }}</td>
+                            <td>
+                                {% if product.running_item %}
+                                <span title="Running item - unlimited stock">∞</span>
+                                {% else %}
+                                {{ product.stock_quantity }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.is_available %}
+                                <span class="admin-status-badge success">Available</span>
+                                {% else %}
+                                <span class="admin-status-badge danger">Unavailable</span>
+                                {% endif %}
+                            </td>
+                            <td class="actions-col">
+                                <div class="admin-action-btns">
+                                    <a href="{% url 'product_detail' product.id %}" class="btn btn-info admin-action-btn" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'product_edit' product.id %}" class="btn btn-warning admin-action-btn" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                         {% endfor %}
-                        
-                        {% if products.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ products.paginator.num_pages }}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">&raquo;</span>
-                        </li>
-                        <li class="page-item disabled">
-                            <span class="page-link">&raquo;&raquo;</span>
-                        </li>
+                    </tbody>
+                </table>
+            </div>
+
+            {% if products.has_other_pages %}
+            <nav class="admin-pagination" aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if products.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">&laquo;&laquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+                    {% for i in products.paginator.page_range %}
+                        {% if products.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% elif i > products.number|add:'-3' and i < products.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
                         {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
+                    {% endfor %}
+                    {% if products.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}">&raquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ products.paginator.num_pages }}">&raquo;&raquo;</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
             {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    No products found in this category.
+            <div class="admin-empty">
+                <i class="fas fa-box-open"></i>
+                No products found in this category.
+                <div class="mt-3">
+                    <a href="{% url 'product_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add Product
+                    </a>
                 </div>
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e3a5f,#2c5282);color:#fff;">
                 <h5 class="modal-title" id="deleteModalLabel">Delete Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete the category "{{ category.name }}"?</p>
                 {% if category.product_set.count > 0 %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        This category has {{ category.product_set.count }} product(s). 
-                        You cannot delete a category that has products.
-                    </div>
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This category has {{ category.product_set.count }} product(s). You cannot delete a category that has products.
+                </div>
                 {% endif %}
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form action="{% url 'category_delete' category.id %}" method="post" style="display: inline;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'category_delete' category.id %}" method="post" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger" {% if category.product_set.count > 0 %}disabled{% endif %}>
-                        Delete
-                    </button>
+                    <button type="submit" class="btn btn-danger" {% if category.product_set.count > 0 %}disabled{% endif %}>Delete</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

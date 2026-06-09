@@ -3,162 +3,162 @@
 {% block title %}
 {% if form.instance.id %}Edit Product{% else %}New Product{% endif %} - POS System
 {% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                {% if form.instance.id %}Edit Product: {{ form.instance.name }}{% else %}Add New Product{% endif %}
-            </h6>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1>
+                    <i class="fas fa-box me-2"></i>
+                    {% if form.instance.id %}Edit Product{% else %}Add Product{% endif %}
+                </h1>
+                <p>
+                    {% if form.instance.id %}Update {{ form.instance.name }}{% else %}Create a new menu item for the POS{% endif %}
+                </p>
+            </div>
         </div>
-        <div class="card-body">
-            
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'product_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Products
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if form.errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Please correct the errors below:</strong>
+        <ul class="mb-0 mt-2">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ field|title }}: {{ error }}</li>
                 {% endfor %}
-            {% endif %}
-            
-            {% if form.errors %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Please correct the errors below:</strong>
-                    <ul>
-                        {% for field, errors in form.errors.items %}
-                            {% for error in errors %}
-                                <li>{{ field|title }}: {{ error }}</li>
-                            {% endfor %}
-                        {% endfor %}
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endif %}
-            
-            <form method="post" id="productForm">
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-4">
-                            <div class="card-header">Basic Information</div>
-                            <div class="card-body">
-                                
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Product Details</h2>
+        </div>
+        <form method="post" id="productForm" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="admin-form-section">
+                            <h6 class="admin-form-section-header"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                            <div class="admin-form-section-body">
                                 <div class="mb-3">
                                     <label for="id_name" class="form-label">Product Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="id_name" name="name" required 
-                                           value="{{ form.name.value|default:'' }}">
+                                    <input type="text" class="form-control" id="id_name" name="name" required value="{{ form.name.value|default:'' }}">
                                 </div>
-                                
                                 <div class="mb-3">
                                     <label for="id_product_code" class="form-label">Product Code <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="id_product_code" name="product_code" required
-                                           value="{{ form.product_code.value|default:'' }}" placeholder="Unique Numeric Code">
+                                    <input type="text" class="form-control" id="id_product_code" name="product_code" required value="{{ form.product_code.value|default:'' }}" placeholder="Unique numeric code">
                                 </div>
-                                
                                 <div class="mb-3">
                                     <label for="id_category" class="form-label">Category <span class="text-danger">*</span></label>
                                     <select class="form-select" id="id_category" name="category" required>
                                         <option value="">Select a category</option>
                                         {% for category in categories %}
-                                            <option value="{{ category.id }}" 
-                                                {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
-                                                {{ category.name }}
-                                            </option>
+                                        <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                
                                 <div class="mb-3">
                                     <label for="id_price" class="form-label">Price <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rs.</span>
-                                        <input type="number" class="form-control" id="id_price" name="price" 
-                                               step="0.01" min="0" required value="{{ form.price.value|default:'' }}">
+                                        <input type="number" class="form-control" id="id_price" name="price" step="0.01" min="0" required value="{{ form.price.value|default:'' }}">
                                     </div>
                                 </div>
-                                
                                 <div class="mb-3">
                                     <label for="id_sku" class="form-label">SKU (Optional)</label>
-                                    <input type="text" class="form-control" id="id_sku" name="sku"
-                                           value="{{ form.sku.value|default:'' }}">
+                                    <input type="text" class="form-control" id="id_sku" name="sku" value="{{ form.sku.value|default:'' }}">
                                 </div>
-                                
-                                <div class="mb-3" id="stock_quantity_container">
+                                <div class="mb-0" id="stock_quantity_container">
                                     <label for="id_stock_quantity" class="form-label">Stock Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="id_stock_quantity" name="stock_quantity" 
-                                           min="0" value="{{ form.stock_quantity.value|default:'0' }}">
+                                    <input type="number" class="form-control" id="id_stock_quantity" name="stock_quantity" min="0" value="{{ form.stock_quantity.value|default:'0' }}">
                                 </div>
-
-                                <hr>
-
-                                <div class="form-check mb-2">
-                                    <input type="checkbox" class="form-check-input" id="id_is_available" name="is_available" 
-                                           {% if form.is_available.value %}checked{% endif %}>
-                                    <label class="form-check-label" for="id_is_available">Available for sale</label>
-                                </div>
-                                
-                                <div class="form-check mb-2">
-                                    <input type="checkbox" class="form-check-input" id="id_is_archived" name="is_archived" 
-                                           {% if form.is_archived.value %}checked{% endif %}>
-                                    <label class="form-check-label" for="id_is_archived">Archived (Hidden)</label>
-                                </div>
-                                
-                                <div class="form-check mb-2">
-                                    <input type="checkbox" class="form-check-input" id="id_calculate_price_per_kg" name="calculate_price_per_kg" 
-                                           {% if form.calculate_price_per_kg.value %}checked{% endif %}>
-                                    <label class="form-check-label" for="id_calculate_price_per_kg">Sell by Weight (Per KG)</label>
-                                </div>
-
-                                <div class="p-3 bg-light rounded border mt-3">
-                                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">Stock Settings</h6>
-                                    
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="id_running_item" name="running_item" 
-                                               {% if form.running_item.value %}checked{% endif %}>
-                                        <label class="form-check-label fw-bold" for="id_running_item">Running Item (Unlimited Stock)</label>
-                                    </div>
-
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="id_is_recipe_based" name="is_recipe_based" 
-                                               {% if form.is_recipe_based.value %}checked{% endif %}>
-                                        <label class="form-check-label fw-bold text-primary" for="id_is_recipe_based">
-                                            Is Recipe Based? (Kitchen Item)
-                                        </label>
-                                        <small class="d-block text-muted mt-1">
-                                            Stock will be controlled via Inventory Ingredients (e.g. Burger, Tea).
-                                        </small>
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="card mb-4">
-                            <div class="card-header">Additional Information</div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label for="id_description" class="form-label">Description</label>
-                                    <textarea class="form-control" id="id_description" name="description" rows="4">{{ form.description.value|default:'' }}</textarea>
+
+                        <div class="admin-form-section mb-0">
+                            <h6 class="admin-form-section-header"><i class="fas fa-toggle-on me-2"></i>Availability & Stock</h6>
+                            <div class="admin-form-section-body">
+                                <div class="admin-form-check-group mb-3">
+                                    <div class="admin-form-check">
+                                        <input type="checkbox" class="form-check-input" id="id_is_available" name="is_available" {% if form.is_available.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="id_is_available">Available for sale</label>
+                                    </div>
+                                    <div class="admin-form-check">
+                                        <input type="checkbox" class="form-check-input" id="id_is_archived" name="is_archived" {% if form.is_archived.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="id_is_archived">Archived (hidden from active listings)</label>
+                                    </div>
+                                    <div class="admin-form-check">
+                                        <input type="checkbox" class="form-check-input" id="id_calculate_price_per_kg" name="calculate_price_per_kg" {% if form.calculate_price_per_kg.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="id_calculate_price_per_kg">Sell by weight (per kg)</label>
+                                    </div>
+                                </div>
+                                <div class="admin-form-settings-box">
+                                    <h6><i class="fas fa-cogs me-2"></i>Stock Settings</h6>
+                                    <div class="admin-form-check-group">
+                                        <div class="admin-form-check">
+                                            <input type="checkbox" class="form-check-input" id="id_running_item" name="running_item" {% if form.running_item.value %}checked{% endif %}>
+                                            <label class="form-check-label fw-bold" for="id_running_item">Running item (unlimited stock)</label>
+                                        </div>
+                                        <div class="admin-form-check">
+                                            <input type="checkbox" class="form-check-input" id="id_is_recipe_based" name="is_recipe_based" {% if form.is_recipe_based.value %}checked{% endif %}>
+                                            <label class="form-check-label fw-bold" for="id_is_recipe_based">Recipe based (kitchen item)</label>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Recipe-based stock is controlled via inventory ingredients (e.g. burger, tea).</small>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-lg-6">
+                        <div class="admin-form-section mb-0">
+                            <h6 class="admin-form-section-header"><i class="fas fa-align-left me-2"></i>Additional Information</h6>
+                            <div class="admin-form-section-body">
+                                <label for="id_description" class="form-label">Description</label>
+                                <textarea class="form-control" id="id_description" name="description" rows="8" placeholder="Optional product description">{{ form.description.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{% url 'product_list' %}" class="btn btn-secondary">
-                        <i class="fas fa-times me-1"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary" id="saveButton">
-                        <i class="fas fa-save me-1"></i> {% if form.instance.id %}Update Product{% else %}Save Product{% endif %}
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="saveButton">
+                    <i class="fas fa-save me-1"></i>
+                    {% if form.instance.id %}Update Product{% else %}Save Product{% endif %}
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
@@ -170,34 +170,19 @@
         const recipeItemCheckbox = document.getElementById('id_is_recipe_based');
         const stockQuantityContainer = document.getElementById('stock_quantity_container');
         const stockQuantityInput = document.getElementById('id_stock_quantity');
-        
-        // Function to toggle stock quantity field visibility
+
         function toggleStockQuantityVisibility() {
-            // Logic: Agar 'Running' hai YA 'Recipe' hai -> Stock Input Chupao
             if (runningItemCheckbox.checked || recipeItemCheckbox.checked) {
-                
-                // Hide Container
                 stockQuantityContainer.style.display = 'none';
-                
-                // Validation Remove
                 stockQuantityInput.removeAttribute('required');
-                
-                // Value 0 set karo (Important for backend validation)
                 stockQuantityInput.value = 0;
-                
             } else {
-                // Show Container
                 stockQuantityContainer.style.display = 'block';
-                
-                // Validation Add
                 stockQuantityInput.setAttribute('required', 'true');
             }
         }
-        
-        // Initial Run (Page Load)
+
         toggleStockQuantityVisibility();
-        
-        // Event Listeners
         runningItemCheckbox.addEventListener('change', toggleStockQuantityVisibility);
         recipeItemCheckbox.addEventListener('change', toggleStockQuantityVisibility);
     });

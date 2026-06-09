@@ -3,46 +3,71 @@
 {% block title %}
 {% if category.id %}Edit Category{% else %}New Category{% endif %} - POS System
 {% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                {% if category.id %}Edit Category: {{ category.name }}{% else %}Add New Category{% endif %}
-            </h6>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1>
+                    <i class="fas fa-folder me-2"></i>
+                    {% if category.id %}Edit Category{% else %}Add Category{% endif %}
+                </h1>
+                <p>
+                    {% if category.id %}Update details for {{ category.name }}{% else %}Create a new menu category{% endif %}
+                </p>
+            </div>
         </div>
-        <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-            
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="id_name" class="form-label">Category Name</label>
-                    <input type="text" class="form-control" id="id_name" name="name" required 
-                           value="{{ category.name }}">
-                </div>
-                
-                <div class="mb-3">
-                    <label for="id_description" class="form-label">Description</label>
-                    <textarea class="form-control" id="id_description" name="description" rows="4">{{ category.description }}</textarea>
-                </div>
-                
-                <div class="d-flex justify-content-between">
-                    <a href="{% if category.id %}{% url 'category_detail' category.id %}{% else %}{% url 'category_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">
-                        {% if category.id %}Update Category{% else %}Save Category{% endif %}
-                    </button>
-                </div>
-            </form>
+        <div class="focus-toolbar-actions">
+            <a href="{% if category.id %}{% url 'category_detail' category.id %}{% else %}{% url 'category_list' %}{% endif %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
         </div>
     </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Category Details</h2>
+        </div>
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_name" class="form-label">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="id_name" name="name" required value="{{ category.name }}">
+                    </div>
+                    <div class="col-12">
+                        <label for="id_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="id_description" name="description" rows="4" placeholder="Optional description for this category">{{ category.description }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% if category.id %}{% url 'category_detail' category.id %}{% else %}{% url 'category_list' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    {% if category.id %}Update Category{% else %}Save Category{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
-{% endblock %} 
+{% endblock %}
