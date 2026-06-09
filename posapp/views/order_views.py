@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from collections import defaultdict
 from django.db.models import Q, Sum
 from django.utils import timezone
 from django.http import JsonResponse
@@ -1605,51 +1604,46 @@ def create_order_api(request):
                 }, status=400)
         
         items = data.get('items', [])
-        stock_already_reduced = data.get('stock_already_reduced', False)
-        products = {}
-        recipes_by_product = defaultdict(list)
-
+        
         # Use atomic transaction for the entire order creation process
         with transaction.atomic():
-            if items and not stock_already_reduced:
-                product_ids = list({item['product_id'] for item in items})
-                products = {
-                    p.id: p for p in PosProduct.objects.select_for_update().filter(id__in=product_ids)
-                }
-                recipe_product_ids = [pid for pid, p in products.items() if p.is_recipe_based]
-                if recipe_product_ids:
-                    for recipe in Recipe.objects.filter(
-                        pos_product_id__in=recipe_product_ids
-                    ).select_related('ingredient'):
-                        recipes_by_product[recipe.pos_product_id].append(recipe)
-
-                for item in items:
-                    product_id = item['product_id']
-                    quantity = float(item['quantity'])
-
-                    product = products.get(product_id)
-                    if not product:
-                        return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=400)
-
+            # Check stock availability for all items first
+            for item in items:
+                product_id = item['product_id']
+                quantity = float(item['quantity'])
+                
+                # Skip stock check if stock already updated in UI
+                if data.get('stock_already_reduced', False):
+                    continue
+                
+                try:
+                    product = PosProduct.objects.select_for_update().get(id=product_id)
+                    
+                    # CASE A: Recipe Item (Kitchen)
                     if product.is_recipe_based:
-                        for recipe in recipes_by_product[product.id]:
+                        recipes = Recipe.objects.filter(pos_product=product)
+                        for recipe in recipes:
                             required_qty = recipe.quantity_required * Decimal(str(quantity))
                             if recipe.ingredient.current_stock < required_qty:
                                 return JsonResponse({
                                     'status': 'error',
-                                    'message': (
-                                        f'Low Stock: Not enough {recipe.ingredient.name} to make '
-                                        f'{product.name}. Available: {recipe.ingredient.current_stock}'
-                                    )
+                                    'message': f'Low Stock: Not enough {recipe.ingredient.name} to make {product.name}. Available: {recipe.ingredient.current_stock}'
                                 }, status=400)
+
+                    # CASE B: Running Item (Unlimited)
                     elif product.running_item:
-                        pass
+                        pass # No check needed
+
+                    # CASE C: Standard Product
                     elif product.stock_quantity < quantity:
                         return JsonResponse({
                             'status': 'error',
                             'message': f'Insufficient stock for {product.name}. Available: {product.stock_quantity}',
                             'product_id': product_id
                         }, status=400)
+                        
+                except PosProduct.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=400)
             
             # Extract customer info
             customer_name = data.get('customer_name', '')
@@ -1736,55 +1730,44 @@ def create_order_api(request):
                 change_amount=change_amount
             )
             
-            order_items = []
+            # Create order items
             for item_data in items:
+                product_id = item_data['product_id']
                 quantity = float(item_data['quantity'])
-                price_str = str(item_data.get('unit_price', 0))
+                
+                # 🔥 FIX: Safe Get for Unit Price
+                price_str = str(item_data.get('unit_price', 0)) 
                 unit_price = Decimal(price_str)
                 total_price = unit_price * Decimal(str(quantity))
-                order_items.append(OrderItem(
+                
+                OrderItem.objects.create(
                     order=order,
-                    product_id=item_data['product_id'],
+                    product_id=product_id,
                     quantity=quantity,
                     unit_price=unit_price,
                     total_price=total_price
-                ))
-            if order_items:
-                OrderItem.objects.bulk_create(order_items)
-
-            if not stock_already_reduced and products:
-                ingredients_to_update = {}
-                products_to_update = {}
-
-                for item_data in items:
-                    product_id = item_data['product_id']
-                    quantity = float(item_data['quantity'])
-                    product = products.get(product_id)
-                    if not product:
-                        continue
-
-                    if product.is_recipe_based:
-                        for recipe in recipes_by_product[product.id]:
-                            ing_id = recipe.ingredient_id
-                            if ing_id not in ingredients_to_update:
-                                ingredients_to_update[ing_id] = recipe.ingredient
-                            required_qty = recipe.quantity_required * Decimal(str(quantity))
-                            ingredients_to_update[ing_id].current_stock -= required_qty
-                    elif not product.running_item:
-                        if product_id not in products_to_update:
-                            products_to_update[product_id] = product
-                        products_to_update[product_id].stock_quantity -= quantity
-
-                if products_to_update:
-                    PosProduct.objects.bulk_update(
-                        list(products_to_update.values()),
-                        ['stock_quantity']
-                    )
-                if ingredients_to_update:
-                    InventoryItem.objects.bulk_update(
-                        list(ingredients_to_update.values()),
-                        ['current_stock']
-                    )
+                )
+                
+                # Update product stock if not already updated in UI
+                if not data.get('stock_already_reduced', False):
+                    try:
+                        product = PosProduct.objects.get(id=product_id)
+                        
+                        # Deduct Ingredients for Recipe Items
+                        if product.is_recipe_based:
+                            recipes = Recipe.objects.filter(pos_product=product)
+                            for recipe in recipes:
+                                required_qty = recipe.quantity_required * Decimal(str(quantity))
+                                recipe.ingredient.current_stock -= required_qty
+                                recipe.ingredient.save()
+                                
+                        # Deduct Stock for Standard Items
+                        elif not product.running_item:
+                            product.stock_quantity -= quantity
+                            product.save()
+                            
+                    except Exception as e:
+                        logger.error(f"Stock update failed: {str(e)}")
 
             # Return Success
             return JsonResponse({
