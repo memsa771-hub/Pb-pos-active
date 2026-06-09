@@ -944,8 +944,8 @@
 
     body.pos-page .product-grid {
         display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
-        gap: 10px !important;
+        grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)) !important;
+        gap: 12px !important;
         width: 100%;
     }
 
@@ -954,89 +954,170 @@
     }
 
     body.pos-page .product-card {
-        height: auto !important;
+        height: 100% !important;
         width: 100% !important;
-        min-height: 118px !important;
+        min-height: 148px !important;
         max-width: none !important;
         aspect-ratio: unset !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         border: 1px solid #e2e8f0 !important;
         background: #fff;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        position: relative;
     }
 
     body.pos-page .product-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
         border-color: #90cdf4 !important;
-        box-shadow: 0 6px 16px rgba(44, 82, 130, 0.12) !important;
+        box-shadow: 0 10px 22px rgba(44, 82, 130, 0.14) !important;
     }
 
-    body.pos-page .pos-product-badge-row {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 0.35rem;
+    body.pos-page .product-card:active {
+        transform: translateY(-1px);
     }
 
     body.pos-page .product-card .card-body {
-        padding: 0.65rem 0.75rem 0.75rem !important;
+        padding: 0.8rem 0.85rem 0.65rem !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;
         text-align: left !important;
         flex: 1;
+        min-height: 0;
+    }
+
+    body.pos-page .pos-product-meta {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.4rem;
+        margin-bottom: 0.45rem;
+        min-height: 22px;
+    }
+
+    body.pos-page .pos-product-code {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #718096;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 0.15rem 0.45rem;
+        letter-spacing: 0.02em;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    body.pos-page .pos-stock-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 22px;
+        padding: 0 0.45rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    body.pos-page .pos-stock-chip.running {
+        background: #e6fffa;
+        color: #234e52;
+        border: 1px solid #81e6d9;
+    }
+
+    body.pos-page .pos-stock-chip.kitchen {
+        background: #fffaf0;
+        color: #9c4221;
+        border: 1px solid #fbd38d;
+    }
+
+    body.pos-page .pos-stock-chip.out {
+        background: #fff5f5;
+        color: #c53030;
+        border: 1px solid #feb2b2;
+    }
+
+    body.pos-page .pos-stock-chip.in-stock {
+        background: #f0fff4;
+        color: #276749;
+        border: 1px solid #9ae6b4;
     }
 
     body.pos-page .product-card .card-title {
-        font-size: 0.92rem !important;
+        font-size: 0.88rem !important;
         font-weight: 700 !important;
         color: #1a202c;
-        margin-bottom: 0.15rem !important;
+        margin: 0 0 0.35rem 0 !important;
         white-space: normal !important;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        line-height: 1.25;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
     }
 
-    body.pos-page .product-card small {
-        font-size: 0.72rem !important;
-        color: #718096 !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    body.pos-page .pos-product-footer {
+    body.pos-page .pos-product-action-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 0.5rem;
+        padding: 0.55rem 0.7rem;
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
         margin-top: auto;
-        padding-top: 0.35rem;
-        border-top: 1px solid #edf2f7;
+        flex-shrink: 0;
     }
 
-    body.pos-page .product-card .card-text {
-        font-size: 0.95rem !important;
+    body.pos-page .pos-product-price {
+        font-size: 0.88rem !important;
         font-weight: 700 !important;
-        color: #2b6cb0 !important;
+        color: #fff !important;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1;
     }
 
     body.pos-page .pos-add-btn {
-        width: 40px !important;
-        height: 40px !important;
-        min-width: 40px;
-        border-radius: 10px !important;
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        border-radius: 8px !important;
         padding: 0 !important;
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        font-size: 1rem !important;
-        background: #2b6cb0 !important;
-        border: none !important;
+        font-size: 0.85rem !important;
+        background: rgba(255, 255, 255, 0.18) !important;
+        border: 1px solid rgba(255, 255, 255, 0.28) !important;
+        color: #fff !important;
+        flex-shrink: 0;
+        pointer-events: none;
+    }
+
+    body.pos-page .product-card:hover .pos-add-btn {
+        background: rgba(255, 255, 255, 0.28) !important;
+    }
+
+    body.pos-page .disabled-product {
+        opacity: 0.72;
+    }
+
+    body.pos-page .disabled-product::after {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transform: translate(-50%, -50%) rotate(-12deg);
     }
 
     body.pos-page .category-selector {
@@ -1138,7 +1219,7 @@
 
     @media (min-width: 1024px) and (max-width: 1440px) {
         body.pos-page .product-grid {
-            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)) !important;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
         }
     }
 
@@ -1294,27 +1375,27 @@
                  data-per-kg="{% if product.calculate_price_per_kg %}true{% else %}false{% endif %}">
 
                 <div class="card-body">
-                    <div class="pos-product-badge-row">
-                        {% if product.running_item %}
-                            <span class="badge bg-info rounded-pill">∞</span>
-                        {% elif product.is_recipe_based %}
-                            <span class="badge bg-warning text-dark rounded-pill">Kitchen</span>
-                        {% elif product.stock_quantity <= 0 %}
-                            <span class="badge bg-danger rounded-pill">Out</span>
+                    <div class="pos-product-meta">
+                        {% if product.product_code %}
+                        <span class="pos-product-code">#{{ product.product_code }}</span>
                         {% else %}
-                            <span class="badge bg-success rounded-pill stock-badge">{{ product.stock_quantity }}</span>
+                        <span></span>
+                        {% endif %}
+                        {% if product.running_item %}
+                        <span class="pos-stock-chip running" title="Unlimited stock">∞</span>
+                        {% elif product.is_recipe_based %}
+                        <span class="pos-stock-chip kitchen">Kitchen</span>
+                        {% elif product.stock_quantity <= 0 %}
+                        <span class="pos-stock-chip out">Out</span>
+                        {% else %}
+                        <span class="pos-stock-chip in-stock stock-badge">{{ product.stock_quantity }}</span>
                         {% endif %}
                     </div>
                     <h6 class="card-title" title="{{ product.name }}">{{ product.name }}</h6>
-                    {% if product.product_code %}
-                    <small>#{{ product.product_code }}</small>
-                    {% endif %}
-                    <div class="pos-product-footer">
-                        <span class="card-text">Rs. {{ product.price|intcomma }}</span>
-                        <button type="button" class="btn btn-primary pos-add-btn" aria-label="Add {{ product.name }}">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
+                </div>
+                <div class="pos-product-action-bar">
+                    <span class="pos-product-price">Rs. {{ product.price|intcomma }}</span>
+                    <span class="pos-add-btn" aria-hidden="true"><i class="fas fa-plus"></i></span>
                 </div>
             </div>
             </div>
@@ -1889,18 +1970,31 @@
             bsToast.show();
         }
         
+        function getStockBadgeEl(productEl) {
+            return productEl ? productEl.querySelector('.stock-badge') : null;
+        }
+
+        function getStockValue(productEl) {
+            const badge = getStockBadgeEl(productEl);
+            if (!badge) return 0;
+            return parseInt(badge.textContent, 10) || 0;
+        }
+
+        function setStockValue(productEl, value) {
+            const badge = getStockBadgeEl(productEl);
+            if (!badge) return;
+            const qty = Math.max(0, value);
+            badge.textContent = qty;
+            badge.classList.toggle('out', qty <= 0);
+            badge.classList.toggle('in-stock', qty > 0);
+        }
+
         // Initialize product cards - ensure out-of-stock items are properly disabled
         document.querySelectorAll('.product-card').forEach(productCard => {
             const isRunning = productCard.dataset.running === 'true';
-            const stockElement = productCard.querySelector('.badge');
-            
-            if (!isRunning && stockElement) {
-                const stockValue = parseInt(stockElement.textContent);
-                if (stockValue <= 0) {
-                    // Disable product card for zero stock non-running items
-                    productCard.classList.add('disabled-product');
-                    productCard.dataset.available = 'false';
-                }
+            if (!isRunning && getStockValue(productCard) <= 0) {
+                productCard.classList.add('disabled-product');
+                productCard.dataset.available = 'false';
             }
         });
         
@@ -2031,7 +2125,7 @@
             
             // For non-running items, check current stock before proceeding
             if (!isRunning) {
-                const currentStock = parseInt(productEl.querySelector('.badge').textContent);
+                const currentStock = getStockValue(productEl);
                 if (currentStock <= 0) {
                     showAlert("This product is out of stock.", "warning");
                     return;
@@ -2045,19 +2139,13 @@
             if (existingItem) {
                 // For non-running items, check stock before adding
                 if (!isRunning) {
-                    const currentStock = parseInt(productEl.querySelector('.badge').textContent);
-                    
-                    // Check if we can add one more (current stock should be > 0)
+                    const currentStock = getStockValue(productEl);
                     if (currentStock <= 0) {
                         showAlert("Cannot add more. Stock limit reached.", "warning");
                         return;
                     }
-                    
-                    // Update the stock display visually
-                    const newStockValue = currentStock - Math.ceil(quantity); // Use ceiling for stock deduction
-                    productEl.querySelector('.badge').textContent = Math.max(0, newStockValue);
-                    
-                    // If stock reaches zero, disable the product card
+                    const newStockValue = currentStock - Math.ceil(quantity);
+                    setStockValue(productEl, newStockValue);
                     if (newStockValue <= 0) {
                         productEl.classList.add('disabled-product');
                         productEl.dataset.available = 'false';
@@ -2068,19 +2156,13 @@
             } else {
                 // For non-running items, check stock before adding new item
                 if (!isRunning) {
-                    const currentStock = parseInt(productEl.querySelector('.badge').textContent);
-                    
-                    // Check if we have enough stock (use ceiling for stock check)
+                    const currentStock = getStockValue(productEl);
                     if (currentStock < Math.ceil(quantity)) {
                         showAlert("Cannot add more. Stock limit reached.", "warning");
                         return;
                     }
-                    
-                    // Update the stock display visually
                     const newStockValue = currentStock - Math.ceil(quantity);
-                    productEl.querySelector('.badge').textContent = Math.max(0, newStockValue);
-                    
-                    // If stock reaches zero, disable the product card
+                    setStockValue(productEl, newStockValue);
                     if (newStockValue <= 0) {
                         productEl.classList.add('disabled-product');
                         productEl.dataset.available = 'false';
@@ -2136,19 +2218,13 @@
             
             // For non-running items, check stock before adding more
             if (!isRunning) {
-                const currentStock = parseInt(productEl.querySelector('.badge').textContent);
-                
-                // Check if we can add one more (current stock should be > 0)
+                const currentStock = getStockValue(productEl);
                 if (currentStock <= 0) {
                     showAlert("Cannot add more. Stock limit reached.", "warning");
                     return;
                 }
-                
-                // Update the stock display visually
                 const newStockValue = currentStock - 1;
-                productEl.querySelector('.badge').textContent = newStockValue;
-                
-                // If stock reaches zero, disable the product card
+                setStockValue(productEl, newStockValue);
                 if (newStockValue <= 0) {
                     productEl.classList.add('disabled-product');
                     productEl.dataset.available = 'false';
@@ -2167,11 +2243,8 @@
             
             // Only restore stock for non-running items
             if (!isRunning) {
-                const currentStock = parseInt(productEl.querySelector('.badge').textContent);
-                const newStockValue = currentStock + quantity;
-                productEl.querySelector('.badge').textContent = newStockValue;
-                
-                // Re-enable the product card if it was disabled
+                const newStockValue = getStockValue(productEl) + quantity;
+                setStockValue(productEl, newStockValue);
                 if (productEl.classList.contains('disabled-product')) {
                     productEl.classList.remove('disabled-product');
                     productEl.dataset.available = 'true';
