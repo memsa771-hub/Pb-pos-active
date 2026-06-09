@@ -48,6 +48,8 @@
             list-style: none;
             margin: 0;
             padding: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         @media (min-width: 768px) {
@@ -234,6 +236,239 @@
             color: #1a202c;
             margin: 0;
         }
+
+        .topbar-user-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .topbar-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.35rem 0.65rem 0.35rem 0.35rem;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            color: inherit;
+            max-width: 220px;
+        }
+
+        .topbar-user-chip:hover {
+            background: #edf2f7;
+            color: inherit;
+        }
+
+        .topbar-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3a5f, #2c5282);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .topbar-user-meta {
+            min-width: 0;
+            line-height: 1.2;
+        }
+
+        .topbar-user-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #1a202c;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .topbar-user-role {
+            font-size: 0.68rem;
+            color: #718096;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .topbar-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.9rem;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #4a5568;
+            white-space: nowrap;
+            min-height: 40px;
+        }
+
+        .topbar-action-btn:hover {
+            background: #f8fafc;
+            color: #2d3748;
+        }
+
+        .topbar-action-btn.sign-out {
+            background: #fff5f5;
+            border-color: #feb2b2;
+            color: #c53030;
+        }
+
+        .topbar-action-btn.sign-out:hover {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .app-user-bar {
+            display: none;
+            position: fixed;
+            top: 0.7rem;
+            right: 0.85rem;
+            z-index: 1045;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
+            backdrop-filter: blur(6px);
+        }
+
+        body.focus-page .app-user-bar,
+        body.pos-page .app-user-bar {
+            display: inline-flex;
+        }
+
+        .sidebar-user-footer {
+            margin-top: auto;
+            width: 100%;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.12);
+            list-style: none;
+        }
+
+        .sidebar-user-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .sidebar-user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-user-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 0.1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .sidebar-user-link {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: background 0.15s ease;
+        }
+
+        .sidebar-user-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+        }
+
+        .sidebar-user-link.sign-out {
+            background: rgba(229, 62, 62, 0.18);
+            border-color: rgba(252, 129, 129, 0.35);
+            color: #fff;
+        }
+
+        .sidebar-user-link.sign-out:hover {
+            background: rgba(229, 62, 62, 0.32);
+        }
+
+        @media (min-width: 768px) {
+            body:not(.focus-page):not(.pos-page) .sidebar.collapsed .sidebar-user-footer .sidebar-user-meta,
+            body:not(.focus-page):not(.pos-page) .sidebar.collapsed .sidebar-user-link span {
+                display: none;
+            }
+
+            body:not(.focus-page):not(.pos-page) .sidebar.collapsed .sidebar-user-footer {
+                padding: 0.65rem 0.45rem;
+            }
+
+            body:not(.focus-page):not(.pos-page) .sidebar.collapsed .sidebar-user-card {
+                justify-content: center;
+                margin-bottom: 0.5rem;
+            }
+
+            body:not(.focus-page):not(.pos-page) .sidebar.collapsed .sidebar-user-link {
+                justify-content: center;
+                padding: 0.55rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .app-user-bar .topbar-user-meta,
+            .app-user-bar .topbar-action-btn span {
+                display: none;
+            }
+
+            .topbar-user-actions .topbar-user-meta,
+            .topbar-user-actions .topbar-action-btn span {
+                display: none;
+            }
+        }
         
         /* Button Overrides */
         .btn-primary { background-color: var(--primary) !important; border-color: var(--primary) !important; }
@@ -394,7 +629,43 @@
         </li>
         {% endif %}
 
+        <li class="sidebar-user-footer">
+            <div class="sidebar-user-card">
+                <div class="sidebar-user-avatar">{{ user.username|slice:":1"|upper }}</div>
+                <div class="sidebar-user-meta" style="min-width:0;">
+                    <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="sidebar-user-role">
+                        {% if user.is_superuser %}Admin{% elif user.profile.role %}{{ user.profile.role.name }}{% else %}User{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-user-actions">
+                <a href="{% url 'profile' %}" class="sidebar-user-link {% if '/profile/' in request.path %}active{% endif %}">
+                    <i class="fas fa-user"></i><span>My Profile</span>
+                </a>
+                <a href="{% url 'logout' %}" class="sidebar-user-link sign-out">
+                    <i class="fas fa-sign-out-alt"></i><span>Sign Out</span>
+                </a>
+            </div>
+        </li>
+
     </ul>
+
+    <div class="app-user-bar">
+        <a href="{% url 'profile' %}" class="topbar-user-chip" title="My Profile">
+            <span class="topbar-user-avatar">{{ user.username|slice:":1"|upper }}</span>
+            <span class="topbar-user-meta d-none d-md-inline">
+                <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
+                <span class="topbar-user-role">
+                    {% if user.is_superuser %}Admin{% elif user.profile.role %}{{ user.profile.role.name }}{% else %}User{% endif %}
+                </span>
+            </span>
+        </a>
+        <a href="{% url 'logout' %}" class="topbar-action-btn sign-out" title="Sign Out">
+            <i class="fas fa-sign-out-alt"></i><span>Sign Out</span>
+        </a>
+    </div>
+
     <div class="main-content" id="contentWrapper">
         <nav class="navbar navbar-expand navbar-light topbar static-top">
             <button type="button" id="sidebarToggleTop" class="me-3" title="Toggle menu">
@@ -403,21 +674,23 @@
 
             <h4 class="topbar-title d-none d-sm-inline-block">{% block nav_title %}POS System{% endblock %}</h4>
 
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item dropdown no-arrow">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                        <span class="d-none d-lg-inline small fw-bold text-secondary">{{ user.username }}</span>
-                        <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: linear-gradient(135deg, #1e3a5f, #2c5282); font-weight: 700;">
-                            {{ user.username|slice:":1"|upper }}
-                        </div>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px;">
-                        <a class="dropdown-item py-2" href="{% url 'profile' %}"><i class="fas fa-user fa-sm fa-fw me-2 text-secondary"></i> Profile</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item py-2" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-secondary"></i> Logout</a>
-                    </div>
-                </li>
-            </ul>
+            <div class="topbar-user-actions">
+                <a href="{% url 'profile' %}" class="topbar-user-chip" title="My Profile">
+                    <span class="topbar-user-avatar">{{ user.username|slice:":1"|upper }}</span>
+                    <span class="topbar-user-meta d-none d-md-inline">
+                        <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="topbar-user-role">
+                            {% if user.is_superuser %}Admin{% elif user.profile.role %}{{ user.profile.role.name }}{% else %}User{% endif %}
+                        </span>
+                    </span>
+                </a>
+                <a href="{% url 'profile' %}" class="topbar-action-btn" title="Profile">
+                    <i class="fas fa-user"></i><span>Profile</span>
+                </a>
+                <a href="{% url 'logout' %}" class="topbar-action-btn sign-out" title="Sign Out">
+                    <i class="fas fa-sign-out-alt"></i><span>Sign Out</span>
+                </a>
+            </div>
         </nav>
 
         {% block content %}{% endblock %}
@@ -460,7 +733,7 @@
                 closeSidebarDrawer();
             });
 
-            $('.sidebar-submenu .nav-link, .sidebar-brand').on('click', function() {
+            $('.sidebar-submenu .nav-link, .sidebar-brand, .sidebar-user-link').on('click', function() {
                 if (isDrawerMode()) {
                     closeSidebarDrawer();
                 }

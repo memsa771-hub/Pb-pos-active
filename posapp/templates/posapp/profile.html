@@ -2,66 +2,123 @@
 {% load custom_filters %}
 
 {% block title %}My Profile - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+{% block nav_title %}My Profile{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .profile-hero {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        padding: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .profile-avatar {
+        width: 84px;
+        height: 84px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 8px 20px rgba(30, 58, 95, 0.2);
+    }
+
+    .profile-hero h2 {
+        margin: 0 0 0.25rem;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1a202c;
+    }
+
+    .profile-hero .profile-role {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.65rem;
+        border-radius: 999px;
+        background: #ebf8ff;
+        color: #2c5282;
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .profile-hero .profile-email {
+        color: #718096;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">User Profile</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-3 text-center">
-                            <!-- Text-based avatar -->
-                            <div style="width: 100px; height: 100px; background-color: #007bff; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; margin: 0 auto;">
-                                {{ request.user.username|slice:":1"|upper }}
-                            </div>
-                        </div>
-                        <div class="col-md-9">
-                            <h3>{{ request.user.get_full_name|default:request.user.username }}</h3>
-                            <p class="text-muted">
-                                {% if request.user.profile.role %}
-                                    {{ request.user.profile.role.name }}
-                                {% else %}
-                                    User
-                                {% endif %}
-                            </p>
-                            <p><i class="fa fa-envelope me-2"></i>{{ request.user.email }}</p>
-                        </div>
-                    </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-user-circle me-2"></i>My Profile</h1>
+                <p>View your account details and manage security settings</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'change_password' %}" class="btn btn-outline-light">
+                <i class="fas fa-key me-1"></i> Change Password
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-light" style="background:#fff5f5;border-color:#feb2b2;color:#c53030;">
+                <i class="fas fa-sign-out-alt me-1"></i> Sign Out
+            </a>
+        </div>
+    </div>
 
-                    <div class="row">
-                        <div class="col-12">
-                            <h5 class="border-bottom pb-2">Personal Information</h5>
-                            <div class="row my-3">
-                                <div class="col-md-6">
-                                    <p><strong>Username:</strong> {{ request.user.username }}</p>
-                                    <p><strong>Role:</strong> 
-                                        {% if request.user.profile.role %}
-                                            {{ request.user.profile.role.name }}
-                                        {% else %}
-                                            User
-                                        {% endif %}
-                                    </p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Date Joined:</strong> {{ request.user.date_joined|pkt_date }}</p>
-                                    <p><strong>Last Login:</strong> {{ request.user.last_login|pkt_date }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 text-center">
-                        <a href="{% url 'change_password' %}" class="btn btn-outline-primary me-2">
-                            Change Password
-                        </a>
-                    </div>
+    <div class="admin-panel">
+        <div class="profile-hero">
+            <div class="profile-avatar">{{ request.user.username|slice:":1"|upper }}</div>
+            <div>
+                <span class="profile-role">
+                    {% if request.user.is_superuser %}Admin{% elif request.user.profile.role %}{{ request.user.profile.role.name }}{% else %}User{% endif %}
+                </span>
+                <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+                <p class="profile-email"><i class="fas fa-envelope me-2"></i>{{ request.user.email|default:"No email set" }}</p>
+            </div>
+        </div>
+        <div class="admin-detail-grid">
+            <div class="admin-detail-item">
+                <div class="label">Username</div>
+                <div class="value">{{ request.user.username }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Role</div>
+                <div class="value">
+                    {% if request.user.profile.role %}{{ request.user.profile.role.name }}{% else %}User{% endif %}
                 </div>
             </div>
+            <div class="admin-detail-item">
+                <div class="label">Date Joined</div>
+                <div class="value">{{ request.user.date_joined|pkt_date }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Last Login</div>
+                <div class="value">{{ request.user.last_login|pkt_datetime|default:"-" }}</div>
+            </div>
+        </div>
+        <div class="admin-detail-actions">
+            <a href="{% url 'change_password' %}" class="btn btn-primary" style="background:linear-gradient(135deg,#1e3a5f,#2c5282);border:none;">
+                <i class="fas fa-key me-1"></i> Change Password
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i> Sign Out
+            </a>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
