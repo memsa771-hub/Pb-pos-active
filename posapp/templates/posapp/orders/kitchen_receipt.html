@@ -1,219 +1,124 @@
 {% load static %}
 {% load custom_filters %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kitchen Order #{{ order.reference_number }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% include 'posapp/partials/thermal_receipt_styles.html' %}
     <style>
-        @page {
-            size: 70mm auto;
-            margin: 0;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+        .kitchen-title {
+            font-size: 16px !important;
+            letter-spacing: 0.05em;
         }
-        body {
-            font-family: "Courier New", "Arial", monospace;
-            font-size: 12px;
-            width: 68mm;
-            margin: 0 auto;
-            padding: 1mm;
-            background-color: white;
-            color: #000000;
-            line-height: 1.1;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+        .kitchen-item {
+            display: flex;
+            align-items: stretch;
+            border: 2px solid #000;
+            margin-bottom: 6px;
+            page-break-inside: avoid;
         }
-        .receipt {
-            width: 100%;
-            max-width: 68mm;
-            color: #000000;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 8px;
-            color: #000000;
-        }
-        .header h1 {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 0;
-            color: #000000;
-        }
-        .header p {
-            font-size: 11px;
-            font-weight: bold;
-            margin: 2px 0;
-            color: #000000;
-        }
-        .divider {
-            border-top: 1px dashed #000;
-            margin: 6px 0;
-            clear: both;
-        }
-        .item-block {
+        .kitchen-qty {
+            min-width: 36px;
             display: flex;
             align-items: center;
-            margin: 4px 0;
-            padding: 4px;
-            border: 1px solid #000;
-            background-color: white;
-            color: #000000;
-        }
-        .item-qty {
+            justify-content: center;
             font-weight: bold;
-            font-size: 14px;
-            color: #000000;
-            min-width: 30px;
-            text-align: center;
-            margin-right: 8px;
-            border-right: 1px solid #000;
-            padding-right: 8px;
+            font-size: 15px;
+            border-right: 2px solid #000;
+            padding: 6px 4px;
         }
-        .item-name {
-            font-weight: bold;
-            font-size: 11px;
-            color: #000000;
+        .kitchen-name-wrap {
             flex: 1;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .print-controls {
-            display: block;
-            margin-bottom: 15px;
+        .kitchen-name {
+            font-weight: bold;
+            font-size: 12px;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.2;
         }
-        .print-controls button, .print-controls a {
-            padding: 8px 16px;
-            background-color: #4e73df;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            margin-right: 5px;
-            margin-bottom: 5px;
-        }
-        .print-controls button i, .print-controls a i {
-            margin-right: 5px;
-        }
-        .print-controls button:hover, .print-controls a:hover {
-            background-color: #2e59d9;
-        }
-        @media print {
-            body, html {
-                width: 70mm;
-                margin: 0;
-                padding: 0;
-                background: white;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                color: #000000 !important;
-            }
-            .receipt {
-                width: 68mm;
-                max-width: 68mm;
-                margin: 0 auto;
-                box-shadow: none;
-                border: none;
-                padding: 1mm;
-                color: #000000 !important;
-            }
-            .print-controls, nav, .sidebar, .main-content, .navbar, .notification-container {
-                display: none !important;
-            }
-            .receipt, .receipt * {
-                page-break-inside: avoid !important;
-                page-break-before: avoid !important;
-                page-break-after: avoid !important;
-                color: #000000 !important;
-            }
-            body, h1, p, .item-name, .item-qty {
-                color: #000000 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                -webkit-text-fill-color: #000000 !important;
-                text-fill-color: #000000 !important;
-            }
-            .divider, .item-block {
-                border-color: #000 !important;
-            }
-            .item-name, .item-qty, h1, .header p {
-                font-weight: bold !important;
-            }
-            /* Thermal printer specific optimizations */
-            * {
-                text-rendering: optimizeSpeed !important;
-                -webkit-font-smoothing: none !important;
-                -moz-osx-font-smoothing: unset !important;
-            }
+        .kitchen-sub {
+            font-size: 9px;
+            margin-top: 2px;
         }
     </style>
 </head>
 <body>
-    <!-- Print controls - hidden when printing -->
-    <div class="print-controls">
+    <div class="print-controls no-print">
         {% if auto_print %}
-        <button onclick="window.print()"><i class="fas fa-print"></i> Print Additional Items</button>
-        <a href="{{ redirect_url }}"><i class="fas fa-arrow-left"></i> Back to Order</a>
+        <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print Additional</button>
+        <a href="{{ redirect_url }}"><i class="fas fa-arrow-left"></i> Back</a>
         {% else %}
-        <button onclick="window.print()"><i class="fas fa-print"></i> Print Kitchen Copy</button>
+        <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print Kitchen</button>
         <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
         {% endif %}
     </div>
-    
+
     <div class="receipt">
-        <!-- Header -->
-        <div class="header">
+        <div class="thermal-header">
             {% if is_additional %}
-            <h1>ADDITIONAL ITEMS</h1>
-            <p>Order {{ order.daily_order_number }}</p>
+            <h1 class="kitchen-title">ADDITIONAL ITEMS</h1>
             {% else %}
-            <h1>Order {{ order.daily_order_number }}</h1>
+            <h1 class="kitchen-title">KITCHEN ORDER</h1>
             {% endif %}
+            <p class="thermal-label">Order #{{ order.daily_order_number }} · {{ order.reference_number }}</p>
+            <p>{{ order.created_at|pkt_datetime }}</p>
             {% if order.order_type == 'Dine In' and order.table_number %}
-            <p>Table {{ order.table_number }}</p>
+            <p class="thermal-label" style="font-size: 14px;">TABLE {{ order.table_number }}</p>
             {% elif order.order_type == 'Delivery' %}
-            <p>Delivery</p>
+            <p class="thermal-label">DELIVERY</p>
+            {% elif order.order_type == 'Takeaway' %}
+            <p class="thermal-label">TAKEAWAY</p>
             {% endif %}
-            {% if is_additional %}
-            <p><strong>Additional Items</strong></p>
-            {% endif %}
+            {% if order.customer_name %}<p>Customer: {{ order.customer_name }}</p>{% endif %}
         </div>
-        
-        <div class="divider"></div>
-        
-        <!-- Order Items in Blocks -->
+
+        {% if order.notes %}
+        <hr class="thermal-divider">
+        <div class="thermal-meta">
+            <p class="thermal-label">Notes: {{ order.notes }}</p>
+        </div>
+        {% endif %}
+
+        <hr class="thermal-divider">
+
         {% for item in order_items %}
-        <div class="item-block">
-            <div class="item-qty">{{ item.quantity|stringformat:"g" }}</div>
-            <div class="item-name">{{ item.product.name }}</div>
+        <div class="kitchen-item">
+            <div class="kitchen-qty">{{ item.quantity|stringformat:"g" }}</div>
+            <div class="kitchen-name-wrap">
+                <div class="kitchen-name">{{ item.product.name }}</div>
+                {% if item.product.calculate_price_per_kg %}
+                <div class="kitchen-sub">Weight item (kg)</div>
+                {% endif %}
+                {% if item.notes %}
+                <div class="kitchen-sub">Note: {{ item.notes }}</div>
+                {% endif %}
+            </div>
         </div>
+        {% empty %}
+        <p class="thermal-meta">No items</p>
         {% endfor %}
     </div>
 
     <script>
-        // Auto print when page loads
-        window.onload = function() {
-            window.print();
-            
+        window.addEventListener('load', function() {
+            setTimeout(function() { window.print(); }, 250);
             {% if auto_print %}
-            // If this was auto-triggered by order save, redirect back after printing
+            window.addEventListener('afterprint', function() {
+                window.location.href = '{{ redirect_url }}';
+            });
             setTimeout(function() {
                 window.location.href = '{{ redirect_url }}';
-            }, 2000); // Wait 2 seconds for print dialog to appear
+            }, 3000);
             {% endif %}
-        }
-        
-        {% if auto_print %}
-        // Also redirect after print dialog is closed
-        window.addEventListener('afterprint', function() {
-            setTimeout(function() {
-                window.location.href = '{{ redirect_url }}';
-            }, 500);
         });
-        {% endif %}
     </script>
 </body>
-</html> 
+</html>

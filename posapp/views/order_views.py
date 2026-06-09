@@ -808,7 +808,7 @@ def order_delete(request, order_id):
 def order_receipt(request, order_id):
     """Display a printable receipt for an order"""
     order = get_object_or_404(Order, id=order_id)
-    order_items = OrderItem.objects.filter(order=order)
+    order_items = OrderItem.objects.filter(order=order).select_related('product')
     
     # Calculate subtotal and discount amount
     subtotal = sum([item.unit_price * item.quantity for item in order_items])
@@ -956,29 +956,17 @@ def kitchen_receipt(request, order_id):
     - Delivery address (for Delivery orders)
     """
     order = get_object_or_404(Order, id=order_id)
-    order_items = OrderItem.objects.filter(order=order)
+    order_items = OrderItem.objects.filter(order=order).select_related('product')
     
-    # Get business settings
-    business_settings = get_or_create_settings([
-        'business_name', 'business_address', 'business_phone', 
-    ])
-    
-    business_name = business_settings['business_name'].setting_value
-    business_address = business_settings['business_address'].setting_value
-    business_phone = business_settings['business_phone'].setting_value
-    
-    import pytz
-    pkt = pytz.timezone('Asia/Karachi')
-    from django.utils.timezone import now as tz_now
-    now_pkt = tz_now().astimezone(pkt).strftime('%d/%m/%Y %I:%M %p')
+    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css'])
+    receipt_paper_size = receipt_settings['receipt_paper_size'].setting_value
+    receipt_custom_css = receipt_settings['receipt_custom_css'].setting_value
 
     context = {
         'order': order,
         'order_items': order_items,
-        'business_name': business_name,
-        'business_address': business_address,
-        'business_phone': business_phone,
-        'now_pkt': now_pkt,
+        'receipt_paper_size': receipt_paper_size,
+        'receipt_custom_css': receipt_custom_css,
     }
     
     return render(request, 'posapp/orders/kitchen_receipt.html', context)
@@ -1013,28 +1001,16 @@ def kitchen_receipt_additional(request, order_id):
             quantity=item_data['quantity']
         ))
     
-    # Get business settings
-    business_settings = get_or_create_settings([
-        'business_name', 'business_address', 'business_phone', 
-    ])
-    
-    business_name = business_settings['business_name'].setting_value
-    business_address = business_settings['business_address'].setting_value
-    business_phone = business_settings['business_phone'].setting_value
-    
-    import pytz
-    pkt = pytz.timezone('Asia/Karachi')
-    from django.utils.timezone import now as tz_now
-    now_pkt = tz_now().astimezone(pkt).strftime('%d/%m/%Y %I:%M %p')
+    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css'])
+    receipt_paper_size = receipt_settings['receipt_paper_size'].setting_value
+    receipt_custom_css = receipt_settings['receipt_custom_css'].setting_value
 
     context = {
         'order': order,
-        'order_items': additional_items,  # Only additional quantities
-        'business_name': business_name,
-        'business_address': business_address,
-        'business_phone': business_phone,
-        'is_additional': True,  # Flag to indicate this is for additional items
-        'now_pkt': now_pkt,
+        'order_items': additional_items,
+        'is_additional': True,
+        'receipt_paper_size': receipt_paper_size,
+        'receipt_custom_css': receipt_custom_css,
     }
     
     # Check if this was triggered by order save
@@ -2057,7 +2033,8 @@ def delivery_combined_bill(request, delivery_person_id):
     
     # Get business settings for receipt
     business_settings = get_or_create_settings([
-        'business_name', 'business_address', 'business_phone', 'business_email'
+        'business_name', 'business_address', 'business_phone', 'business_email',
+        'currency_symbol', 'receipt_paper_size', 'receipt_custom_css',
     ])
     
     context = {
@@ -2074,6 +2051,9 @@ def delivery_combined_bill(request, delivery_person_id):
         'business_address': business_settings['business_address'].setting_value or '',
         'business_phone': business_settings['business_phone'].setting_value or '',
         'business_email': business_settings['business_email'].setting_value or '',
+        'currency_symbol': business_settings['currency_symbol'].setting_value or 'Rs.',
+        'receipt_paper_size': business_settings['receipt_paper_size'].setting_value,
+        'receipt_custom_css': business_settings['receipt_custom_css'].setting_value,
     }
     
     return render(request, 'posapp/orders/delivery_combined_bill.html', context)

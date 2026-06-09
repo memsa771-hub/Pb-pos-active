@@ -6,30 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Summary Report #{{ start_date|date:"Ymd" }}-{{ end_date|date:"Ymd" }}</title>
+    {% include 'posapp/partials/thermal_receipt_styles.html' %}
     <style>
-        @page {
-            size: 70mm auto;
-            margin: 0;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        body {
-            font-family: "Courier New", Arial, monospace;
-            font-size: 10px;
-            line-height: 1.1;
-            width: 68mm;
-            margin: 0 auto;
-            padding: 0;
-            background-color: white;
-            color: black;
-            letter-spacing: 0.01em;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .receipt {
-            width: 100%;
-            max-width: 68mm;
-        }
         .header {
             text-align: center;
             margin-bottom: 6px;
@@ -115,51 +93,15 @@
             margin: 6px 0;
             border-radius: 2px;
         }
-        @media print {
-            body, html {
-                width: 70mm;
-                margin: 0;
-                padding: 0;
-                background: #fff;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .receipt {
-                width: 68mm;
-                max-width: 68mm;
-                margin: 0 auto;
-                box-shadow: none;
-                border: none;
-                padding: 1mm;
-                min-height: auto !important;
-            }
-            nav, .sidebar, .main-content, .navbar, .notification-container {
-                display: none !important;
-            }
-            .receipt, .receipt * {
-                page-break-inside: avoid !important;
-                page-break-before: avoid !important;
-                page-break-after: avoid !important;
-            }
-            .divider, .section-box {
-                border-color: #000 !important;
-            }
-            .negative-amount, body, table, th, td, h1, h2, p {
-                color: #000 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                -webkit-text-fill-color: #000 !important;
-                text-fill-color: #000 !important;
-            }
-            th, td, h2, .total-row, .report-info p {
-                font-weight: bold !important;
-            }
-            /* Thermal printer specific optimizations */
-            * {
-                text-rendering: optimizeSpeed !important;
-                -webkit-font-smoothing: none !important;
-                -moz-osx-font-smoothing: unset !important;
-            }
+        .section-box {
+            border: 1px solid #000;
+            padding: 4px;
+            margin: 6px 0;
+        }
+        h2 {
+            font-size: 11px !important;
+            margin: 6px 0 3px !important;
+            text-decoration: underline;
         }
     </style>
 </head>

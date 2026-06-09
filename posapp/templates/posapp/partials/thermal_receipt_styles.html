@@ -1,0 +1,292 @@
+{# Thermal receipt base styles. Set receipt_paper_size to 58mm or 80mm (default 80mm). #}
+<style>
+    {% if receipt_paper_size == '58mm' %}
+    @page {
+        size: 58mm auto;
+        margin: 1mm 0;
+    }
+    {% else %}
+    @page {
+        size: 80mm auto;
+        margin: 2mm 0;
+    }
+    {% endif %}
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Courier New", Courier, monospace;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 10px;
+        width: 52mm;
+        {% else %}
+        font-size: 11px;
+        width: 72mm;
+        {% endif %}
+        margin: 0 auto;
+        padding: 2mm 1mm;
+        background: #fff;
+        color: #000;
+        line-height: 1.25;
+    }
+
+    .receipt {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .thermal-header {
+        text-align: center;
+        margin-bottom: 4px;
+    }
+
+    .thermal-header h1 {
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 13px;
+        {% else %}
+        font-size: 15px;
+        {% endif %}
+        font-weight: bold;
+        margin: 0 0 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .thermal-header p {
+        margin: 1px 0;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 9px;
+        {% else %}
+        font-size: 10px;
+        {% endif %}
+    }
+
+    .thermal-logo img {
+        max-width: 100%;
+        {% if receipt_paper_size == '58mm' %}
+        max-height: 32px;
+        {% else %}
+        max-height: 42px;
+        {% endif %}
+        margin-bottom: 4px;
+        object-fit: contain;
+    }
+
+    .thermal-divider {
+        border: none;
+        border-top: 1px dashed #000;
+        margin: 5px 0;
+        height: 0;
+    }
+
+    .thermal-meta p {
+        margin: 1px 0;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 9px;
+        {% else %}
+        font-size: 10px;
+        {% endif %}
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .thermal-meta .thermal-label {
+        font-weight: bold;
+    }
+
+    .thermal-items {
+        margin: 4px 0;
+    }
+
+    .thermal-item {
+        margin: 0 0 5px;
+        padding-bottom: 4px;
+        border-bottom: 1px dotted #bbb;
+        page-break-inside: avoid;
+    }
+
+    .thermal-item:last-child {
+        border-bottom: none;
+    }
+
+    .thermal-item-name {
+        font-weight: bold;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 10px;
+        {% else %}
+        font-size: 11px;
+        {% endif %}
+    }
+
+    .thermal-item-note {
+        font-size: 9px;
+        font-style: italic;
+        margin-top: 1px;
+        color: #000;
+    }
+
+    .thermal-item-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        margin-top: 2px;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 9px;
+        {% else %}
+        font-size: 10px;
+        {% endif %}
+    }
+
+    .thermal-item-total {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .thermal-totals {
+        margin-top: 4px;
+        page-break-inside: avoid;
+    }
+
+    .thermal-total-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 1px 0;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 9px;
+        {% else %}
+        font-size: 10px;
+        {% endif %}
+    }
+
+    .thermal-total-line span:last-child {
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .thermal-total-line.discount span:last-child {
+        font-weight: bold;
+    }
+
+    .thermal-total-line.grand {
+        font-weight: bold;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 12px;
+        {% else %}
+        font-size: 13px;
+        {% endif %}
+        border-top: 1px solid #000;
+        margin-top: 4px;
+        padding-top: 4px;
+    }
+
+    .thermal-total-note {
+        text-align: center;
+        font-size: 9px;
+        font-style: italic;
+        margin: 2px 0;
+    }
+
+    .thermal-footer {
+        text-align: center;
+        margin-top: 6px;
+        {% if receipt_paper_size == '58mm' %}
+        font-size: 9px;
+        {% else %}
+        font-size: 10px;
+        {% endif %}
+        page-break-inside: avoid;
+    }
+
+    .thermal-footer p {
+        margin: 2px 0;
+    }
+
+    .print-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+        padding: 8px;
+        background: #f1f5f9;
+        border-radius: 6px;
+        max-width: 320px;
+    }
+
+    .print-controls button,
+    .print-controls a {
+        padding: 8px 12px;
+        background: #2b6cb0;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 13px;
+        font-family: Arial, sans-serif;
+    }
+
+    .print-controls button:hover,
+    .print-controls a:hover {
+        background: #1e4f8a;
+    }
+
+    @media print {
+        body, html {
+            {% if receipt_paper_size == '58mm' %}
+            width: 58mm;
+            {% else %}
+            width: 80mm;
+            {% endif %}
+            margin: 0;
+            padding: 0;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .receipt {
+            {% if receipt_paper_size == '58mm' %}
+            width: 52mm;
+            max-width: 52mm;
+            {% else %}
+            width: 72mm;
+            max-width: 72mm;
+            {% endif %}
+            margin: 0 auto;
+            padding: 2mm 1mm;
+        }
+
+        .print-controls {
+            display: none !important;
+        }
+
+        body, .receipt, .receipt * {
+            color: #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .thermal-divider {
+            border-top: 1px dashed #000 !important;
+        }
+
+        .thermal-item-name,
+        .thermal-total-line.grand,
+        .thermal-label {
+            font-weight: bold !important;
+        }
+
+        * {
+            text-rendering: optimizeSpeed !important;
+            -webkit-font-smoothing: none !important;
+        }
+    }
+
+    {% if receipt_custom_css %}{{ receipt_custom_css|safe }}{% endif %}
+</style>

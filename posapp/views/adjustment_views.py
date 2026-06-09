@@ -568,10 +568,14 @@ def adjustment_receipt(request):
         receipt_show_logo = Setting.objects.get(setting_key='receipt_show_logo').setting_value == 'True'
         receipt_header = Setting.objects.get(setting_key='receipt_header').setting_value
         receipt_footer = Setting.objects.get(setting_key='receipt_footer').setting_value
-    except:
+        receipt_paper_size = Setting.objects.get(setting_key='receipt_paper_size').setting_value
+        receipt_custom_css = Setting.objects.get(setting_key='receipt_custom_css').setting_value
+    except Setting.DoesNotExist:
         receipt_show_logo = False
         receipt_header = ''
         receipt_footer = ''
+        receipt_paper_size = ''
+        receipt_custom_css = ''
     
     context = {
         'bill_adjustments': bill_adjustments,
@@ -593,6 +597,8 @@ def adjustment_receipt(request):
         'receipt_show_logo': receipt_show_logo,
         'receipt_header': receipt_header,
         'receipt_footer': receipt_footer,
+        'receipt_paper_size': receipt_paper_size,
+        'receipt_custom_css': receipt_custom_css,
     }
     
     return render(request, 'posapp/adjustments/adjustment_receipt.html', context) 

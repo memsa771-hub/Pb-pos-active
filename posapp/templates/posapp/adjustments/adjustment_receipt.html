@@ -6,24 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adjustment Report #ADJ-{{ start_date|date:"Ymd" }}-{{ end_date|date:"Ymd" }}</title>
+    {% include 'posapp/partials/thermal_receipt_styles.html' %}
     <style>
-        @page {
-            size: 80mm auto;
-            margin: 0;
-        }
-        body {
-            font-family: "Courier New", Courier, monospace;
-            font-size: 10px;
-            width: 76mm;
-            margin: 0 auto;
-            padding: 2mm;
-            background-color: white;
-            color: black;
-        }
-        .receipt {
-            width: 100%;
-            max-width: 76mm;
-        }
         .header {
             text-align: center;
             margin-bottom: 5px;
@@ -89,30 +73,6 @@
             padding: 5px;
             background-color: #f8f9fa;
             border-radius: 3px;
-        }
-        @media print {
-            body, html {
-                width: 80mm;
-                margin: 0;
-                padding: 0;
-                background: #fff;
-            }
-            .receipt {
-                width: 80mm;
-                max-width: 80mm;
-                margin: 0;
-                box-shadow: none;
-                border: none;
-                padding: 0;
-            }
-            nav, .sidebar, .main-content, .navbar, .notification-container {
-                display: none !important;
-            }
-            .receipt, .receipt * {
-                page-break-inside: avoid !important;
-                page-break-before: avoid !important;
-                page-break-after: avoid !important;
-            }
         }
     </style>
 </head>
