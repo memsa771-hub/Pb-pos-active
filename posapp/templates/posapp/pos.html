@@ -944,8 +944,8 @@
 
     body.pos-page .product-grid {
         display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)) !important;
-        gap: 12px !important;
+        grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)) !important;
+        gap: 8px !important;
         width: 100%;
     }
 
@@ -956,10 +956,10 @@
     body.pos-page .product-card {
         height: 100% !important;
         width: 100% !important;
-        min-height: 148px !important;
+        min-height: 102px !important;
         max-width: none !important;
         aspect-ratio: unset !important;
-        border-radius: 14px !important;
+        border-radius: 10px !important;
         border: 1px solid #e2e8f0 !important;
         background: #fff;
         display: flex;
@@ -982,7 +982,7 @@
     }
 
     body.pos-page .product-card .card-body {
-        padding: 0.8rem 0.85rem 0.65rem !important;
+        padding: 0.5rem 0.55rem 0.4rem !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;
@@ -995,21 +995,21 @@
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 0.4rem;
-        margin-bottom: 0.45rem;
-        min-height: 22px;
+        gap: 0.3rem;
+        margin-bottom: 0.3rem;
+        min-height: 18px;
     }
 
     body.pos-page .pos-product-code {
         display: inline-flex;
         align-items: center;
-        font-size: 0.68rem;
+        font-size: 0.58rem;
         font-weight: 600;
         color: #718096;
         background: #f1f5f9;
         border: 1px solid #e2e8f0;
         border-radius: 6px;
-        padding: 0.15rem 0.45rem;
+        padding: 0.1rem 0.35rem;
         letter-spacing: 0.02em;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
@@ -1018,11 +1018,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 28px;
-        height: 22px;
-        padding: 0 0.45rem;
+        min-width: 22px;
+        height: 18px;
+        padding: 0 0.35rem;
         border-radius: 999px;
-        font-size: 0.68rem;
+        font-size: 0.58rem;
         font-weight: 700;
         line-height: 1;
         flex-shrink: 0;
@@ -1053,10 +1053,10 @@
     }
 
     body.pos-page .product-card .card-title {
-        font-size: 0.88rem !important;
+        font-size: 0.72rem !important;
         font-weight: 700 !important;
         color: #1a202c;
-        margin: 0 0 0.35rem 0 !important;
+        margin: 0 0 0.2rem 0 !important;
         white-space: normal !important;
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -1070,15 +1070,15 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.5rem;
-        padding: 0.55rem 0.7rem;
+        gap: 0.35rem;
+        padding: 0.38rem 0.5rem;
         background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
         margin-top: auto;
         flex-shrink: 0;
     }
 
     body.pos-page .pos-product-price {
-        font-size: 0.88rem !important;
+        font-size: 0.72rem !important;
         font-weight: 700 !important;
         color: #fff !important;
         white-space: nowrap;
@@ -1089,15 +1089,15 @@
     }
 
     body.pos-page .pos-add-btn {
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        border-radius: 8px !important;
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        border-radius: 6px !important;
         padding: 0 !important;
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        font-size: 0.85rem !important;
+        font-size: 0.72rem !important;
         background: rgba(255, 255, 255, 0.18) !important;
         border: 1px solid rgba(255, 255, 255, 0.28) !important;
         color: #fff !important;
@@ -1490,7 +1490,13 @@
 
     @media (min-width: 1024px) and (max-width: 1440px) {
         body.pos-page .product-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+            grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)) !important;
+        }
+    }
+
+    @media (min-width: 1600px) {
+        body.pos-page .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important;
         }
     }
 

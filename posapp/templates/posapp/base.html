@@ -35,7 +35,8 @@
         /* --- SIDEBAR --- */
         .sidebar {
             background: linear-gradient(180deg, #1e3a5f 0%, #2c5282 55%, #1a365d 100%);
-            min-height: 100vh;
+            height: 100vh;
+            max-height: 100vh;
             width: var(--sidebar-width);
             position: fixed;
             top: 0;
@@ -45,6 +46,8 @@
             color: white;
             overflow-y: auto;
             overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             list-style: none;
             margin: 0;
             padding: 0;
@@ -619,6 +622,12 @@
             $(window).on('resize', function() {
                 if (!isDrawerMode()) {
                     closeSidebarDrawer();
+                }
+            });
+
+            $('.sidebar').on('wheel', function(e) {
+                if (isDrawerMode() && body.hasClass('sidebar-open')) {
+                    e.stopPropagation();
                 }
             });
 

@@ -17,6 +17,16 @@
         transform: translateX(0);
         pointer-events: auto;
         box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body.focus-page.sidebar-open,
+    body.pos-page.sidebar-open {
+        overflow: hidden;
     }
 
     body.focus-page .main-content,
