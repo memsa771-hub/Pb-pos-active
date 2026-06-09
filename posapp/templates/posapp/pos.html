@@ -1225,8 +1225,7 @@
         display: none !important;
     }
     /* Hide everything else */
-    #receipt-container,
-    #kitchen-print-ticket {
+    #receipt-container {
         display: block !important;
         position: absolute;
         top: 0;
@@ -2482,51 +2481,6 @@
             deliveryCharges = parseFloat($(this).val()) || 0;
             updateTotals();
         });
-
-        // Print kitchen ticket instantly on POS (no separate receipt page / print button)
-        function printKitchenTicket(cartSnapshot, orderNumberDisplay, orderNumber, orderType, tableNumber, orderNotes) {
-            if (!cartSnapshot || !cartSnapshot.length) {
-                return;
-            }
-
-            const typeLine = orderType === 'Dine In' && tableNumber
-                ? 'TABLE ' + tableNumber
-                : orderType === 'Delivery'
-                    ? 'DELIVERY'
-                    : orderType === 'Takeaway'
-                        ? 'TAKEAWAY'
-                        : '';
-
-            const itemsHtml = cartSnapshot.map(function(item) {
-                return '<div style="display:flex;align-items:stretch;border:2px solid #000;margin-bottom:6px;page-break-inside:avoid;">' +
-                    '<div style="min-width:36px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:15px;border-right:2px solid #000;padding:6px 4px;">' + item.quantity + '</div>' +
-                    '<div style="flex:1;padding:6px 8px;font-weight:bold;font-size:12px;word-wrap:break-word;">' + item.name + '</div>' +
-                '</div>';
-            }).join('');
-
-            const notesHtml = orderNotes
-                ? '<div style="border-top:1px dashed #000;margin:6px 0;padding-top:4px;font-size:11px;"><strong>Notes:</strong> ' + orderNotes + '</div>'
-                : '';
-
-            $('#kitchen-print-ticket').remove();
-            $('body').append(
-                '<div id="kitchen-print-ticket" class="print-only">' +
-                    '<div class="receipt-preview" style="width:72mm;padding:2mm;font-family:\'Courier New\',monospace;font-size:12px;line-height:1.2;color:#000;">' +
-                        '<div style="text-align:center;margin-bottom:8px;">' +
-                            '<h1 style="font-size:16px;font-weight:bold;margin:0;">KITCHEN ORDER</h1>' +
-                            '<p style="margin:2px 0;">Order #' + orderNumberDisplay + ' &middot; ' + orderNumber + '</p>' +
-                            (typeLine ? '<p style="margin:2px 0;font-weight:bold;font-size:14px;">' + typeLine + '</p>' : '') +
-                        '</div>' +
-                        '<div style="border-top:1px dashed #000;margin:6px 0;"></div>' +
-                        notesHtml +
-                        itemsHtml +
-                    '</div>' +
-                '</div>'
-            );
-
-            window.print();
-            setTimeout(function() { $('#kitchen-print-ticket').remove(); }, 800);
-        }
         
         // Complete payment
         $('#completePaymentBtn').click(function() {
@@ -2646,10 +2600,6 @@
 
                 const savedTableNumber = $('#tableNumber').val();
                 const savedOrderType = selectedOrderType;
-                const savedOrderNotes = orderNotes;
-                const cartSnapshot = cart.map(function(item) {
-                    return { name: item.name, quantity: item.quantity };
-                });
 
                 // Save order to server
                 $.ajax({
@@ -2665,15 +2615,6 @@
                         const orderNumberDisplay = response.display_number || '0';
 
                         $('#paymentModal').modal('hide');
-
-                        printKitchenTicket(
-                            cartSnapshot,
-                            orderNumberDisplay,
-                            orderNumber,
-                            savedOrderType,
-                            savedTableNumber,
-                            savedOrderNotes
-                        );
 
                         cart = [];
                         updateCart();
@@ -2695,6 +2636,19 @@
                         `);
                         
                         $('#successModal').modal('show');
+
+                        if (response.order_id) {
+                            setTimeout(function() {
+                                let kitchenFrame = document.getElementById('kitchen-print-frame');
+                                if (!kitchenFrame) {
+                                    kitchenFrame = document.createElement('iframe');
+                                    kitchenFrame.id = 'kitchen-print-frame';
+                                    kitchenFrame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+                                    document.body.appendChild(kitchenFrame);
+                                }
+                                kitchenFrame.src = '/orders/' + response.order_id + '/kitchen/';
+                            }, 0);
+                        }
 
                         // Reset order form
                         $('#tableNumber').val('');  // Clear table number

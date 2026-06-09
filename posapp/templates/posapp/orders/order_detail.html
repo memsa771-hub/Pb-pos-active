@@ -566,6 +566,17 @@
             $('button[data-bs-target="#cancelModal"]').remove();
         }
 
+        function printCustomerReceipt() {
+            let frame = document.getElementById('order-receipt-frame');
+            if (!frame) {
+                frame = document.createElement('iframe');
+                frame.id = 'order-receipt-frame';
+                frame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+                document.body.appendChild(frame);
+            }
+            frame.src = '{% url "order_receipt" order.id %}';
+        }
+
         $('#completeOrderBtn').on('click', function() {
             const $btn = $(this);
             if ($btn.prop('disabled')) {
@@ -592,6 +603,7 @@
 
                 $('#completeModal').modal('hide');
                 markOrderCompletedInUI();
+                setTimeout(printCustomerReceipt, 0);
 
                 const toast = document.createElement('div');
                 toast.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3 shadow';
