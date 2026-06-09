@@ -73,7 +73,7 @@ def product_create(request):
     
     if request.method == 'POST':
         # Form handle karega Validation aur Data Extraction
-        form = ProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST)
         
         if form.is_valid():
             try:
@@ -107,21 +107,11 @@ def product_edit(request, product_id):
     product = get_object_or_404(PosProduct, id=product_id)
     
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
+        form = ProductForm(request.POST, instance=product)
         
         if form.is_valid():
             try:
-                # Save but don't commit yet to handle manual image deletion
-                updated_prod = form.save(commit=False)
-                
-                # Manual Logic: Delete Image Checkbox
-                if request.POST.get('delete_image') == 'on':
-                    updated_prod.image = None
-                    updated_prod.image_name = None
-                    updated_prod.image_type = None
-                
-                # Forms.py ka save method baaki kaam (Image set, Stock logic) khud kr lega
-                form.save() 
+                updated_prod = form.save()
                 
                 messages.success(request, f'Product "{updated_prod.name}" updated successfully.')
                 return redirect('product_detail', product_id=product.id)

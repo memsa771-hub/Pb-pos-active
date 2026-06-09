@@ -65,8 +65,6 @@ class CategoryForm(forms.ModelForm):
 
 class ProductForm(forms.ModelForm):
     """Form for Product model"""
-    image = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
-    
     class Meta:
         model = PosProduct
         fields = ('name', 'product_code', 'category', 'price', 'sku', 'stock_quantity', 'is_available', 'running_item', 'is_recipe_based','calculate_price_per_kg', 'description')
@@ -126,11 +124,6 @@ class ProductForm(forms.ModelForm):
         # Force stock to 0 if running or recipe based (Double Safety)
         if product.running_item or product.is_recipe_based:
             product.stock_quantity = 0
-
-        # Handle the image field separately
-        image = self.cleaned_data.get('image')
-        if image:
-            product.set_image(image)
         
         if commit:
             product.save()

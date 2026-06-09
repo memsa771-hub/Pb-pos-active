@@ -51,7 +51,6 @@ from .views.adjustment_views import (
     adjustment_receipt
 )
 from .views.image_views import (
-    serve_product_image,
     serve_business_logo,
     serve_bill_adjustment_image
 )
@@ -165,7 +164,6 @@ urlpatterns = [
     path('delivery-persons/<int:person_id>/delete/', delivery_person_delete, name='delivery_person_delete'),
     
     # Images served from database
-    path('product_image/<int:product_id>/', serve_product_image, name='serve_product_image'),
     path('business_logo/<int:logo_id>/', serve_business_logo, name='serve_business_logo'),
     path('bill_adjustment_image/<int:image_id>/', serve_bill_adjustment_image, name='serve_bill_adjustment_image'),
     

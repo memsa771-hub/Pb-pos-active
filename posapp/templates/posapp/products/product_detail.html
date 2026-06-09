@@ -5,11 +5,6 @@
 
 {% block extra_css %}
 <style>
-    .product-image {
-        max-width: 100%;
-        height: auto;
-        border-radius: 5px;
-    }
     .product-info-item {
         margin-bottom: 1rem;
     }
@@ -19,9 +14,6 @@
     }
     .product-actions {
         margin-top: 2rem;
-    }
-    .no-image-placeholder {
-        background-color: #f8f9fa;
     }
 </style>
 {% endblock %}
@@ -47,24 +39,7 @@
     {% endif %}
 
     <div class="row">
-        <div class="col-md-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Product Image</h6>
-                </div>
-                <div class="card-body text-center">
-                    {% if product.image %}
-                    <img src="{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" class="product-image" onerror="this.onerror=null; this.src='https://i.imgur.com/pTXpXpF.jpg';">
-                    {% else %}
-                    <div class="p-5 rounded text-center text-muted no-image-placeholder">
-                        <img src="https://i.imgur.com/pTXpXpF.jpg" alt="{{ product.name }}" class="product-image">
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-8">
+        <div class="col-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Product Information</h6>
@@ -221,4 +196,4 @@
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

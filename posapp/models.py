@@ -169,9 +169,6 @@ class PosProduct(models.Model):
     is_recipe_based = models.BooleanField(default=False, help_text="Check this if product is made in kitchen using raw ingredients")
     running_item = models.BooleanField(default=False, help_text="If checked, stock will not decrease when ordered")
     calculate_price_per_kg = models.BooleanField(default=False, help_text="If checked, product will be sold by weight (per kg)")
-    image = models.BinaryField(null=True, blank=True)
-    image_name = models.CharField(max_length=255, null=True, blank=True)
-    image_type = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -184,20 +181,6 @@ class PosProduct(models.Model):
     
     class Meta:
         ordering = ['name']
-    
-    def set_image(self, image_file):
-        if image_file:
-            # Store image content in BinaryField
-            self.image_name = image_file.name
-            self.image_type = image_file.content_type
-            self.image = image_file.read()
-    
-    def get_image_url(self):
-        if self.image:
-            # Generate a unique ID for the image URL
-            unique_id = uuid.uuid4().hex
-            return f"/product_image/{self.id}/?v={unique_id}"
-        return None
 
 class Order(models.Model):
     PAYMENT_STATUS_CHOICES = [

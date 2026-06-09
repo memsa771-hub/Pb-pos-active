@@ -37,7 +37,7 @@
                 </div>
             {% endif %}
             
-            <form method="post" enctype="multipart/form-data" id="productForm">
+            <form method="post" id="productForm">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col-md-6">
@@ -143,29 +143,6 @@
                                 <div class="mb-3">
                                     <label for="id_description" class="form-label">Description</label>
                                     <textarea class="form-control" id="id_description" name="description" rows="4">{{ form.description.value|default:'' }}</textarea>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="id_image" class="form-label">Product Image</label>
-                                    
-                                    {% if form.instance.image %}
-                                        <div class="mb-3 p-2 border rounded bg-light">
-                                            <label class="form-check-label mb-2 fw-bold">Current Image:</label>
-                                            <div class="d-flex align-items-start">
-                                                <img src="{% if form.instance.get_image_url %}{{ form.instance.get_image_url }}{% else %}{{ form.instance.image.url }}{% endif %}" 
-                                                     alt="{{ form.instance.name }}"
-                                                     class="img-thumbnail me-3" style="width: 100px; height: 100px; object-fit: cover;">
-                                                
-                                                <div class="form-check mt-2">
-                                                    <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
-                                                    <label class="form-check-label text-danger" for="delete_image">Delete Image</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                    
-                                    <input type="file" class="form-control" id="id_image" name="image">
-                                    <div class="form-text">Allowed formats: JPG, PNG. Max size: 2MB</div>
                                 </div>
                             </div>
                         </div>

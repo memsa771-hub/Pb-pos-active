@@ -50,16 +50,6 @@
         border-color: #007bff;
     }
     
-    .cart-item-image {
-        width: 35px;
-        height: 35px;
-        object-fit: cover;
-        border-radius: 6px;
-        border: 1px solid #fff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        flex-shrink: 0;
-    }
-    
     .cart-item-content {
         flex: 1;
         min-width: 0;
@@ -166,11 +156,6 @@
             padding: 5px 6px;
         }
         
-        .cart-item-image {
-            width: 32px;
-            height: 32px;
-        }
-        
         .cart-item-name {
             font-size: 0.7rem;
         }
@@ -204,11 +189,6 @@
             height: 50px;
             padding: 4px 5px;
             margin-bottom: 3px;
-        }
-        
-        .cart-item-image {
-            width: 28px;
-            height: 28px;
         }
         
         .cart-item-name {
@@ -994,8 +974,8 @@
 
     body.pos-page .product-grid {
         display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)) !important;
-        gap: 12px !important;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+        gap: 10px !important;
         width: 100%;
     }
 
@@ -1006,10 +986,10 @@
     body.pos-page .product-card {
         height: auto !important;
         width: 100% !important;
-        min-height: 195px !important;
+        min-height: 118px !important;
         max-width: none !important;
         aspect-ratio: unset !important;
-        border-radius: 14px !important;
+        border-radius: 12px !important;
         border: 1px solid #e2e8f0 !important;
         background: #fff;
         display: flex;
@@ -1024,25 +1004,10 @@
         box-shadow: 0 6px 16px rgba(44, 82, 130, 0.12) !important;
     }
 
-    body.pos-page .pos-product-media {
-        position: relative;
-        height: 88px;
-        background: linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+    body.pos-page .pos-product-badge-row {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    body.pos-page .pos-product-media img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    body.pos-page .pos-product-placeholder {
-        font-size: 2rem;
-        color: #a0aec0;
+        justify-content: flex-end;
+        margin-bottom: 0.35rem;
     }
 
     body.pos-page .product-card .card-body {
@@ -1166,26 +1131,12 @@
 
     body.pos-page .cart-item-compact {
         height: auto;
-        min-height: 78px;
-        padding: 10px 12px;
+        min-height: 58px;
+        padding: 8px 12px;
         margin-bottom: 8px;
         border-radius: 12px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
-    }
-
-    body.pos-page .cart-item-image,
-    body.pos-page .pos-cart-placeholder {
-        width: 52px;
-        height: 52px;
-        border-radius: 10px;
-        object-fit: cover;
-        background: #edf2f7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #a0aec0;
-        flex-shrink: 0;
     }
 
     body.pos-page .cart-totals {
@@ -1370,11 +1321,10 @@
                  data-code="{{ product.product_code }}" 
                  data-available="{% if product.stock_quantity > 0 or product.running_item or product.is_recipe_based %}true{% else %}false{% endif %}" 
                  data-running="{% if product.running_item or product.is_recipe_based %}true{% else %}false{% endif %}" 
-                 data-per-kg="{% if product.calculate_price_per_kg %}true{% else %}false{% endif %}" 
-                 data-image-url="{% if product.image %}{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}{% else %}{% endif %}">
+                 data-per-kg="{% if product.calculate_price_per_kg %}true{% else %}false{% endif %}">
 
-                <div class="pos-product-media">
-                    <div class="position-absolute top-0 end-0 p-1" style="z-index:2;">
+                <div class="card-body">
+                    <div class="pos-product-badge-row">
                         {% if product.running_item %}
                             <span class="badge bg-info rounded-pill">∞</span>
                         {% elif product.is_recipe_based %}
@@ -1385,17 +1335,6 @@
                             <span class="badge bg-success rounded-pill stock-badge">{{ product.stock_quantity }}</span>
                         {% endif %}
                     </div>
-                    {% if product.image %}
-                    <img src="{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}"
-                         alt="{{ product.name }}"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="pos-product-placeholder" style="display:none;"><i class="fas fa-utensils"></i></div>
-                    {% else %}
-                    <div class="pos-product-placeholder"><i class="fas fa-utensils"></i></div>
-                    {% endif %}
-                </div>
-
-                <div class="card-body">
                     <h6 class="card-title" title="{{ product.name }}">{{ product.name }}</h6>
                     {% if product.product_code %}
                     <small>#{{ product.product_code }}</small>
@@ -2018,12 +1957,8 @@
             } else {
                 let cartItems = '';
                 cart.forEach((item, index) => {
-                    const imageHtml = item.image
-                        ? `<img src="${item.image}" class="cart-item-image" alt="${item.name}" onerror="this.outerHTML='<div class=\\'pos-cart-placeholder\\'><i class=\\'fas fa-utensils\\'></i></div>'">`
-                        : `<div class="pos-cart-placeholder"><i class="fas fa-utensils"></i></div>`;
                     cartItems += `
                         <div class="cart-item-compact">
-                            ${imageHtml}
                             <div class="cart-item-content">
                                 <div class="cart-item-name">${item.name}</div>
                                 <div class="cart-item-price">Rs.${item.price.toFixed(2)}</div>
@@ -2116,7 +2051,7 @@
         }
         
         // Add item to cart
-        function addToCart(productId, name, price, image, quantity = 1) {
+        function addToCart(productId, name, price, quantity = 1) {
             // Get the product element
             const productEl = document.querySelector(`.product-card[data-id="${productId}"]`);
             const isAvailable = productEl.dataset.available === 'true';
@@ -2191,8 +2126,7 @@
                     name: name,
                     price: parseFloat(price),
                     quantity: quantity,
-                    total: parseFloat(price) * quantity,
-                    image: image
+                    total: parseFloat(price) * quantity
                 });
             }
             
@@ -2205,7 +2139,6 @@
             const productId = $(this).data('id');
             const productName = $(this).data('name');
             const productPrice = parseFloat($(this).data('price'));
-            const productImage = $(this).data('image-url');
             const isPerKg = $(this).data('per-kg') === true;
             
             if (isPerKg) {
@@ -2219,11 +2152,10 @@
                 $('#weightModal').data('product-id', productId);
                 $('#weightModal').data('product-name', productName);
                 $('#weightModal').data('product-price', productPrice);
-                $('#weightModal').data('product-image', productImage);
                 
                 $('#weightModal').modal('show');
             } else {
-                addToCart(productId, productName, productPrice, productImage);
+                addToCart(productId, productName, productPrice);
             }
         });
         
@@ -2371,10 +2303,8 @@
                             const productId = $(this).data('id');
                             const productName = $(this).data('name');
                             const productPrice = parseFloat($(this).data('price'));
-                            const productImage = $(this).data('image-url');
-                            
                             // Add to cart
-                            addToCart(productId, productName, productPrice, productImage);
+                            addToCart(productId, productName, productPrice);
                             
                             // Clear search
                             $('#product-search').val('');
@@ -2420,7 +2350,6 @@
             const productId = modal.data('product-id');
             const productName = modal.data('product-name');
             const productPrice = modal.data('product-price');
-            const productImage = modal.data('product-image');
             const weight = parseFloat($('#productWeight').val()) || 1;
             
             if (weight < 0.5) {
@@ -2429,7 +2358,7 @@
             }
             
             // Add to cart with weight as quantity
-            addToCart(productId, productName, productPrice, productImage, weight);
+            addToCart(productId, productName, productPrice, weight);
             modal.modal('hide');
         });
 

@@ -4,21 +4,6 @@
 
 {% block extra_css %}
 <style>
-    .product-image {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 4px;
-    }
-    .product-placeholder {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-        border-radius: 4px;
-    }
     .action-buttons .btn {
         padding: 4px 8px;
         font-size: 0.8rem;
@@ -108,7 +93,6 @@
                 <table class="table table-bordered table-hover" id="productsTable">
                     <thead>
                         <tr>
-                            <th style="width: 70px;">Image</th>
                             <th>Name</th>
                             <th>Product Code</th>
                             <th>Category</th>
@@ -122,15 +106,6 @@
                     <tbody>
                         {% for product in products %}
                         <tr>
-                            <td>
-                                {% if product.image %}
-                                <img src="{% if product.get_image_url %}{{ product.get_image_url }}{% else %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" class="product-image" onerror="this.onerror=null; this.src='https://i.imgur.com/pTXpXpF.jpg';">
-                                {% else %}
-                                <div class="product-placeholder">
-                                    <img src="https://i.imgur.com/pTXpXpF.jpg" alt="{{ product.name }}" class="product-image">
-                                </div>
-                                {% endif %}
-                            </td>
                             <td>{{ product.name }}</td>
                             <td>{% if product.product_code %}{{ product.product_code }}{% else %}-{% endif %}</td>
                             <td>{% if product.category %}{{ product.category.name }}{% else %}-{% endif %}</td>
@@ -190,7 +165,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center">No products available</td>
+                            <td colspan="8" class="text-center">No products available</td>
                         </tr>
                         {% endfor %}
                     </tbody>
