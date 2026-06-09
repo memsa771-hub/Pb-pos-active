@@ -7,15 +7,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# High-frequency POS API paths — skip extra session DB work
-_FAST_API_PREFIXES = ('/api/orders/', '/api/tables/active/', '/api/products/')
-
 _timezone_cache = {'name': None, 'tz': None, 'loaded_at': 0}
 _TIMEZONE_CACHE_TTL = 300
 
 
 def _is_fast_api_path(path):
-    return path.startswith(_FAST_API_PREFIXES)
+    """POS API calls are high-frequency — skip extra session DB work."""
+    return path.startswith('/api/')
 
 
 class SessionActivityMiddleware:
