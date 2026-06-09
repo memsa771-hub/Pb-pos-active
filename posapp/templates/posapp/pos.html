@@ -2638,16 +2638,11 @@
                         $('#successModal').modal('show');
 
                         if (response.order_id) {
-                            setTimeout(function() {
-                                let kitchenFrame = document.getElementById('kitchen-print-frame');
-                                if (!kitchenFrame) {
-                                    kitchenFrame = document.createElement('iframe');
-                                    kitchenFrame.id = 'kitchen-print-frame';
-                                    kitchenFrame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
-                                    document.body.appendChild(kitchenFrame);
-                                }
-                                kitchenFrame.src = '/orders/' + response.order_id + '/kitchen/';
-                            }, 0);
+                            window.open(
+                                '/orders/' + response.order_id + '/kitchen/',
+                                'kitchen_' + response.order_id,
+                                'width=400,height=600,noopener'
+                            );
                         }
 
                         // Reset order form

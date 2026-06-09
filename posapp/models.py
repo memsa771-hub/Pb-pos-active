@@ -235,13 +235,6 @@ class Order(models.Model):
         from decimal import Decimal
         return self.items.aggregate(total=models.Sum(models.F('unit_price') * models.F('quantity')))['total'] or Decimal('0.00')
 
-    class Meta:
-        indexes = [
-            models.Index(fields=['order_type', 'order_status', 'table_number'], name='order_dine_table_idx'),
-            models.Index(fields=['order_status', 'user'], name='order_status_user_idx'),
-            models.Index(fields=['order_status', 'created_at'], name='order_status_created_idx'),
-        ]
-
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(PosProduct, on_delete=models.PROTECT, help_text="Products can only be deleted if they're not in pending orders")

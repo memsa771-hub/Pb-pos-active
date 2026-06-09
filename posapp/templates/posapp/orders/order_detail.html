@@ -457,7 +457,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="cash_given" id="hiddenCashGiven" value="{{ order.cash_given|default:'' }}">
                     <input type="hidden" name="change_amount" id="hiddenChangeAmount" value="{{ order.change_amount|default:'' }}">
-                    <button type="button" class="btn btn-lg btn-success rounded-3 px-4" id="completeOrderBtn"
+                    <button type="submit" class="btn btn-lg btn-success rounded-3 px-4" id="completeOrderBtn" 
                             {% if order.payment_method == 'Cash' %}disabled{% endif %}>
                         <i class="fas fa-check-circle me-2"></i>Complete Order
                     </button>
@@ -556,69 +556,6 @@
             {% endif %}
         });
         {% endif %}
-
-        const completeBtnOriginalHtml = $('#completeOrderBtn').html();
-
-        function markOrderCompletedInUI() {
-            $('.order-detail-badge.pending').removeClass('pending').addClass('completed').text('Completed');
-            $('button[data-bs-target="#completeModal"]').remove();
-            $('a[href*="order_edit"]').remove();
-            $('button[data-bs-target="#cancelModal"]').remove();
-        }
-
-        function printCustomerReceipt() {
-            let frame = document.getElementById('order-receipt-frame');
-            if (!frame) {
-                frame = document.createElement('iframe');
-                frame.id = 'order-receipt-frame';
-                frame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
-                document.body.appendChild(frame);
-            }
-            frame.src = '{% url "order_receipt" order.id %}';
-        }
-
-        $('#completeOrderBtn').on('click', function() {
-            const $btn = $(this);
-            if ($btn.prop('disabled')) {
-                return;
-            }
-
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Completing...');
-
-            const payload = {
-                cash_given: $('#hiddenCashGiven').val() || null,
-                change_amount: $('#hiddenChangeAmount').val() || null
-            };
-
-            fetch('{% url "complete_order_api" order.id %}', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json().then(data => ({ ok: response.ok, data })))
-            .then(({ ok, data }) => {
-                if (!ok || !data.success) {
-                    throw new Error(data.message || 'Could not complete order.');
-                }
-
-                $('#completeModal').modal('hide');
-                markOrderCompletedInUI();
-                setTimeout(printCustomerReceipt, 0);
-
-                const toast = document.createElement('div');
-                toast.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3 shadow';
-                toast.style.zIndex = '2000';
-                toast.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2500);
-            })
-            .catch(error => {
-                alert(error.message || 'Could not complete order. Please try again.');
-            })
-            .finally(() => {
-                $btn.prop('disabled', false).html(completeBtnOriginalHtml);
-            });
-        });
     });
 </script>
 {% endblock %}

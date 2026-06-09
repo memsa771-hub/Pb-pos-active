@@ -17,7 +17,7 @@ from .views.order_views import (
     order_list, order_detail, order_create, 
     order_edit, order_delete, order_receipt,
     add_order_item, delete_order_item, create_order_api,
-    complete_order, complete_order_api, mark_order_paid, increase_order_item,
+    complete_order, mark_order_paid, increase_order_item,
     kitchen_receipt, kitchen_receipt_additional, get_active_tables, complete_all_delivery_orders,
     delivery_combined_bill, verify_admin_password
 )
@@ -117,7 +117,6 @@ urlpatterns = [
     
     # API endpoints
     path('api/orders/', create_order_api, name='create_order_api'),
-    path('api/orders/<int:order_id>/complete/', complete_order_api, name='complete_order_api'),
     path('api/discounts/validate/', validate_discount_code, name='validate_discount_code'),
     path('api/products/<int:product_id>/check-stock/', check_product_stock, name='check_product_stock'),
     path('api/products/stock/', get_products_stock, name='get_products_stock'),
