@@ -959,17 +959,13 @@ def kitchen_receipt(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     order_items = OrderItem.objects.filter(order=order).select_related('product')
     
-    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css'])
-    receipt_paper_size = receipt_settings['receipt_paper_size'].setting_value
-    receipt_custom_css = receipt_settings['receipt_custom_css'].setting_value
-
     context = {
         'order': order,
         'order_items': order_items,
-        'receipt_paper_size': receipt_paper_size,
-        'receipt_custom_css': receipt_custom_css,
+        'receipt_paper_size': Setting.get_value('receipt_paper_size', '80mm'),
+        'receipt_custom_css': Setting.get_value('receipt_custom_css', ''),
     }
-    
+
     return render(request, 'posapp/orders/kitchen_receipt.html', context)
 
 @login_required
@@ -1590,20 +1586,6 @@ def create_order_api(request):
         order_type = data.get('order_type', 'Takeaway')
         table_number = data.get('table_number', '')
         
-        if order_type == 'Dine In' and table_number:
-            # Check if table already has a pending order
-            existing_table_order = Order.objects.filter(
-                order_type='Dine In',
-                order_status='Pending',
-                table_number=table_number
-            ).exists()
-            
-            if existing_table_order:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': f'Table #{table_number} already has a pending order. Please select a different table or complete/cancel the existing order first.'
-                }, status=400)
-        
         items = data.get('items', [])
         stock_already_reduced = data.get('stock_already_reduced', False)
         products = {}
@@ -1611,6 +1593,20 @@ def create_order_api(request):
 
         # Use atomic transaction for the entire order creation process
         with transaction.atomic():
+            if order_type == 'Dine In' and table_number:
+                if Order.objects.filter(
+                    order_type='Dine In',
+                    order_status='Pending',
+                    table_number=table_number
+                ).exists():
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': (
+                            f'Table #{table_number} already has a pending order. '
+                            'Please select a different table or complete/cancel the existing order first.'
+                        )
+                    }, status=400)
+
             if items and not stock_already_reduced:
                 product_ids = list({item['product_id'] for item in items})
                 products = {
@@ -1905,52 +1901,124 @@ def update_stock_on_order_cancelled(order):
         print(f"Error restoring stock on order cancellation: {str(e)}")
         return False
 
+def _build_order_complete_update(cash_given=None, change_amount=None):
+    """Build update kwargs for fast order completion (avoids pre_save signal)."""
+    update_kwargs = {
+        'order_status': 'Completed',
+        'payment_status': 'Paid',
+    }
+    if cash_given is not None and change_amount is not None:
+        update_kwargs['cash_given'] = Decimal(str(cash_given))
+        update_kwargs['change_amount'] = Decimal(str(change_amount))
+    return update_kwargs
+
+
+@login_required
+@csrf_exempt
+@require_POST
+def complete_order_api(request, order_id):
+    """Fast JSON endpoint for completing orders without a full page reload."""
+    try:
+        order = Order.objects.only(
+            'id', 'reference_number', 'order_status', 'payment_method'
+        ).filter(pk=order_id).first()
+        if not order:
+            return JsonResponse({'success': False, 'message': 'Order not found.'}, status=404)
+
+        if order.order_status == 'Completed':
+            return JsonResponse({
+                'success': False,
+                'message': f'Order {order.reference_number} is already completed.'
+            }, status=400)
+
+        if order.order_status == 'Cancelled':
+            return JsonResponse({
+                'success': False,
+                'message': f'Cancelled orders cannot be completed.'
+            }, status=400)
+
+        payload = {}
+        if request.body:
+            try:
+                payload = json.loads(request.body)
+            except json.JSONDecodeError:
+                payload = {}
+
+        cash_given = payload.get('cash_given') or request.POST.get('cash_given')
+        change_amount = payload.get('change_amount') or request.POST.get('change_amount')
+
+        if order.payment_method == 'Cash' and cash_given and change_amount:
+            try:
+                update_kwargs = _build_order_complete_update(cash_given, change_amount)
+            except (ValueError, InvalidOperation):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid cash payment amounts provided.'
+                }, status=400)
+        else:
+            update_kwargs = _build_order_complete_update()
+
+        updated = Order.objects.filter(pk=order_id, order_status='Pending').update(**update_kwargs)
+        if not updated:
+            return JsonResponse({
+                'success': False,
+                'message': 'Order could not be completed. It may already be completed or cancelled.'
+            }, status=400)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Order {order.reference_number} completed.',
+            'order_id': order.id,
+            'reference_number': order.reference_number,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
 @login_required
 def complete_order(request, order_id):
     """Mark an order as completed"""
     order = get_object_or_404(Order, id=order_id)
-    
-    # If the order is already completed, show a warning message
+
     if order.order_status == 'Completed':
         messages.warning(request, f'Order {order.reference_number} is already completed.')
         return redirect('order_list')
-    
-    # Cancelled orders cannot be completed
+
     if order.order_status == 'Cancelled':
         messages.warning(request, f'Cancelled orders cannot be completed. Order {order.reference_number} remains cancelled.')
         return redirect('order_detail', order_id=order_id)
-    
+
     if request.method == 'POST':
-        # Handle cash payment details if provided
         cash_given = request.POST.get('cash_given')
         change_amount = request.POST.get('change_amount')
-        
+
         if cash_given and change_amount:
-            # Convert to Decimal and save cash payment details
             try:
-                order.cash_given = Decimal(str(cash_given))
-                order.change_amount = Decimal(str(change_amount))
+                update_kwargs = _build_order_complete_update(cash_given, change_amount)
             except (ValueError, InvalidOperation):
                 messages.error(request, 'Invalid cash payment amounts provided.')
                 return redirect('order_detail', order_id=order_id)
-        
-        # Complete the order - stock should already be reduced when order was placed
-        order_number = order.reference_number
-        
-        # Update the order status
-        order.order_status = 'Completed'
-        # Also set the payment status to 'Paid' when order is completed
-        order.payment_status = 'Paid'
-        order.save()
-        
-        # Create success message based on payment method
-        if order.payment_method == 'Cash' and order.cash_given:
-            messages.success(request, f'Order {order.reference_number} completed! Cash given: Rs.{order.cash_given}, Change: Rs.{order.change_amount}')
         else:
-            messages.success(request, f'Order {order.reference_number} has been marked as completed and paid.')
-        
+            update_kwargs = _build_order_complete_update()
+
+        reference_number = order.reference_number
+        payment_method = order.payment_method
+        updated = Order.objects.filter(pk=order_id, order_status='Pending').update(**update_kwargs)
+
+        if not updated:
+            messages.warning(request, f'Order {reference_number} could not be completed.')
+            return redirect('order_detail', order_id=order_id)
+
+        if payment_method == 'Cash' and cash_given and change_amount:
+            messages.success(
+                request,
+                f'Order {reference_number} completed! Cash given: Rs.{cash_given}, Change: Rs.{change_amount}'
+            )
+        else:
+            messages.success(request, f'Order {reference_number} has been marked as completed and paid.')
+
         return redirect('order_list')
-    
+
     return redirect('order_detail', order_id=order_id)
 
 @login_required
@@ -1988,15 +2056,11 @@ def complete_all_delivery_orders(request, delivery_person_id):
                 'message': 'No pending orders found for this delivery person.'
             })
         
-        # Complete all orders
-        completed_count = 0
-        for order in pending_orders:
-            order.order_status = 'Completed'
-            order.save()
-            # Update stock if needed
-            update_stock_on_order_complete(order)
-            completed_count += 1
-        
+        completed_count = pending_orders.update(
+            order_status='Completed',
+            payment_status='Paid',
+        )
+
         return JsonResponse({
             'success': True,
             'message': f'Successfully completed {completed_count} orders.',

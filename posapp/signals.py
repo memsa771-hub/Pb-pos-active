@@ -39,9 +39,12 @@ def create_user_profile(sender, instance, created, **kwargs):
             }
         )
 
-# Handle order number generation
+# Handle order number generation (new orders only — skip on complete/edit saves)
 @receiver(pre_save, sender=Order)
 def generate_order_number(sender, instance, **kwargs):
+    if instance.pk is not None:
+        return
+
     last_end_day = EndDay.get_last_end_day()
 
     if last_end_day:
