@@ -634,13 +634,6 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const menuToggle = document.getElementById('focusMenuToggle');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', function() {
-                document.body.classList.toggle('sidebar-open');
-            });
-        }
-
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
         const isHistoryView = {% if show_history %}true{% else %}false{% endif %};

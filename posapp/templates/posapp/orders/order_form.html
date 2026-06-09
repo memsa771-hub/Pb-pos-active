@@ -729,10 +729,6 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    $('#focusMenuToggle').on('click', function() {
-        $('body').toggleClass('sidebar-open');
-    });
-
     // Store initial order ID to track if we're editing
     const orderId = "{{ order.id|default:'new' }}";
     const isEditable = {{ is_editable|yesno:"true,false" }};

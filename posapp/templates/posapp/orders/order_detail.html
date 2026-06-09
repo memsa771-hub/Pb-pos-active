@@ -493,10 +493,6 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        $('#focusMenuToggle').on('click', function() {
-            $('body').toggleClass('sidebar-open');
-        });
-
         {% if order.payment_method == 'Cash' %}
         const totalAmount = {{ total|floatformat:2 }};
         

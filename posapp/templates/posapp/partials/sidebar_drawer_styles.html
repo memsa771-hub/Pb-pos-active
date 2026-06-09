@@ -1,0 +1,125 @@
+<style>
+    /* Slide-out drawer for focus/pos pages — full nav, actually clickable */
+    body.focus-page .sidebar,
+    body.pos-page .sidebar {
+        width: 260px;
+        transform: translateX(-100%);
+        overflow-y: auto;
+        overflow-x: hidden;
+        pointer-events: none;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        z-index: 1100;
+        box-shadow: none;
+    }
+
+    body.focus-page.sidebar-open .sidebar,
+    body.pos-page.sidebar-open .sidebar {
+        transform: translateX(0);
+        pointer-events: auto;
+        box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
+    }
+
+    body.focus-page .main-content,
+    body.pos-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    body.focus-page.sidebar-open .main-content,
+    body.pos-page.sidebar-open .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    body.focus-page .topbar,
+    body.pos-page .topbar {
+        display: none;
+    }
+
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 1090;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+    }
+
+    body.focus-page.sidebar-open .sidebar-backdrop,
+    body.pos-page.sidebar-open .sidebar-backdrop {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .sidebar-drawer-close {
+        display: none;
+        position: absolute;
+        top: 14px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font-size: 1rem;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .sidebar-drawer-close:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    body.focus-page .sidebar-drawer-close,
+    body.pos-page .sidebar-drawer-close {
+        display: inline-flex;
+    }
+
+    body.focus-page .sidebar-brand,
+    body.pos-page .sidebar-brand {
+        padding-right: 3rem;
+    }
+
+    /* Mobile: regular pages also use drawer when sidebar is toggled closed */
+    @media (max-width: 767.98px) {
+        body:not(.focus-page):not(.pos-page) .sidebar {
+            width: 260px;
+            transform: translateX(-100%);
+            pointer-events: none;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            z-index: 1100;
+        }
+
+        body:not(.focus-page):not(.pos-page).sidebar-open .sidebar {
+            transform: translateX(0);
+            pointer-events: auto;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
+        }
+
+        body:not(.focus-page):not(.pos-page).sidebar-open .sidebar-backdrop {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body:not(.focus-page):not(.pos-page) .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
+        body:not(.focus-page):not(.pos-page).sidebar-open .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
+        body:not(.focus-page):not(.pos-page) .sidebar-drawer-close {
+            display: inline-flex;
+        }
+    }
+</style>

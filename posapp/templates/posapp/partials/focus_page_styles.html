@@ -3,42 +3,12 @@
         background: #eef2f7;
     }
 
-    body.focus-page .sidebar {
-        width: 0;
-        overflow: hidden;
-        transition: width 0.2s ease;
-    }
-
-    body.focus-page.sidebar-open .sidebar {
-        width: 72px;
-        overflow-y: auto;
-    }
-
-    body.focus-page.sidebar-open .sidebar .sidebar-brand-text,
-    body.focus-page.sidebar-open .sidebar .nav-text,
-    body.focus-page.sidebar-open .sidebar .dropdown-arrow,
-    body.focus-page.sidebar-open .sidebar .sidebar-heading,
-    body.focus-page.sidebar-open .sidebar .collapse {
-        display: none !important;
-    }
-
     body.focus-page .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
         padding: 0.65rem 0.85rem 1.25rem;
         min-height: 100vh;
         overflow-x: hidden;
         overflow-y: auto;
         background: #eef2f7;
-    }
-
-    body.focus-page.sidebar-open .main-content {
-        margin-left: 72px !important;
-        width: calc(100% - 72px) !important;
-    }
-
-    body.focus-page .topbar {
-        display: none;
     }
 
     .focus-toolbar-left {

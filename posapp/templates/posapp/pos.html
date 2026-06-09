@@ -816,43 +816,13 @@
         background: #eef2f7;
     }
 
-    body.pos-page .sidebar {
-        width: 0;
-        overflow: hidden;
-        transition: width 0.2s ease;
-    }
-
-    body.pos-page.sidebar-open .sidebar {
-        width: 72px;
-        overflow-y: auto;
-    }
-
-    body.pos-page.sidebar-open .sidebar .sidebar-brand-text,
-    body.pos-page.sidebar-open .sidebar .nav-text,
-    body.pos-page.sidebar-open .sidebar .dropdown-arrow,
-    body.pos-page.sidebar-open .sidebar .sidebar-heading,
-    body.pos-page.sidebar-open .sidebar .collapse {
-        display: none !important;
-    }
-
     body.pos-page .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
         padding: 0.65rem;
         height: 100vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         background: #eef2f7;
-    }
-
-    body.pos-page.sidebar-open .main-content {
-        margin-left: 72px !important;
-        width: calc(100% - 72px) !important;
-    }
-
-    body.pos-page .topbar {
-        display: none;
     }
 
     .pos-terminal-wrapper {
@@ -1760,10 +1730,6 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        $('#posMenuToggle').on('click', function() {
-            $('body').toggleClass('sidebar-open');
-        });
-
         // Variables for cart functionality
         let cart = [];
         let subtotal = 0;

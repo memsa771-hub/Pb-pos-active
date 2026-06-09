@@ -336,13 +336,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const menuToggle = document.getElementById('focusMenuToggle');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', function() {
-                document.body.classList.toggle('sidebar-open');
-            });
-        }
-
         const salesCanvas = document.getElementById('salesChart');
         if (salesCanvas) {
             const salesData = JSON.parse('{{ daily_sales_data|escapejs }}');
