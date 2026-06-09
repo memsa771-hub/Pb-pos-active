@@ -2,34 +2,142 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block head %}
-<title>{{ title|default:"Order Form" }}</title>
+{% block title %}{% if order %}Edit Order {{ order.reference_number }}{% else %}Create Order{% endif %} - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/focus_page_styles.html' %}
 <style>
+    .order-edit-page {
+        max-width: 100%;
+        overflow-x: hidden;
+        padding-bottom: 1.5rem;
+    }
+
+    .order-edit-page .order-edit-note {
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        color: #2c5282;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .order-edit-page .card {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .order-edit-page .card-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        padding: 0.85rem 1.15rem;
+    }
+
+    .order-edit-page .card-header h6 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .order-edit-page .card-body {
+        padding: 1rem 1.15rem;
+    }
+
+    .order-edit-page .form-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #4a5568;
+    }
+
+    .order-edit-page .form-control,
+    .order-edit-page .form-select {
+        border-radius: 10px;
+        border-color: #e2e8f0;
+        min-height: 42px;
+    }
+
+    .order-edit-page .nav-tabs .nav-link {
+        border-radius: 10px 10px 0 0;
+        font-weight: 600;
+        color: #4a5568;
+    }
+
+    .order-edit-page .nav-tabs .nav-link.active {
+        color: #2b6cb0;
+    }
+
+    .order-items-table {
+        margin-bottom: 0;
+        font-size: 0.88rem;
+    }
+
     .order-items-table th,
     .order-items-table td {
         vertical-align: middle;
+        padding: 0.85rem 1rem;
+        border-color: #edf2f7;
     }
-    
-    #floatingSaveBtn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: none;
+
+    .order-items-table thead th {
+        background: #f8fafc;
+        color: #4a5568;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
     }
-    
+
+    .order-items-table tbody tr:hover {
+        background: #f7fafc;
+    }
+
+    .order-edit-page .focus-table-wrap table {
+        min-width: 820px;
+    }
+
+    .order-edit-page #orderSummaryTable th {
+        font-weight: 600;
+        color: #4a5568;
+        width: 40%;
+    }
+
+    .order-edit-page #orderSummaryTable .table-primary {
+        background: #ebf8ff !important;
+    }
+
+    .order-edit-save-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        background: linear-gradient(180deg, rgba(238, 242, 247, 0) 0%, #eef2f7 28%);
+        padding: 1.25rem 0 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .order-edit-save-bar .btn-success {
+        min-height: 48px;
+        font-weight: 700;
+        border-radius: 12px;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        box-shadow: 0 4px 14px rgba(56, 161, 105, 0.25);
+    }
+
     @keyframes pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
-        }
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
     }
-    
+
     .btn-pulse {
         animation: pulse 1.5s infinite;
     }
@@ -37,31 +145,59 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        {% if order %}Edit Order #{{ order.id }}{% else %}Create New Order{% endif %}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info" role="alert">
-                        <strong>Note:</strong> Changes will only be saved when you click the "Save Order Changes" button.
-                    </div>
-                    
-                    {% if has_changes %}
-                    <div id="unsavedChangesAlert" class="alert alert-warning" role="alert">
-                        <strong>Warning:</strong> You have unsaved changes to items. Click "Save Order Changes" to apply these changes.
-                    </div>
+<div class="container-fluid order-edit-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1>
+                    {% if order %}
+                    <i class="fas fa-edit me-2"></i>Edit Order {{ order.reference_number }}
                     {% else %}
-                    <div id="unsavedChangesAlert" class="alert alert-warning" role="alert" style="display: none;">
-                        <strong>Warning:</strong> You have unsaved changes. Please click "Save Order Changes" to save your changes.
-                    </div>
+                    <i class="fas fa-plus me-2"></i>Create New Order
                     {% endif %}
+                </h1>
+                {% if order %}
+                <p>Order #{{ order.daily_order_number }} · {{ order.order_type }} · {{ order.order_status }}</p>
+                {% else %}
+                <p>Add customer details, products, and save the order</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            {% if order %}
+            <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Order
+            </a>
+            <a href="{% url 'order_list' %}" class="btn btn-light btn-sm">
+                <i class="fas fa-list me-1"></i> Orders
+            </a>
+            {% else %}
+            <a href="{% url 'order_list' %}" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+            {% endif %}
+        </div>
+    </div>
 
-                    <form method="post" id="orderForm" action="{% if order %}{% url 'order_edit' order.id %}{% else %}{% url 'order_create' %}{% endif %}">
+    <div class="order-edit-note">
+        <i class="fas fa-info-circle me-2"></i>
+        Changes are only saved when you click <strong>Save Order Changes</strong>.
+    </div>
+
+    {% if has_changes %}
+    <div id="unsavedChangesAlert" class="alert alert-warning" role="alert">
+        <strong>Warning:</strong> You have unsaved changes to items. Click "Save Order Changes" to apply these changes.
+    </div>
+    {% else %}
+    <div id="unsavedChangesAlert" class="alert alert-warning" role="alert" style="display: none;">
+        <strong>Warning:</strong> You have unsaved changes. Please click "Save Order Changes" to save your changes.
+    </div>
+    {% endif %}
+
+    <form method="post" id="orderForm" action="{% if order %}{% url 'order_edit' order.id %}{% else %}{% url 'order_create' %}{% endif %}">
                         {% csrf_token %}
                         
                         <!-- Customer Information Card -->
@@ -357,15 +493,15 @@
                                 <div class="alert alert-warning mb-3" id="unsavedItemsAlert" {% if not has_changes %}style="display: none;"{% endif %}>
                                     <i class="fas fa-exclamation-triangle me-2"></i> You have unsaved changes to order items. Don't forget to save!
                                 </div>
-                                <div class="table-responsive">
+                                <div class="focus-table-wrap">
                                     <table class="table table-bordered table-hover order-items-table" id="orderItemsTable">
-                                        <thead class="table-light">
+                                        <thead>
                                             <tr>
                                                 <th>Product</th>
                                                 <th width="15%">Price</th>
                                                 <th width="20%">Quantity</th>
                                                 <th width="15%">Subtotal</th>
-                                                <th width="12%">Actions</th>
+                                                <th width="12%" class="actions-col text-end">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -423,7 +559,7 @@
                                                         Rs.{{ item.total_price }}
                                                         {% endif %}
                                                     </td>
-                                                    <td>
+                                                    <td class="actions-col text-end">
                                                         <button type="button" class="btn btn-sm btn-outline-danger delete-item" data-item-id="{{ item.id }}">
                                                             <i class="fas fa-trash me-1"></i> Remove
                                                         </button>
@@ -470,7 +606,7 @@
                                                     <td class="item-subtotal">
                                                         <span class="text-danger text-decoration-line-through">Rs.{{ item.original_quantity|multiply:item.unit_price }}</span>
                                                     </td>
-                                                    <td>
+                                                    <td class="actions-col text-end">
                                                         <button type="button" class="btn btn-sm btn-outline-secondary restore-item" data-item-id="{{ item.id }}">
                                                             <i class="fas fa-undo"></i> Restore
                                                         </button>
@@ -551,16 +687,12 @@
                         </div>
 
                         <!-- Save Button -->
-                        <div class="text-center mb-5">
-                            <button type="submit" class="btn btn-success btn-lg px-5" id="saveOrderBtn">
+                        <div class="order-edit-save-bar text-center">
+                            <button type="submit" class="btn btn-success btn-lg" id="saveOrderBtn">
                                 <i class="fas fa-save me-2"></i> Save Order Changes
                             </button>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Weight Edit Modal -->
@@ -597,6 +729,10 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    $('#focusMenuToggle').on('click', function() {
+        $('body').toggleClass('sidebar-open');
+    });
+
     // Store initial order ID to track if we're editing
     const orderId = "{{ order.id|default:'new' }}";
     const isEditable = {{ is_editable|yesno:"true,false" }};
