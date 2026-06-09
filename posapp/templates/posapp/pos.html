@@ -1,5 +1,7 @@
 {% extends 'posapp/base.html' %}
-{% load humanize %}  {% block title %}POS Terminal | POS System{% endblock %}
+{% load humanize %}
+{% block body_class %}pos-page{% endblock %}
+{% block title %}POS Terminal | POS System{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -826,6 +828,287 @@
     .product-section-content {
         width: 100%;
     }
+
+    /* ===== POS TERMINAL — optimized for 16" touch screens ===== */
+    body.pos-page {
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    body.pos-page .sidebar {
+        width: 72px;
+    }
+
+    body.pos-page .sidebar .sidebar-brand-text,
+    body.pos-page .sidebar .nav-text,
+    body.pos-page .sidebar .dropdown-arrow,
+    body.pos-page .sidebar .sidebar-heading,
+    body.pos-page .sidebar .collapse {
+        display: none !important;
+    }
+
+    body.pos-page .sidebar .nav-link {
+        justify-content: center;
+        padding: 0.85rem;
+    }
+
+    body.pos-page .main-content {
+        margin-left: 72px;
+        width: calc(100% - 72px);
+        padding: 0.5rem;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.pos-page .topbar {
+        display: none;
+    }
+
+    .pos-terminal-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        gap: 0.5rem;
+    }
+
+    .pos-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-shrink: 0;
+        background: #fff;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .pos-toolbar-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .pos-terminal-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(300px, 32%);
+        gap: 0.75rem;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .pos-products-panel,
+    .pos-cart-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .pos-products-panel .pos-panel-card,
+    .pos-cart-panel .pos-panel-card {
+        border: none;
+        box-shadow: none;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        background: transparent;
+    }
+
+    .pos-products-panel .pos-panel-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        padding: 0.75rem !important;
+    }
+
+    .pos-cart-panel .pos-panel-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        padding: 0.75rem !important;
+    }
+
+    body.pos-page .products-container {
+        flex: 1;
+        min-height: 0;
+        height: auto !important;
+        max-height: none;
+    }
+
+    body.pos-page .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+        gap: 10px;
+    }
+
+    body.pos-page .product-card {
+        height: auto !important;
+        width: 100% !important;
+        min-height: 138px;
+        border-radius: 12px;
+    }
+
+    body.pos-page .product-card .card-img-top {
+        height: 76px;
+    }
+
+    body.pos-page .product-card .card-body {
+        padding: 0.45rem 0.5rem;
+    }
+
+    body.pos-page .product-card .card-title {
+        font-size: 0.85rem;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    body.pos-page .product-card .card-text {
+        font-size: 0.82rem;
+    }
+
+    body.pos-page .product-card .btn-sm {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 0.85rem !important;
+    }
+
+    body.pos-page .category-btn {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        min-height: 44px;
+    }
+
+    body.pos-page .search-container {
+        margin-bottom: 0.75rem;
+    }
+
+    body.pos-page .search-container input {
+        padding: 12px 15px 12px 44px;
+        font-size: 1rem;
+        min-height: 46px;
+    }
+
+    body.pos-page .product-section-header {
+        padding-bottom: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    body.pos-page .cart-container {
+        flex: 1;
+        max-height: none !important;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    body.pos-page .cart-item-compact {
+        height: auto;
+        min-height: 76px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+    }
+
+    body.pos-page .cart-item-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    body.pos-page .cart-item-name {
+        font-size: 0.92rem;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    body.pos-page .cart-item-price {
+        font-size: 0.8rem;
+    }
+
+    body.pos-page .cart-quantity-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 0.85rem;
+    }
+
+    body.pos-page .cart-quantity-display {
+        min-width: 32px;
+        font-size: 0.95rem;
+    }
+
+    body.pos-page .cart-item-total {
+        font-size: 0.9rem;
+    }
+
+    body.pos-page .cart-remove-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 0.75rem;
+    }
+
+    body.pos-page .cart-totals {
+        flex-shrink: 0;
+        padding: 12px;
+    }
+
+    body.pos-page .cart-actions button {
+        min-height: 50px;
+        font-size: 1rem;
+    }
+
+    body.pos-page .payment-method,
+    body.pos-page .order-type {
+        min-height: 84px;
+        padding: 1rem !important;
+    }
+
+    body.pos-page .pos-cart-panel .card-header {
+        flex-shrink: 0;
+        padding: 0.75rem 1rem;
+    }
+
+    /* Typical 16" POS: 1366x768 or 1280x800 */
+    @media (min-width: 1024px) and (max-width: 1440px) {
+        .pos-terminal-grid {
+            grid-template-columns: 1fr minmax(290px, 31%);
+        }
+
+        body.pos-page .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+            gap: 9px;
+        }
+    }
+
+    @media (max-width: 991px) {
+        body.pos-page {
+            overflow: auto;
+            height: auto;
+        }
+
+        body.pos-page .main-content {
+            height: auto;
+            overflow: auto;
+        }
+
+        .pos-terminal-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pos-cart-panel {
+            max-height: 50vh;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -905,44 +1188,41 @@
 
 {% block content %}
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
-<div class="container-fluid px-lg-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 mb-lg-4 flex-wrap">
-        <h2 class="mb-2 mb-sm-0">Point of Sale</h2>
-        <div class="d-flex">
-            <a href="{% url 'order_list' %}" class="btn btn-outline-primary me-2">
-                <i class="fas fa-list me-1"></i> <span class="d-none d-sm-inline">Orders</span>
+<div class="pos-terminal-wrapper">
+    <div class="pos-toolbar">
+        <h2 class="pos-toolbar-title"><i class="fas fa-cash-register me-2 text-primary"></i>POS Terminal</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'order_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-1"></i> Orders
             </a>
             {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
             <a href="{% url 'product_list' %}" class="btn btn-outline-success">
-                <i class="fas fa-boxes me-1"></i> <span class="d-none d-sm-inline">Products</span>
+                <i class="fas fa-boxes me-1"></i> Products
             </a>
             {% endif %}
         </div>
     </div>
-    
-    <div class="row g-3">
+
+    <div class="pos-terminal-grid">
         <!-- Products Section -->
-        <div class="col-lg-8 col-md-6">
-            <div class="card shadow-sm border-0 mb-3 mb-lg-4">
-                <div class="card-body p-3 p-lg-4">
+        <section class="pos-products-panel">
+            <div class="card pos-panel-card">
+                <div class="card-body pos-panel-body">
                     <div class="product-section-header">
-                        <!-- Categories - Made scrollable for mobile -->
-                        <div class="category-selector mb-3 d-flex overflow-auto">
+                        <div class="category-selector mb-2 d-flex overflow-auto">
                             <button class="category-btn active flex-shrink-0" data-category="all">All Products</button>
                             {% for category in categories %}
                             <button class="category-btn flex-shrink-0" data-category="{{ category.id }}">{{ category.name }}</button>
                             {% endfor %}
                         </div>
-                        
-                        <!-- Search Bar -->
-                        <div class="search-container mb-3 mb-lg-4">
+
+                        <div class="search-container">
                             <i class="fas fa-search"></i>
-                            <input type="text" class="form-control" id="product-search" placeholder="Search products or enter product code + Enter to add to cart">
+                            <input type="text" class="form-control" id="product-search" placeholder="Search product or scan code + Enter">
                         </div>
                     </div>
-                    
-                    <!-- Product Grid - This will be scrollable -->
-                    <div class="products-container" style="height: calc(100vh - 240px); overflow-y: auto;">
+
+                    <div class="products-container">
     <div class="product-grid" id="products-grid">
         {% for product in products %}
         <div class="product-item" data-category="{{ product.category.id }}">
@@ -999,16 +1279,16 @@
 </div>
                 </div>
             </div>
-        </div>
-        
+        </section>
+
         <!-- Cart Section -->
-        <div class="col-lg-4 col-md-5">
-            <div class="card shadow-sm border-0 sticky-lg-top" style="top: 20px; z-index: 100;">
-                <div class="card-header bg-white py-3">
+        <aside class="pos-cart-panel">
+            <div class="card pos-panel-card">
+                <div class="card-header bg-white border-bottom">
                     <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Cart</h5>
                 </div>
-                <div class="card-body">
-                    <div class="cart-container mb-3">
+                <div class="card-body pos-panel-body">
+                    <div class="cart-container mb-2">
                         <div id="cart-items">
                             <div class="empty-cart-message">
                                 <div class="text-center">
@@ -1018,27 +1298,25 @@
                             </div>
                         </div>
                     </div>
-                
-                    <div class="cart-totals">
-                        <div class="p-2 p-lg-3">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <span class="fs-4 fw-bold text-dark">Total:</span>
-                                <span id="cart-total" class="fs-4 fw-bold text-primary">Rs.0.00</span>
-                            </div>
-                    
-                            <div class="cart-actions">
-                                <button class="btn btn-lg btn-danger w-100 mb-2" id="btn-clear">
-                                    <i class="fas fa-trash me-2"></i> Clear Cart
-                                </button>
-                                <button class="btn btn-lg btn-primary w-100" id="btn-payment" disabled>
-                                    <i class="fas fa-money-bill-wave me-2"></i> Process Order
-                                </button>
-                            </div>
+
+                    <div class="cart-totals mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-5 fw-bold text-dark">Total:</span>
+                            <span id="cart-total" class="fs-4 fw-bold text-primary">Rs.0.00</span>
+                        </div>
+
+                        <div class="cart-actions">
+                            <button class="btn btn-danger w-100 mb-2" id="btn-clear">
+                                <i class="fas fa-trash me-2"></i> Clear Cart
+                            </button>
+                            <button class="btn btn-primary w-100" id="btn-payment" disabled>
+                                <i class="fas fa-money-bill-wave me-2"></i> Process Order
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
     </div>
 </div>
 
@@ -1435,53 +1713,31 @@
         // Function to initialize responsive UI adjustments
         function initResponsiveUI() {
             const windowWidth = $(window).width();
-            
-            // Adjust product grid columns based on screen size
+            const isPosPage = $('body').hasClass('pos-page');
+
+            if (isPosPage) {
+                // POS terminal uses CSS flex/grid layout — let it fill the screen
+                $('.cart-container').css('max-height', '');
+                $('.product-grid').css('grid-template-columns', '');
+                return;
+            }
+
             adjustProductGrid(windowWidth);
-            
-            // Adjust cart container height based on screen size
             adjustCartContainer(windowWidth);
-            
-            // Hide text in buttons on very small screens
+
             if (windowWidth < 576) {
                 $('.btn-outline-primary, .btn-outline-success').addClass('btn-sm');
             } else {
                 $('.btn-outline-primary, .btn-outline-success').removeClass('btn-sm');
             }
-            
-            // Set sticky behavior for cart on larger screens
-            if (windowWidth >= 992) {
-                const navbarHeight = $('.navbar').outerHeight(true);
-                const headerHeight = $('.d-flex.justify-content-between.align-items-center').outerHeight(true);
-                const topOffset = navbarHeight + headerHeight + 15;
-                
-                // Set top position for sticky cart
-                $('.sticky-lg-top').css('top', topOffset + 'px');
-                
-                // Dynamically adjust cart container height to show 4-5 items
-                const viewportHeight = window.innerHeight;
-                const cartCard = $('.col-lg-4 .card');
-                    const cartHeader = cartCard.find('.card-header');
-                    const cartTotals = cartCard.find('.cart-totals');
-                    
-                // Calculate optimal height to show 4-5 cart items
-                const itemHeight = 85; // Approximate height of each compact cart item
-                const optimalItemCount = Math.min(5, Math.max(3, Math.floor((viewportHeight - topOffset - 300) / itemHeight)));
-                const optimalCartHeight = optimalItemCount * itemHeight + 20; // Add padding
-                
-                $('.cart-container').css('max-height', optimalCartHeight + 'px');
-            } else {
-                // For smaller screens, use responsive heights
-                if (windowWidth >= 768) {
-                    $('.cart-container').css('max-height', '350px');
-                } else {
-                    $('.cart-container').css('max-height', '300px');
-                }
-            }
         }
         
         // Function to adjust product grid based on screen width
         function adjustProductGrid(windowWidth) {
+            if ($('body').hasClass('pos-page')) {
+                return;
+            }
+
             let columnWidth;
             
             if (windowWidth >= 1600) {
@@ -1503,6 +1759,11 @@
         
         // Function to adjust cart container height
         function adjustCartContainer(windowWidth) {
+            if ($('body').hasClass('pos-page')) {
+                $('.cart-container').css('max-height', '');
+                return;
+            }
+
             let maxCartHeight;
             
             if (windowWidth >= 1200) {

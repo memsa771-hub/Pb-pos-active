@@ -12,6 +12,7 @@ from django import forms
 from django.utils import timezone
 from datetime import datetime, timedelta
 
+from posapp.decorators import management_required
 from posapp.models import BillAdjustment, BillAdjustmentImage, AdvanceAdjustment, EndDay, Setting, BusinessLogo
 
 # Custom mixin to check if user is admin only
@@ -35,6 +36,10 @@ class AdminOrBranchManagerRequiredMixin(UserPassesTestMixin):
                 self.request.user.profile.role.name == 'Admin' or
                 self.request.user.profile.role.name == 'Branch Manager')
 
+    def handle_no_permission(self):
+        messages.error(self.request, "You don't have permission to access this page. Management access required.")
+        return redirect('pos')
+
 # Form for multiple image uploads
 class BillAdjustmentForm(forms.ModelForm):
     class Meta:
@@ -45,7 +50,7 @@ class BillAdjustmentForm(forms.ModelForm):
         }
 
 # Bill Adjustment Views
-class BillAdjustmentListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class BillAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, ListView):
     model = BillAdjustment
     template_name = 'posapp/adjustments/bill_adjustment_list.html'
     context_object_name = 'bill_adjustments'
@@ -102,12 +107,12 @@ class BillAdjustmentListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         context['is_admin'] = self.request.user.is_superuser or self.request.user.profile.role.name == 'Admin'
         return context
 
-class BillAdjustmentDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class BillAdjustmentDetailView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DetailView):
     model = BillAdjustment
     template_name = 'posapp/adjustments/bill_adjustment_detail.html'
     context_object_name = 'bill_adjustment'
 
-class BillAdjustmentCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class BillAdjustmentCreateView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, CreateView):
     model = BillAdjustment
     form_class = BillAdjustmentForm
     template_name = 'posapp/adjustments/bill_adjustment_form.html'
@@ -127,7 +132,7 @@ class BillAdjustmentCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateVie
         messages.success(self.request, 'Bill adjustment created successfully.')
         return HttpResponseRedirect(self.get_success_url())
 
-class BillAdjustmentUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class BillAdjustmentUpdateView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, UpdateView):
     model = BillAdjustment
     form_class = BillAdjustmentForm
     template_name = 'posapp/adjustments/bill_adjustment_form.html'
@@ -146,7 +151,7 @@ class BillAdjustmentUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateVie
         messages.success(self.request, 'Bill adjustment updated successfully.')
         return HttpResponseRedirect(self.get_success_url())
 
-class BillAdjustmentDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class BillAdjustmentDeleteView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DeleteView):
     model = BillAdjustment
     template_name = 'posapp/adjustments/bill_adjustment_confirm_delete.html'
     context_object_name = 'bill_adjustment'
@@ -181,7 +186,7 @@ class BillAdjustmentDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteVie
             messages.error(request, f"Error deleting bill adjustment: {str(e)}")
             return HttpResponseRedirect(reverse_lazy('bill_adjustment_list'))
 
-class BillAdjustmentImageDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class BillAdjustmentImageDeleteView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DeleteView):
     model = BillAdjustmentImage
     template_name = 'posapp/adjustments/bill_adjustment_image_confirm_delete.html'
     context_object_name = 'bill_adjustment_image'
@@ -225,7 +230,7 @@ class BillAdjustmentImageDeleteView(LoginRequiredMixin, AdminRequiredMixin, Dele
             return HttpResponseRedirect(reverse_lazy('bill_adjustment_list'))
 
 # Advance Adjustment Views
-class AdvanceAdjustmentListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class AdvanceAdjustmentListView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, ListView):
     model = AdvanceAdjustment
     template_name = 'posapp/adjustments/advance_adjustment_list.html'
     context_object_name = 'advance_adjustments'
@@ -282,12 +287,12 @@ class AdvanceAdjustmentListView(LoginRequiredMixin, AdminRequiredMixin, ListView
         context['is_admin'] = self.request.user.is_superuser or self.request.user.profile.role.name == 'Admin'
         return context
 
-class AdvanceAdjustmentDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class AdvanceAdjustmentDetailView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DetailView):
     model = AdvanceAdjustment
     template_name = 'posapp/adjustments/advance_adjustment_detail.html'
     context_object_name = 'advance_adjustment'
 
-class AdvanceAdjustmentCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class AdvanceAdjustmentCreateView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, CreateView):
     model = AdvanceAdjustment
     template_name = 'posapp/adjustments/advance_adjustment_form.html'
     fields = ['name', 'amount', 'notes']
@@ -298,7 +303,7 @@ class AdvanceAdjustmentCreateView(LoginRequiredMixin, AdminRequiredMixin, Create
         messages.success(self.request, 'Advance adjustment created successfully.')
         return super().form_valid(form)
 
-class AdvanceAdjustmentUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class AdvanceAdjustmentUpdateView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, UpdateView):
     model = AdvanceAdjustment
     template_name = 'posapp/adjustments/advance_adjustment_form.html'
     fields = ['name', 'amount', 'notes']
@@ -308,7 +313,7 @@ class AdvanceAdjustmentUpdateView(LoginRequiredMixin, AdminRequiredMixin, Update
         messages.success(self.request, 'Advance adjustment updated successfully.')
         return super().form_valid(form)
 
-class AdvanceAdjustmentDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class AdvanceAdjustmentDeleteView(LoginRequiredMixin, AdminOrBranchManagerRequiredMixin, DeleteView):
     model = AdvanceAdjustment
     template_name = 'posapp/adjustments/advance_adjustment_confirm_delete.html'
     context_object_name = 'advance_adjustment'
@@ -345,11 +350,8 @@ class AdvanceAdjustmentDeleteView(LoginRequiredMixin, AdminRequiredMixin, Delete
 
 # Adjustment Dashboard
 @login_required
+@management_required
 def adjustment_dashboard(request):
-    if not (request.user.is_superuser or request.user.profile.role.name == 'Admin'):
-        messages.error(request, "You don't have permission to access this page. Admin access required.")
-        return redirect('pos')
-    
     # Check if user is admin or branch manager
     is_admin = request.user.is_superuser or request.user.profile.role.name == 'Admin'
     
@@ -380,11 +382,8 @@ def adjustment_dashboard(request):
 
 # Adjustment Report
 @login_required
+@management_required
 def adjustment_report(request):
-    if not (request.user.is_superuser or request.user.profile.role.name == 'Admin'):
-        messages.error(request, "You don't have permission to access this page. Admin access required.")
-        return redirect('pos')
-    
     # Check if user is admin or branch manager
     is_admin = request.user.is_superuser or request.user.profile.role.name == 'Admin'
     

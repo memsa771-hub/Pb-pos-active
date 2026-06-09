@@ -208,7 +208,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
     <ul class="navbar-nav sidebar accordion" id="accordionSidebar">
 
@@ -248,8 +248,8 @@
             </div>
         </li>
 
-        {% if user.is_superuser or user.profile.role.name == 'Admin' %}
-        <!-- Reports Menu - Admin Only -->
+        {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
+        <!-- Reports Menu - Admin + Branch Manager -->
         <div class="sidebar-heading">Analytics</div>
         <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.namespace == 'inventory' or '/reports/' not in request.path and '/adjustments/' not in request.path %}collapsed{% endif %}" 

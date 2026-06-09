@@ -120,7 +120,7 @@ def get_business_day_ranges():
     }
 
 @login_required
-@admin_required
+@management_required
 def reports_dashboard(request):
     """Main reports dashboard with overview of available reports"""
     
@@ -185,7 +185,7 @@ def reports_dashboard(request):
 
 
 @login_required
-@admin_required
+@management_required
 def sales_report(request):
     """Sales report with charts and data"""
     
@@ -342,7 +342,7 @@ def sales_report(request):
 
 
 @login_required
-@admin_required
+@management_required
 def export_orders_excel(request):
     """Export orders as modern Excel (.xlsx) file using pandas + openpyxl"""
 
@@ -460,7 +460,7 @@ def export_orders_excel(request):
 
 
 @login_required
-@admin_required
+@management_required
 def export_order_items_excel(request):
     """Export order items as Excel file using openpyxl"""
     try:
