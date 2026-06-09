@@ -3,313 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS System - Login</title>
-    <!-- Bootstrap CSS -->
+    <title>Sign In - POS System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
     <style>
-        {% if settings.theme_color == 'indigo' %}
         :root {
-            --primary: #6610f2;
-            --primary-gradient: linear-gradient(135deg, #6610f2 0%, #6f42c1 100%);
-            --secondary: #6c757d;
-            --success: #20c997;
-            --danger: #dc3545;
-            --info: #0dcaf0;
-            --warning: #ffc107;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --primary-rgb: 102, 16, 242;
-            --secondary-rgb: 108, 117, 125;
-            --success-rgb: 32, 201, 151;
-            --danger-rgb: 220, 53, 69;
-            --info-rgb: 13, 202, 240;
-            --warning-rgb: 255, 193, 7;
+            --login-navy: #1e3a5f;
+            --login-blue: #2c5282;
+            --login-accent: #2b6cb0;
+            --login-bg: #eef2f7;
+            --login-text: #1a202c;
+            --login-muted: #718096;
+            --login-border: #e2e8f0;
         }
-        {% elif settings.theme_color == 'teal' %}
-        :root {
-            --primary: #20c997;
-            --primary-gradient: linear-gradient(135deg, #20c997 0%, #0ca678 100%);
-            --secondary: #5a6268;
-            --success: #28a745;
-            --danger: #dd6b4d;
-            --info: #17a2b8;
-            --warning: #ffc107;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --primary-rgb: 32, 201, 151;
-            --secondary-rgb: 90, 98, 104;
-            --success-rgb: 40, 167, 69;
-            --danger-rgb: 221, 107, 77;
-            --info-rgb: 23, 162, 184;
-            --warning-rgb: 255, 193, 7;
+
+        * {
+            box-sizing: border-box;
         }
-        {% elif settings.theme_color == 'crimson' %}
-        :root {
-            --primary: #dc3545;
-            --primary-gradient: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            --secondary: #6c757d;
-            --success: #28a745;
-            --danger: #212529;
-            --info: #17a2b8;
-            --warning: #ffc107;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --primary-rgb: 220, 53, 69;
-            --secondary-rgb: 108, 117, 125;
-            --success-rgb: 40, 167, 69;
-            --danger-rgb: 33, 37, 41;
-            --info-rgb: 23, 162, 184;
-            --warning-rgb: 255, 193, 7;
-        }
-        {% elif settings.theme_color == 'amber' %}
-        :root {
-            --primary: #fd7e14;
-            --primary-gradient: linear-gradient(135deg, #fd7e14 0%, #f57c00 100%);
-            --secondary: #6c757d;
-            --success: #28a745;
-            --danger: #dc3545;
-            --info: #17a2b8;
-            --warning: #ffc107;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --primary-rgb: 253, 126, 20;
-            --secondary-rgb: 108, 117, 125;
-            --success-rgb: 40, 167, 69;
-            --danger-rgb: 220, 53, 69;
-            --info-rgb: 23, 162, 184;
-            --warning-rgb: 255, 193, 7;
-        }
-        {% else %}
-        :root {
-            --primary: #4e73df;
-            --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            --secondary: #858796;
-            --success: #1cc88a;
-            --danger: #e74a3b;
-            --info: #36b9cc;
-            --warning: #f6c23e;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --primary-rgb: 78, 115, 223;
-            --secondary-rgb: 133, 135, 150;
-            --success-rgb: 28, 200, 138;
-            --danger-rgb: 231, 74, 59;
-            --info-rgb: 54, 185, 204;
-            --warning-rgb: 246, 194, 62;
-        }
-        {% endif %}
-        
+
         body {
-            background: var(--primary-gradient);
-            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--login-bg);
+            color: var(--login-text);
+        }
+
+        .login-page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+        }
+
+        .login-brand-panel {
+            background: linear-gradient(160deg, #1e3a5f 0%, #2c5282 52%, #1a365d 100%);
+            color: #fff;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-brand-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, transparent 42%),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 38%);
+            pointer-events: none;
+        }
+
+        .login-brand-content {
+            position: relative;
+            z-index: 1;
+            max-width: 460px;
+        }
+
+        .login-brand-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-brand-content h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            margin: 0 0 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .login-brand-content p {
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.6;
+            margin: 0 0 2rem;
+        }
+
+        .login-brand-features {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .login-brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0.9rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .login-brand-feature i {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .login-form-panel {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            color: #333;
+            padding: 2rem;
         }
-        .login-container {
-            width: 90%;
+
+        .login-card {
+            width: 100%;
             max-width: 420px;
-            padding: 40px;
-            background-color: #fff;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            transform: translateY(0);
-            transition: all 0.3s ease;
+            background: #fff;
+            border: 1px solid var(--login-border);
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+            padding: 2rem;
         }
-        .login-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+
+        .login-card-header {
+            margin-bottom: 1.75rem;
         }
-        .login-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .login-logo h1 {
-            color: var(--primary);
+
+        .login-card-header h2 {
+            margin: 0 0 0.35rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            font-size: 42px;
-            letter-spacing: 2px;
-            margin-bottom: 0;
+            color: var(--login-text);
         }
-        .login-logo p {
-            color: #6c757d;
-            font-size: 16px;
-            margin-top: 5px;
+
+        .login-card-header p {
+            margin: 0;
+            color: var(--login-muted);
+            font-size: 0.92rem;
         }
-        .login-title {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
+
+        .login-alert {
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            border: 1px solid transparent;
+        }
+
+        .login-alert-danger {
+            background: #fff5f5;
+            border-color: #feb2b2;
+            color: #9b2c2c;
+        }
+
+        .login-alert-warning {
+            background: #fffaf0;
+            border-color: #fbd38d;
+            color: #9c4221;
+        }
+
+        .login-alert-success {
+            background: #f0fff4;
+            border-color: #9ae6b4;
+            color: #22543d;
+        }
+
+        .login-alert-info {
+            background: #ebf8ff;
+            border-color: #bee3f8;
+            color: #2c5282;
+        }
+
+        .login-field {
+            margin-bottom: 1rem;
+        }
+
+        .login-field label {
+            display: block;
+            font-size: 0.8rem;
             font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.4rem;
+        }
+
+        .login-input-wrap {
             position: relative;
         }
-        .login-title:after {
-            content: '';
-            display: block;
-            width: 50px;
-            height: 3px;
-            background: var(--primary);
-            margin: 10px auto;
-            border-radius: 5px;
+
+        .login-input-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            z-index: 2;
+            font-size: 0.95rem;
         }
-        .form-floating {
-            margin-bottom: 20px;
-        }
-        .form-control {
-            border-radius: 10px;
-            padding: 12px 15px;
-            height: auto;
-            font-size: 16px;
-            border: 1px solid #ced4da;
-            background-color: #f8f9fa;
-        }
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
-            background-color: #fff;
-        }
-        .form-floating label {
-            padding: 12px 15px;
-        }
-        .input-group-text {
-            background-color: #f8f9fa;
-            border-radius: 10px 0 0 10px;
-            border-right: none;
-        }
-        .input-group .form-control {
-            border-radius: 0 10px 10px 0;
-        }
-        .btn-login {
+
+        .login-input-wrap input {
             width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            background: var(--primary-gradient);
+            min-height: 48px;
+            padding: 0.75rem 0.9rem 0.75rem 2.6rem;
+            border: 1px solid var(--login-border);
+            border-radius: 12px;
+            background: #f8fafc;
+            font-size: 0.95rem;
+            color: var(--login-text);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        .login-input-wrap input:focus {
+            outline: none;
+            border-color: #90cdf4;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.12);
+        }
+
+        .login-error {
+            color: #c53030;
+            font-size: 0.78rem;
+            margin-top: 0.35rem;
+        }
+
+        .login-submit {
+            width: 100%;
+            min-height: 50px;
+            margin-top: 0.5rem;
             border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(30, 58, 95, 0.22);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+
+        .login-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(30, 58, 95, 0.28);
         }
-        .btn-login:active {
-            transform: translateY(1px);
+
+        .login-submit:active {
+            transform: translateY(0);
         }
-        .alert {
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 25px;
-            border: none;
-            font-size: 14px;
-        }
-        .alert-danger {
-            background-color: rgba(var(--danger-rgb), 0.1);
-            color: var(--danger);
-            border-left: 4px solid var(--danger);
-        }
-        .alert-warning {
-            background-color: rgba(var(--warning-rgb), 0.1);
-            color: var(--warning);
-            border-left: 4px solid var(--warning);
-        }
-        .alert-success {
-            background-color: rgba(var(--success-rgb), 0.1);
-            color: var(--success);
-            border-left: 4px solid var(--success);
-        }
-        .alert-info {
-            background-color: rgba(var(--info-rgb), 0.1);
-            color: var(--info);
-            border-left: 4px solid var(--info);
-        }
-        .invalid-feedback {
-            color: var(--danger);
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        .form-text {
-            color: #6c757d;
-            font-size: 13px;
-            margin-top: 20px;
+
+        .login-footer-note {
+            margin-top: 1.25rem;
             text-align: center;
+            font-size: 0.82rem;
+            color: var(--login-muted);
         }
-        .form-icon {
-            color: var(--primary);
-            margin-right: 10px;
+
+        .login-mobile-brand {
+            display: none;
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-        .input-group-text {
-            border-right: 0;
+
+        .login-mobile-brand .login-brand-icon {
+            width: 58px;
+            height: 58px;
+            font-size: 1.4rem;
+            margin: 0 auto 0.85rem;
+            background: linear-gradient(135deg, #1e3a5f, #2c5282);
+            border: none;
         }
-        .input-group .form-control {
-            border-left: 0;
+
+        .login-mobile-brand h1 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            margin: 0 0 0.25rem;
+            color: var(--login-text);
+        }
+
+        .login-mobile-brand p {
+            margin: 0;
+            color: var(--login-muted);
+            font-size: 0.88rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .login-page {
+                grid-template-columns: 1fr;
+            }
+
+            .login-brand-panel {
+                display: none;
+            }
+
+            .login-mobile-brand {
+                display: block;
+            }
+
+            .login-form-panel {
+                padding: 1.25rem;
+                align-items: flex-start;
+                padding-top: 2.5rem;
+            }
+
+            .login-card {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-logo">
-            <h1>PB POS</h1>
-            <p>PickBug Solutions </p>
-        </div>
-        <h2 class="login-title">Sign In</h2>
-        
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} d-flex align-items-center" role="alert">
-                    <i class="fas fa-exclamation-circle flex-shrink-0 me-2"></i>
-                    <div>{{ message }}</div>
+    <div class="login-page">
+        <section class="login-brand-panel">
+            <div class="login-brand-content">
+                <div class="login-brand-icon">
+                    <i class="fas fa-store"></i>
                 </div>
-            {% endfor %}
-        {% endif %}
-        
-        <form method="post">
-            {% csrf_token %}
-            <div class="form-floating mb-3">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-user form-icon"></i></span>
-                    {{ form.username }}
-                </div>
-                {% if form.username.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.username.errors }}
+                <h1>{{ settings.business_name|default:"PB POS" }}</h1>
+                <p>Fast, reliable point of sale for your restaurant and retail operations. Sign in to manage orders, products, and daily sales.</p>
+                <div class="login-brand-features">
+                    <div class="login-brand-feature">
+                        <i class="fas fa-cash-register"></i>
+                        <span>POS terminal built for speed</span>
                     </div>
-                {% endif %}
-            </div>
-            <div class="form-floating mb-3">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-lock form-icon"></i></span>
-                    {{ form.password }}
-                </div>
-                {% if form.password.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.password.errors }}
+                    <div class="login-brand-feature">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Real-time sales and reporting</span>
                     </div>
-                {% endif %}
+                    <div class="login-brand-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure staff access and session control</span>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-login">
-                <i class="fas fa-sign-in-alt me-2"></i>Sign In
-            </button>
-            <div class="form-text mt-4">
-                <i class="fas fa-info-circle me-1"></i>
-                Enter your credentials to access the POS system
-            </div>
-        </form>
-    </div>
+        </section>
 
-    <!-- Bootstrap & jQuery JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <section class="login-form-panel">
+            <div class="login-card">
+                <div class="login-mobile-brand">
+                    <div class="login-brand-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h1>{{ settings.business_name|default:"PB POS" }}</h1>
+                    <p>PickBug Solutions</p>
+                </div>
+
+                <div class="login-card-header">
+                    <h2>Welcome back</h2>
+                    <p>Sign in to continue to your POS dashboard</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="login-alert login-alert-{{ message.tags }}" role="alert">
+                        <i class="fas fa-info-circle mt-1"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="login-field">
+                        <label for="id_username">Username</label>
+                        <div class="login-input-wrap">
+                            <i class="fas fa-user"></i>
+                            {{ form.username }}
+                        </div>
+                        {% if form.username.errors %}
+                        <div class="login-error">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="login-field">
+                        <label for="id_password">Password</label>
+                        <div class="login-input-wrap">
+                            <i class="fas fa-lock"></i>
+                            {{ form.password }}
+                        </div>
+                        {% if form.password.errors %}
+                        <div class="login-error">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="login-alert login-alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle mt-1"></i>
+                        <div>{{ form.non_field_errors }}</div>
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="login-submit">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+
+                    <div class="login-footer-note">
+                        <i class="fas fa-lock me-1"></i>
+                        Authorized staff only. Contact your administrator if you need access.
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
 </body>
-</html> 
+</html>
