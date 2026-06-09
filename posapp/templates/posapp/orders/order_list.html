@@ -2,47 +2,15 @@
 {% load custom_filters %}
 
 {% block title %}Orders - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
+{% include 'posapp/partials/focus_page_styles.html' %}
 <style>
     .orders-page {
         padding: 0.25rem 0 1.5rem;
-    }
-
-    .orders-toolbar {
-        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
-        color: #fff;
-        border-radius: 14px;
-        padding: 1rem 1.25rem;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-        box-shadow: 0 4px 14px rgba(30, 58, 95, 0.18);
-    }
-
-    .orders-toolbar h1 {
-        font-size: 1.35rem;
-        font-weight: 700;
-        margin: 0;
-    }
-
-    .orders-toolbar p {
-        margin: 0.15rem 0 0;
-        font-size: 0.85rem;
-        opacity: 0.85;
-    }
-
-    .orders-toolbar-actions .btn {
-        min-height: 40px;
-        font-weight: 600;
-        border-radius: 10px;
-    }
-
-    .orders-toolbar-actions .btn-light {
-        color: #1e3a5f;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .orders-info-banner {
@@ -188,6 +156,10 @@
         padding: 0;
     }
 
+    .orders-table-wrap.focus-table-wrap table {
+        min-width: 1020px;
+    }
+
     .orders-table {
         margin: 0;
         font-size: 0.88rem;
@@ -301,25 +273,22 @@
         border-color: #2b6cb0;
     }
 
-    @media (max-width: 992px) {
-        .orders-table-wrap {
-            overflow-x: auto;
-        }
-        .orders-table {
-            min-width: 900px;
-        }
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid orders-page">
-    <div class="orders-toolbar">
-        <div>
-            <h1><i class="fas fa-receipt me-2"></i>Orders</h1>
-            <p>Manage and track all orders from the POS terminal</p>
+    <div class="focus-toolbar orders-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-receipt me-2"></i>Orders</h1>
+                <p>Manage and track all orders from the POS terminal</p>
+            </div>
         </div>
-        <div class="orders-toolbar-actions d-flex gap-2 flex-wrap">
+        <div class="focus-toolbar-actions orders-toolbar-actions">
             <a href="{% url 'pos' %}" class="btn btn-light">
                 <i class="fas fa-cash-register me-1"></i> Open POS
             </a>
@@ -482,7 +451,7 @@
         </div>
 
         <div id="ordersResults">
-            <div class="orders-table-wrap">
+            <div class="orders-table-wrap focus-table-wrap">
                 <table class="table orders-table" id="ordersTable">
                     <thead>
                         <tr>
@@ -494,7 +463,7 @@
                             <th>Status</th>
                             <th>Date</th>
                             <th>Staff</th>
-                            <th class="text-end">Actions</th>
+                            <th class="text-end actions-col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -545,7 +514,7 @@
                             </td>
                             <td>{{ order.created_at|pkt_datetime_short }}</td>
                             <td>{{ order.user.get_full_name|default:order.user.username }}</td>
-                            <td class="text-end">
+                            <td class="text-end actions-col">
                                 <div class="order-actions">
                                     <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-secondary order-action-btn" title="View">
                                         <i class="fas fa-eye"></i>
@@ -665,6 +634,13 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('focusMenuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-open');
+            });
+        }
+
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
         const isHistoryView = {% if show_history %}true{% else %}false{% endif %};

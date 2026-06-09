@@ -2,9 +2,193 @@
 {% load custom_filters %}
 
 {% block title %}Order {{ order.reference_number }} - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/focus_page_styles.html' %}
+<style>
+    .order-detail-page {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .order-detail-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.45rem;
+    }
+
+    .order-detail-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .order-detail-badge.pending { background: #fefcbf; color: #744210; border-color: transparent; }
+    .order-detail-badge.completed { background: #c6f6d5; color: #22543d; border-color: transparent; }
+    .order-detail-badge.cancelled { background: #fed7d7; color: #822727; border-color: transparent; }
+    .order-detail-badge.paid { background: #c6f6d5; color: #22543d; border-color: transparent; }
+    .order-detail-badge.type { background: #ebf8ff; color: #2c5282; border-color: transparent; }
+    .order-detail-badge.payment { background: #e6fffa; color: #234e52; border-color: transparent; }
+
+    .order-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 992px) {
+        .order-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .order-detail-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    .order-detail-card-header {
+        padding: 0.85rem 1.15rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #f8fafc;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .order-detail-card-body {
+        padding: 1rem 1.15rem;
+    }
+
+    .order-info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+    }
+
+    .order-info-row:last-child {
+        border-bottom: none;
+    }
+
+    .order-info-label {
+        color: #718096;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .order-info-value {
+        color: #1a202c;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    .order-total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+        color: #4a5568;
+    }
+
+    .order-total-row.discount {
+        color: #c53030;
+    }
+
+    .order-total-row.grand-total {
+        margin-top: 0.5rem;
+        padding-top: 0.85rem;
+        border-top: 2px solid #e2e8f0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a202c;
+    }
+
+    .order-items-card .order-detail-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .order-items-count {
+        background: #2b6cb0;
+        color: #fff;
+        font-size: 0.72rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+    }
+
+    .order-items-table {
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+    .order-items-table thead th {
+        background: #f8fafc;
+        color: #4a5568;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.85rem 1rem;
+        white-space: nowrap;
+    }
+
+    .order-items-table tbody td {
+        padding: 0.85rem 1rem;
+        vertical-align: middle;
+        border-color: #edf2f7;
+    }
+
+    .order-items-table tbody tr:hover {
+        background: #f7fafc;
+    }
+
+    .order-item-name {
+        font-weight: 700;
+        color: #1a202c;
+    }
+
+    .order-item-code {
+        font-size: 0.75rem;
+        color: #718096;
+    }
+
+    .order-items-empty {
+        padding: 2.5rem 1rem;
+        text-align: center;
+        color: #718096;
+    }
+
+    .focus-toolbar-actions .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.45);
+        color: #fff;
+    }
+
+    .focus-toolbar-actions .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid order-detail-page">
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -14,198 +198,193 @@
         {% endfor %}
     {% endif %}
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-primary-subtle">
-            <div class="d-flex align-items-center">
-                <h5 class="m-0 font-weight-bold text-primary">
-                    Order #{{ order.daily_order_number }}
-                    <small class="text-muted ms-2">({{ order.reference_number }})</small>
-                </h5>
-                <span class="badge bg-{% if order.order_status == 'Completed' %}success{% elif order.order_status == 'Pending' %}warning{% elif order.order_status == 'Cancelled' %}danger{% else %}secondary{% endif %} ms-3">
-                    {{ order.order_status }}
-                </span>
-                <span class="badge bg-{% if order.payment_status == 'Paid' %}success{% elif order.payment_status == 'Pending' %}warning{% elif order.payment_status == 'Failed' %}danger{% else %}secondary{% endif %} ms-2">
-                    {{ order.payment_status }}
-                </span>
-                <span class="badge bg-primary ms-2">{{ order.order_type }}</span>
-                <span class="badge bg-info ms-2">{{ order.payment_method }}</span>
-            </div>
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
             <div>
-                <a href="{% url 'order_receipt' order.id %}" class="btn btn-success btn-sm me-2" target="_blank">
-                    <i class="fas fa-print me-1"></i> Print Receipt
-                </a>
-                <a href="{% url 'kitchen_receipt' order.id %}" class="btn btn-warning btn-sm me-2" target="_blank">
-                    <i class="fas fa-utensils me-1"></i> Kitchen Copy
-                </a>
-                {% if order.order_status != 'Completed' and order.order_status != 'Cancelled' %}
-                <a href="{% url 'order_edit' order.id %}" class="btn btn-info btn-sm me-2">
-                    <i class="fas fa-edit me-1"></i> Edit
-                </a>
-                {% endif %}
-                {% if order.order_status == 'Pending' %}
-                <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#completeModal">
-                    <i class="fas fa-check me-1"></i> Complete
+                <h1>Order #{{ order.daily_order_number }} <small class="opacity-75">({{ order.reference_number }})</small></h1>
+                <div class="order-detail-badges">
+                    <span class="order-detail-badge {% if order.order_status == 'Pending' %}pending{% elif order.order_status == 'Completed' %}completed{% elif order.order_status == 'Cancelled' %}cancelled{% endif %}">
+                        {{ order.order_status }}
+                    </span>
+                    <span class="order-detail-badge {% if order.payment_status == 'Paid' %}paid{% else %}pending{% endif %}">
+                        {{ order.payment_status }}
+                    </span>
+                    <span class="order-detail-badge type">{{ order.order_type }}</span>
+                    <span class="order-detail-badge payment">{{ order.payment_method }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'order_list' %}" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+            <a href="{% url 'order_receipt' order.id %}" class="btn btn-light btn-sm" target="_blank">
+                <i class="fas fa-print me-1"></i> Receipt
+            </a>
+            <a href="{% url 'kitchen_receipt' order.id %}" class="btn btn-warning btn-sm" target="_blank">
+                <i class="fas fa-utensils me-1"></i> Kitchen
+            </a>
+            {% if order.order_status != 'Completed' and order.order_status != 'Cancelled' %}
+            <a href="{% url 'order_edit' order.id %}" class="btn btn-info btn-sm">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+            {% endif %}
+            {% if order.order_status == 'Pending' %}
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal">
+                <i class="fas fa-check me-1"></i> Complete
+            </button>
+            {% endif %}
+            {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' %}
+                {% if user_permissions.can_cancel_orders %}
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                    <i class="fas fa-ban me-1"></i> Cancel
                 </button>
                 {% endif %}
-                {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' %}
-                    {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                        <i class="fas fa-ban me-1"></i> Cancel
-                    </button>
-                    {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="order-detail-grid">
+        <div class="order-detail-card">
+            <div class="order-detail-card-header">
+                <i class="fas fa-info-circle me-2"></i>Order Information
+            </div>
+            <div class="order-detail-card-body">
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-user me-1"></i> Customer</span>
+                    <span class="order-info-value">{{ order.customer_name|default:"Walk-in" }}</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-phone me-1"></i> Phone</span>
+                    <span class="order-info-value">{{ order.customer_phone|default:"--" }}</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-calendar me-1"></i> Date</span>
+                    <span class="order-info-value">{{ order.created_at|pkt_datetime }}</span>
+                </div>
+                {% if is_admin or is_branch_manager %}
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-user-shield me-1"></i> Created By</span>
+                    <span class="order-info-value">{{ order.user.get_full_name|default:order.user.username }}</span>
+                </div>
+                {% endif %}
+                {% if order.order_type == 'Dine In' and order.table_number %}
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-chair me-1"></i> Table</span>
+                    <span class="order-info-value">{{ order.table_number }}</span>
+                </div>
+                {% endif %}
+                {% if order.order_type == 'Delivery' and order.delivery_address %}
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-map-marker-alt me-1"></i> Address</span>
+                    <span class="order-info-value">{{ order.delivery_address }}</span>
+                </div>
+                {% endif %}
+                {% if order.order_type == 'Delivery' and order.delivery_person %}
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-motorcycle me-1"></i> Rider</span>
+                    <span class="order-info-value">
+                        {{ order.delivery_person.name }}
+                        {% if order.delivery_person.phone %}<br><small class="text-muted">{{ order.delivery_person.phone }}</small>{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                {% if order.notes %}
+                <div class="order-info-row">
+                    <span class="order-info-label"><i class="fas fa-sticky-note me-1"></i> Notes</span>
+                    <span class="order-info-value">{{ order.notes }}</span>
+                </div>
                 {% endif %}
             </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-4">
-                <!-- Customer & Order Information -->
-                <div class="col-md-6">
-                    <table class="table table-bordered">
-                        <tbody>
-                            <tr>
-                                <th style="width:35%"><i class="fas fa-user text-primary me-2"></i>Customer</th>
-                                <td>{{ order.customer_name|default:"--" }}</td>
-                            </tr>
-                            <tr>
-                                <th><i class="fas fa-phone text-primary me-2"></i>Phone</th>
-                                <td>{{ order.customer_phone|default:"--" }}</td>
-                            </tr>
-                            <tr>
-                                                            <th><i class="fas fa-calendar text-primary me-2"></i>Date</th>
-                            <td>{{ order.created_at|pkt_datetime }}</td>
-                            </tr>
-                            {% if is_admin or user.profile.role.name == 'Branch Manager' %}
-                            <tr>
-                                <th><i class="fas fa-user-shield text-primary me-2"></i>Created By</th>
-                                <td>{{ order.user.get_full_name|default:order.user.username }}</td>
-                            </tr>
-                            {% endif %}
-                            {% if order.order_type == 'Dine In' and order.table_number %}
-                            <tr>
-                                <th><i class="fas fa-chair text-primary me-2"></i>Table Number</th>
-                                <td>{{ order.table_number }}</td>
-                            </tr>
-                            {% endif %}
-                            {% if order.order_type == 'Delivery' and order.delivery_address %}
-                            <tr>
-                                <th><i class="fas fa-map-marker-alt text-primary me-2"></i>Delivery Address</th>
-                                <td>{{ order.delivery_address }}</td>
-                            </tr>
-                            {% endif %}
-                            {% if order.order_type == 'Delivery' and order.delivery_person %}
-                            <tr>
-                                <th><i class="fas fa-motorcycle text-primary me-2"></i>Delivery Person</th>
-                                <td>
-                                    {{ order.delivery_person.name }}
-                                    {% if order.delivery_person.phone %}
-                                        <small class="text-muted d-block">{{ order.delivery_person.phone }}</small>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endif %}
-                            {% if order.notes %}
-                            <tr>
-                                <th><i class="fas fa-sticky-note text-primary me-2"></i>Notes</th>
-                                <td>{{ order.notes }}</td>
-                            </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+
+        <div class="order-detail-card">
+            <div class="order-detail-card-header">
+                <i class="fas fa-calculator me-2"></i>Payment Summary
+            </div>
+            <div class="order-detail-card-body">
+                <div class="order-total-row">
+                    <span>Subtotal</span>
+                    <span>Rs.{{ subtotal|floatformat:2 }}</span>
                 </div>
-                
-                <!-- Order Summary -->
-                <div class="col-md-6">
-                    <table class="table table-bordered">
-                        <tbody>
-                            <tr>
-                                <th style="width:40%">Subtotal:</th>
-                                <td class="text-end">Rs.{{ subtotal|floatformat:2 }}</td>
-                            </tr>
-                            
-                            {% if order.discount_amount > 0 or discount_amount > 0 %}
-                            <tr>
-                                <th>Discount:
-                                    {% if order.discount %}
-                                    <span class="badge bg-success">({{ order.discount.name }})</span>
-                                    {% elif order.discount_code == 'MANUAL' %}
-                                    <span class="badge bg-primary">(Manual{% if order.discount_type == 'percentage' %} {{ order.discount_value }}%{% endif %})</span>
-                                    {% elif order.discount_code %}
-                                    <span class="badge bg-info">({{ order.discount_code }})</span>
-                                    {% endif %}
-                                </th>
-                                <td class="text-end text-danger">-Rs.{{ discount_amount|floatformat:2 }}</td>
-                            </tr>
-                            {% endif %}
-                            
-                            <tr>
-                                <th>Tax ({{ tax_rate|floatformat:1 }}%):</th>
-                                <td class="text-end">Rs.{{ tax_amount|floatformat:2 }}</td>
-                            </tr>
-                            
-                            {% if order.order_type == 'Dine In' and order.service_charge_percent > 0 %}
-                            <tr>
-                                <th>Service Charge ({{ order.service_charge_percent|floatformat:1 }}%):</th>
-                                <td class="text-end text-primary">Rs.{{ service_charge_amount|floatformat:2 }}</td>
-                            </tr>
-                            {% endif %}
-                            
-                            {% if order.order_type == 'Delivery' and order.delivery_charges > 0 %}
-                            <tr>
-                                <th>Delivery Charges:</th>
-                                <td class="text-end">Rs.{{ order.delivery_charges|floatformat:2 }}</td>
-                            </tr>
-                            {% endif %}
-                            
-                            <tr class="table-primary">
-                                <th>Total Amount:</th>
-                                <td class="text-end fw-bold fs-5">Rs.{{ total|floatformat:2 }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                {% if order.discount_amount > 0 or discount_amount > 0 %}
+                <div class="order-total-row discount">
+                    <span>
+                        Discount
+                        {% if order.discount %}({{ order.discount.name }}){% elif order.discount_code == 'MANUAL' %}(Manual){% elif order.discount_code %}({{ order.discount_code }}){% endif %}
+                    </span>
+                    <span>-Rs.{{ discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="order-total-row">
+                    <span>Tax ({{ tax_rate|floatformat:1 }}%)</span>
+                    <span>Rs.{{ tax_amount|floatformat:2 }}</span>
+                </div>
+                {% if order.order_type == 'Dine In' and order.service_charge_percent > 0 %}
+                <div class="order-total-row">
+                    <span>Service Charge ({{ order.service_charge_percent|floatformat:1 }}%)</span>
+                    <span>Rs.{{ service_charge_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if order.order_type == 'Delivery' and order.delivery_charges > 0 %}
+                <div class="order-total-row">
+                    <span>Delivery Charges</span>
+                    <span>Rs.{{ order.delivery_charges|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="order-total-row grand-total">
+                    <span>Total Amount</span>
+                    <span>Rs.{{ total|floatformat:2 }}</span>
                 </div>
             </div>
-            
-            <!-- Order Items -->
-            <div class="table-responsive">
-                <h6 class="mb-3 text-primary">
-                    <i class="fas fa-shopping-basket me-2"></i>Order Items 
-                    <span class="badge bg-info">{{ order_items|length }} item(s)</span>
-                </h6>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Product</th>
-                            <th width="15%">Unit Price</th>
-                            <th width="15%">Quantity</th>
-                            <th width="15%">Total</th>
-                            <th width="20%">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in order_items %}
-                        <tr>
-                            <td>
-                                <strong>{{ item.product.name }}</strong>
-                                {% if item.product.product_code %}
-                                <small class="text-muted d-block">#{{ item.product.product_code }}</small>
-                                {% endif %}
-                            </td>
-                            <td>Rs.{{ item.unit_price }}</td>
-                            <td class="text-center">{{ item.quantity|stringformat:"g" }}{% if item.product.calculate_price_per_kg %} kg{% endif %}</td>
-                            <td>Rs.{{ item.total_price|floatformat:2 }}</td>
-                            <td class="text-muted small">{{ item.notes|default:"-" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                <i class="fas fa-shopping-cart fa-3x mb-3"></i>
-                                <p>No items in this order</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        </div>
+    </div>
+
+    <div class="order-detail-card order-items-card">
+        <div class="order-detail-card-header">
+            <span><i class="fas fa-shopping-basket me-2"></i>Order Items</span>
+            <span class="order-items-count">{{ order_items|length }} item(s)</span>
+        </div>
+        <div class="focus-table-wrap">
+            <table class="table order-items-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Unit Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>
+                            <div class="order-item-name">{{ item.product.name }}</div>
+                            {% if item.product.product_code %}
+                            <div class="order-item-code">#{{ item.product.product_code }}</div>
+                            {% endif %}
+                        </td>
+                        <td>Rs.{{ item.unit_price }}</td>
+                        <td>{{ item.quantity|stringformat:"g" }}{% if item.product.calculate_price_per_kg %} kg{% endif %}</td>
+                        <td><strong>Rs.{{ item.total_price|floatformat:2 }}</strong></td>
+                        <td class="text-muted small">{{ item.notes|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="order-items-empty">
+                                <i class="fas fa-shopping-cart d-block mb-2"></i>
+                                No items in this order
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -229,7 +408,6 @@
                 </div>
                 
                 {% if order.payment_method == 'Cash' %}
-                <!-- Cash Payment Details -->
                 <div class="card border-success mb-4">
                     <div class="card-header bg-success text-white">
                         <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Cash Payment Details</h6>
@@ -265,7 +443,6 @@
                     </div>
                 </div>
                 {% else %}
-                <!-- Non-cash payment confirmation -->
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     Are you sure you want to mark this {{ order.payment_method }} payment order as completed?
@@ -300,9 +477,6 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to cancel order {{ order.reference_number }}? This action cannot be undone.</p>
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Note: Only Branch Managers and Administrators can cancel orders.
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
@@ -319,14 +493,13 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        // Check if there are additional items to show/hide button
-        // This will be handled by the backend - if no additional items, the button shows a message
-        
+        $('#focusMenuToggle').on('click', function() {
+            $('body').toggleClass('sidebar-open');
+        });
+
         {% if order.payment_method == 'Cash' %}
-        // Cash payment modal logic
         const totalAmount = {{ total|floatformat:2 }};
         
-        // Handle cash given input change
         $('#cashGiven').on('input', function() {
             const cashGiven = parseFloat($(this).val()) || 0;
             
@@ -337,16 +510,12 @@
                     $('#change-display').removeClass('d-none');
                     $('#insufficient-cash-warning').addClass('d-none');
                     $('#completeOrderBtn').prop('disabled', false);
-                    
-                    // Update hidden fields
                     $('#hiddenCashGiven').val(cashGiven.toFixed(2));
                     $('#hiddenChangeAmount').val(changeAmount.toFixed(2));
                 } else {
                     $('#change-display').addClass('d-none');
                     $('#insufficient-cash-warning').removeClass('d-none');
                     $('#completeOrderBtn').prop('disabled', true);
-                    
-                    // Clear hidden fields
                     $('#hiddenCashGiven').val('');
                     $('#hiddenChangeAmount').val('');
                 }
@@ -354,16 +523,13 @@
                 $('#change-display').addClass('d-none');
                 $('#insufficient-cash-warning').addClass('d-none');
                 $('#completeOrderBtn').prop('disabled', true);
-                
-                // Clear hidden fields
                 $('#hiddenCashGiven').val('');
                 $('#hiddenChangeAmount').val('');
             }
         });
         
-        // Handle Enter key press on cashGiven input
         $('#cashGiven').on('keypress', function(e) {
-            if (e.which === 13) { // 13 is the Enter key code
+            if (e.which === 13) {
                 e.preventDefault();
                 if (!$('#completeOrderBtn').prop('disabled')) {
                     $('#completeOrderBtn').click();
@@ -371,17 +537,14 @@
             }
         });
         
-        // Initialize if cash_given already exists
         {% if order.cash_given %}
         $('#cashGiven').trigger('input');
         {% endif %}
         
-        // Auto-focus cash input when modal opens
         $('#completeModal').on('shown.bs.modal', function() {
             $('#cashGiven').trigger('focus').trigger('select');
         });
 
-        // Reset modal when it's closed
         $('#completeModal').on('hidden.bs.modal', function() {
             {% if not order.cash_given %}
             $('#cashGiven').val('');
@@ -395,4 +558,4 @@
         {% endif %}
     });
 </script>
-{% endblock %} 
+{% endblock %}
