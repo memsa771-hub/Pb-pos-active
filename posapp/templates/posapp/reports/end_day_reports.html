@@ -2,24 +2,59 @@
 {% load custom_filters %}
 
 {% block title %}End Day Reports{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .admin-table-wrap.focus-table-wrap table {
+        min-width: 1100px;
+    }
+
+    .end-day-period {
+        font-size: 0.82rem;
+        color: #718096;
+        line-height: 1.4;
+    }
+
+    .end-day-amount {
+        font-weight: 700;
+        color: #1a202c;
+        white-space: nowrap;
+    }
+
+    .end-day-amount.net {
+        color: #2b6cb0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">End Day Reports</h1>
-        <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Reports
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-history me-2"></i>Past End Days</h1>
+                <p>View and download reports from previous business day closures</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'end_day' %}" class="btn btn-outline-light">
+                <i class="fas fa-calendar-check me-1"></i> End Day
+            </a>
+            <a href="{% url 'reports_dashboard' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i> Reports
+            </a>
+        </div>
     </div>
 
     {% if is_admin %}
-    <!-- Filter Card -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Filter Reports</h6>
-        </div>
-        <div class="card-body">
-            <form method="get" class="row g-3">
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0">
+            <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label for="start_date" class="form-label">Start Date</label>
                     <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
@@ -28,69 +63,76 @@
                     <label for="end_date" class="form-label">End Date</label>
                     <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100" style="min-height: 42px; border-radius: 10px; font-weight: 600;">
+                        <i class="fas fa-filter me-1"></i> Apply Filter
+                    </button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
     {% endif %}
 
-    <!-- End Day Reports List -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">End Day Reports</h6>
+    <div class="admin-stats">
+        <div class="admin-stat-card primary">
+            <i class="fas fa-calendar-alt stat-icon"></i>
+            <div class="stat-label">Total End Days</div>
+            <div class="stat-value">{{ end_days_data|length }}</div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+    </div>
+
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2>End Day History</h2>
+        </div>
+        <div class="admin-panel-body">
+            <div class="focus-table-wrap admin-table-wrap">
+                <table class="admin-table">
                     <thead>
                         <tr>
                             <th>End Date</th>
                             <th>Period</th>
                             <th>Orders</th>
                             <th>Total Sales</th>
-                            <th>Total Adjustments</th>
+                            <th>Adjustments</th>
                             <th>Net Total</th>
                             <th>Ended By</th>
                             <th>Notes</th>
-                            <th>Actions</th>
+                            <th class="actions-col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for data in end_days_data %}
                         <tr>
-                            <td>{{ data.end_day.end_date|pkt_datetime }}</td>
+                            <td><strong>{{ data.end_day.end_date|pkt_datetime }}</strong></td>
                             <td>
-                                {{ data.period_start|pkt_datetime_short }} to<br>
-                                {{ data.period_end|pkt_datetime_short }}
+                                <div class="end-day-period">
+                                    {{ data.period_start|pkt_datetime_short }}<br>
+                                    to {{ data.period_end|pkt_datetime_short }}
+                                </div>
                             </td>
                             <td>{{ data.orders_count }}</td>
-                            <td>Rs. {{ data.order_total|floatformat:2 }}</td>
-                            <td>Rs. {{ data.adjustment_total|floatformat:2 }}</td>
-                            <td>Rs. {{ data.net_total|floatformat:2 }}</td>
+                            <td><span class="end-day-amount">Rs. {{ data.order_total|floatformat:2 }}</span></td>
+                            <td><span class="end-day-amount">Rs. {{ data.adjustment_total|floatformat:2 }}</span></td>
+                            <td><span class="end-day-amount net">Rs. {{ data.net_total|floatformat:2 }}</span></td>
                             <td>{{ data.end_day.ended_by.username }}</td>
                             <td>{{ data.end_day.notes|default:"-" }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <!-- Sales Report -->
-                                    <a href="{% url 'sales_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}" 
-                                       class="btn btn-sm btn-primary" target="_blank" title="Sales Report">
+                            <td class="actions-col">
+                                <div class="admin-action-btns">
+                                    <a href="{% url 'sales_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                       class="btn btn-primary admin-action-btn" target="_blank" title="Sales Report">
                                         <i class="fas fa-file-alt"></i>
                                     </a>
-                                    <!-- Adjustment Report -->
                                     <a href="{% url 'adjustment_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}"
-                                       class="btn btn-sm btn-danger" target="_blank" title="Adjustment Report">
+                                       class="btn btn-danger admin-action-btn" target="_blank" title="Adjustment Report">
                                         <i class="fas fa-sliders-h"></i>
                                     </a>
-                                    <!-- Orders Excel Report -->
                                     <a href="{% url 'export_orders_excel' %}?start={{ data.period_start|date:'Y-m-d H:i:s' }}&end={{ data.period_end|date:'Y-m-d H:i:s' }}"
-                                       class="btn btn-sm btn-success" title="Orders Excel Report">
+                                       class="btn btn-success admin-action-btn" title="Orders Excel Report">
                                         <i class="fas fa-file-excel"></i>
                                     </a>
-                                    <!-- Products Excel Report -->
                                     <a href="{% url 'export_order_items_excel' %}?start={{ data.period_start|date:'Y-m-d H:i:s' }}&end={{ data.period_end|date:'Y-m-d H:i:s' }}"
-                                       class="btn btn-sm btn-info" title="Products Excel Report">
+                                       class="btn btn-info admin-action-btn" title="Products Excel Report">
                                         <i class="fas fa-box"></i>
                                     </a>
                                 </div>
@@ -98,7 +140,12 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center">No end day reports found.</td>
+                            <td colspan="9">
+                                <div class="admin-empty">
+                                    <i class="fas fa-calendar-times"></i>
+                                    No end day reports found.
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -107,14 +154,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Tooltips Initialization -->
 {% block extra_js %}
 <script>
-    $(document).ready(function(){
+    $(document).ready(function() {
         $('[title]').tooltip();
     });
 </script>
 {% endblock %}
-
-{% endblock %} 
