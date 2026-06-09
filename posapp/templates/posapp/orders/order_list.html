@@ -1,8 +1,7 @@
-{% extends 'posapp/base.html' %}
+{% extends 'posapp/focus_base.html' %}
 {% load custom_filters %}
 
 {% block title %}Orders - POS System{% endblock %}
-{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
 {% include 'posapp/partials/focus_page_styles.html' %}
@@ -329,313 +328,16 @@
     </div>
     {% endif %}
 
-    <div class="orders-stats">
-        <div class="orders-stat-card">
-            <div class="stat-label">Total Orders</div>
-            <div class="stat-value">{{ order_stats.total }}</div>
-        </div>
-        <div class="orders-stat-card pending">
-            <div class="stat-label">Pending</div>
-            <div class="stat-value">{{ order_stats.pending }}</div>
-        </div>
-        <div class="orders-stat-card completed">
-            <div class="stat-label">Completed</div>
-            <div class="stat-value">{{ order_stats.completed }}</div>
-        </div>
-        <div class="orders-stat-card takeaway">
-            <div class="stat-label">Takeaway</div>
-            <div class="stat-value">{{ order_stats.takeaway }}</div>
-        </div>
-        <div class="orders-stat-card dine-in">
-            <div class="stat-label">Dine In</div>
-            <div class="stat-value">{{ order_stats.dine_in }}</div>
-        </div>
-        <div class="orders-stat-card delivery">
-            <div class="stat-label">Delivery</div>
-            <div class="stat-value">{{ order_stats.delivery }}</div>
-        </div>
-    </div>
-
-    <div class="orders-panel">
-        <div class="orders-filters">
-            <form method="get" action="{% url 'order_list' %}" id="searchForm">
-                {% if show_history %}<input type="hidden" name="history" value="1">{% endif %}
-                {% if type_filter %}
-                    {% if show_history %}
-                    <input type="hidden" name="history_type" value="{{ type_filter }}">
-                    {% else %}
-                    <input type="hidden" name="type" value="{{ type_filter }}">
-                    {% endif %}
-                {% endif %}
-                <div class="row g-3 align-items-end">
-                    <div class="col-lg-4 col-md-6">
-                        <label for="searchInput" class="form-label">Search</label>
-                        <div class="orders-search-wrap">
-                            <i class="fas fa-search"></i>
-                            {% if show_history %}
-                            <input type="text" class="form-control" id="searchInput" name="history_search" placeholder="Reference #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
-                            {% else %}
-                            <input type="text" class="form-control" id="searchInput" name="search" placeholder="Reference #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-6">
-                        <label for="status" class="form-label">Status</label>
-                        {% if show_history %}
-                        <select class="form-select" id="status" name="history_status" onchange="document.getElementById('searchForm').submit();">
-                        {% else %}
-                        <select class="form-select" id="status" name="status" onchange="document.getElementById('searchForm').submit();">
-                        {% endif %}
-                            <option value="" {% if status_filter == '' %}selected{% endif %}>All Statuses</option>
-                            {% for status_code, status_label in order_status_choices %}
-                            <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-6">
-                        <label for="date_from" class="form-label">Date From</label>
-                        {% if show_history %}
-                        <input type="date" class="form-control" id="date_from" name="history_date_from" value="{{ date_from }}" onchange="document.getElementById('searchForm').submit();">
-                        {% else %}
-                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}" onchange="document.getElementById('searchForm').submit();">
-                        {% endif %}
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-6">
-                        <label for="date_to" class="form-label">Date To</label>
-                        {% if show_history %}
-                        <input type="date" class="form-control" id="date_to" name="history_date_to" value="{{ date_to }}" onchange="document.getElementById('searchForm').submit();">
-                        {% else %}
-                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}" onchange="document.getElementById('searchForm').submit();">
-                        {% endif %}
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="orders-type-pills" id="ordersTypePills">
-            {% if show_history %}
-            <a href="?history=1{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if not type_filter %}active{% endif %}">
-                All <span class="pill-count">{{ order_stats.total }}</span>
-            </a>
-            <a href="?history=1&history_type=Takeaway{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if type_filter == 'Takeaway' %}active{% endif %}">
-                <i class="fas fa-shopping-bag"></i> Takeaway <span class="pill-count">{{ order_stats.takeaway }}</span>
-            </a>
-            <a href="?history=1&history_type={{ 'Dine In'|urlencode }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if type_filter == 'Dine In' %}active{% endif %}">
-                <i class="fas fa-utensils"></i> Dine In <span class="pill-count">{{ order_stats.dine_in }}</span>
-            </a>
-            <a href="?history=1&history_type=Delivery{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if type_filter == 'Delivery' %}active{% endif %}">
-                <i class="fas fa-motorcycle"></i> Delivery <span class="pill-count">{{ order_stats.delivery }}</span>
-            </a>
-            {% else %}
-            <a href="?{% if search_query %}search={{ search_query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter|urlencode }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if not type_filter %}active{% endif %}">
-                All <span class="pill-count">{{ order_stats.total }}</span>
-            </a>
-            <a href="?type=Takeaway{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if type_filter == 'Takeaway' %}active{% endif %}">
-                <i class="fas fa-shopping-bag"></i> Takeaway <span class="pill-count">{{ order_stats.takeaway }}</span>
-            </a>
-            <a href="?type={{ 'Dine In'|urlencode }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if type_filter == 'Dine In' %}active{% endif %}">
-                <i class="fas fa-utensils"></i> Dine In <span class="pill-count">{{ order_stats.dine_in }}</span>
-            </a>
-            <a href="?type=Delivery{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
-               class="orders-type-pill {% if type_filter == 'Delivery' %}active{% endif %}">
-                <i class="fas fa-motorcycle"></i> Delivery <span class="pill-count">{{ order_stats.delivery }}</span>
-            </a>
-            {% endif %}
-        </div>
-
-        <div id="ordersResults">
-            <div class="orders-table-wrap focus-table-wrap">
-                <table class="table orders-table" id="ordersTable">
-                    <thead>
-                        <tr>
-                            <th>Order</th>
-                            <th>Type</th>
-                            <th>Customer</th>
-                            <th>Table / Rider</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Staff</th>
-                            <th class="text-end actions-col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                        <tr>
-                            <td><span class="order-ref">{{ order.reference_number }}</span></td>
-                            <td>
-                                {% if order.order_type == 'Takeaway' %}
-                                <span class="order-type-badge takeaway">Takeaway</span>
-                                {% elif order.order_type == 'Dine In' %}
-                                <span class="order-type-badge dine-in">Dine In</span>
-                                {% elif order.order_type == 'Delivery' %}
-                                <span class="order-type-badge delivery">Delivery</span>
-                                {% else %}
-                                <span class="order-type-badge">{{ order.order_type|default:"--" }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div>{{ order.customer_name|default:"Walk-in" }}</div>
-                                {% if order.customer_phone %}
-                                <div class="order-customer-sub">{{ order.customer_phone }}</div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if order.order_type == 'Dine In' and order.table_number %}
-                                    <i class="fas fa-chair text-muted me-1"></i>Table {{ order.table_number }}
-                                {% elif order.order_type == 'Delivery' %}
-                                    {% if order.delivery_person %}
-                                    <a href="{% url 'delivery_person_detail' order.delivery_person.id %}" class="text-decoration-none">
-                                        <i class="fas fa-motorcycle text-muted me-1"></i>{{ order.delivery_person.name }}
-                                    </a>
-                                    {% else %}
-                                    <span class="text-muted">Unassigned</span>
-                                    {% endif %}
-                                {% else %}
-                                <span class="text-muted">--</span>
-                                {% endif %}
-                            </td>
-                            <td><span class="order-total">Rs.{{ order.total_amount|floatformat:2 }}</span></td>
-                            <td>
-                                {% if order.order_status == 'Pending' %}
-                                <span class="order-status-badge pending">Pending</span>
-                                {% elif order.order_status == 'Completed' %}
-                                <span class="order-status-badge completed">Completed</span>
-                                {% elif order.order_status == 'Cancelled' %}
-                                <span class="order-status-badge cancelled">Cancelled</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ order.created_at|pkt_datetime_short }}</td>
-                            <td>{{ order.user.get_full_name|default:order.user.username }}</td>
-                            <td class="text-end actions-col">
-                                <div class="order-actions">
-                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-secondary order-action-btn" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    {% if user_permissions.can_edit_orders %}
-                                    <a href="{% url 'order_edit' order.id %}" class="btn btn-outline-primary order-action-btn" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    {% else %}
-                                    <span class="btn btn-outline-secondary order-action-btn disabled" title="No edit permission">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-                                    {% endif %}
-                                    <a href="{% url 'order_receipt' order.id %}" class="btn btn-outline-success order-action-btn" title="Print" target="_blank">
-                                        <i class="fas fa-print"></i>
-                                    </a>
-                                    {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' %}
-                                        {% if user_permissions.can_cancel_orders %}
-                                        <button type="button" class="btn btn-outline-danger order-action-btn" title="Cancel" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="9">
-                                <div class="orders-empty">
-                                    <div><i class="fas fa-inbox d-block"></i></div>
-                                    <strong>No orders found</strong>
-                                    <div class="mt-1">Try adjusting your search or filters.</div>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% for order in orders %}
-                {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' and user_permissions.can_cancel_orders %}
-                <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderModalLabel{{ order.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="cancelOrderModalLabel{{ order.id }}">Confirm Cancellation</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body text-start">
-                                Cancel order <strong>{{ order.reference_number }}</strong>? This cannot be undone.
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Order</button>
-                                <form action="{% url 'order_cancel' order.id %}" method="post" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger">Cancel Order</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            {% endfor %}
-
-            {% if orders.has_other_pages %}
-            <div class="orders-pagination">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center mb-0">
-                        {% if orders.has_previous %}
-                        <li class="page-item">
-                            {% if show_history %}
-                            <a class="page-link" href="?history=1&page={{ orders.previous_page_number }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">&laquo;</a>
-                            {% else %}
-                            <a class="page-link" href="?page={{ orders.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&laquo;</a>
-                            {% endif %}
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                        {% endif %}
-
-                        {% for i in orders.paginator.page_range %}
-                            {% if orders.number == i %}
-                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                            {% elif i > orders.number|add:'-3' and i < orders.number|add:'3' %}
-                            <li class="page-item">
-                                {% if show_history %}
-                                <a class="page-link" href="?history=1&page={{ i }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">{{ i }}</a>
-                                {% else %}
-                                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ i }}</a>
-                                {% endif %}
-                            </li>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if orders.has_next %}
-                        <li class="page-item">
-                            {% if show_history %}
-                            <a class="page-link" href="?history=1&page={{ orders.next_page_number }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&history_date_from={{ date_from }}{% endif %}{% if date_to %}&history_date_to={{ date_to }}{% endif %}">&raquo;</a>
-                            {% else %}
-                            <a class="page-link" href="?page={{ orders.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter|urlencode }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&raquo;</a>
-                            {% endif %}
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+    {% include 'posapp/orders/_order_list_refresh.html' %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function initOrderListPage() {
         const menuToggle = document.getElementById('focusMenuToggle');
-        if (menuToggle) {
+        if (menuToggle && !menuToggle.dataset.bound) {
+            menuToggle.dataset.bound = '1';
             menuToggle.addEventListener('click', function() {
                 document.body.classList.toggle('sidebar-open');
             });
@@ -643,6 +345,11 @@
 
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
+        if (!searchInput || !searchForm || searchInput.dataset.bound) {
+            return;
+        }
+        searchInput.dataset.bound = '1';
+
         const isHistoryView = {% if show_history %}true{% else %}false{% endif %};
 
         if (searchInput.value.length > 0) {
@@ -668,22 +375,22 @@
             })
             .then(response => response.text())
             .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html;
 
-                const newResults = doc.querySelector('#ordersResults');
+                const newResults = wrapper.querySelector('#ordersResults');
                 const currentResults = document.querySelector('#ordersResults');
                 if (newResults && currentResults) {
                     currentResults.innerHTML = newResults.innerHTML;
                 }
 
-                const newStats = doc.querySelector('.orders-stats');
+                const newStats = wrapper.querySelector('.orders-stats');
                 const currentStats = document.querySelector('.orders-stats');
                 if (newStats && currentStats) {
                     currentStats.innerHTML = newStats.innerHTML;
                 }
 
-                const newPills = doc.querySelector('#ordersTypePills');
+                const newPills = wrapper.querySelector('#ordersTypePills');
                 const currentPills = document.querySelector('#ordersTypePills');
                 if (newPills && currentPills) {
                     currentPills.innerHTML = newPills.innerHTML;
@@ -702,6 +409,6 @@
             clearTimeout(this.timer);
             this.timer = setTimeout(performSearch, isTableNumber ? 100 : 300);
         });
-    });
+    })();
 </script>
 {% endblock %}

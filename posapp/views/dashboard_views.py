@@ -119,8 +119,15 @@ def dashboard(request):
 def pos(request):
     # Fetch only available products and all categories for the POS interface
     # Exclude archived products
-    products = PosProduct.objects.filter(is_available=True, is_archived=False)
-    categories = PosCategory.objects.all()
+    products = (
+        PosProduct.objects.filter(is_available=True, is_archived=False)
+        .select_related('category')
+        .only(
+            'id', 'name', 'price', 'stock_quantity', 'is_available', 'is_archived',
+            'running_item', 'calculate_price_per_kg', 'category_id', 'category__name',
+        )
+    )
+    categories = PosCategory.objects.only('id', 'name')
     
     # Get delivery persons for the dropdown
     from ..models import DeliveryPerson

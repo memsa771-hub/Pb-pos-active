@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from collections import defaultdict
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count, Case, When, IntegerField
 from django.utils import timezone
 from django.http import JsonResponse
 # PDF export is disabled
@@ -19,6 +19,7 @@ from django.views.decorators.http import require_POST
 from decimal import Decimal, InvalidOperation
 from django.urls import reverse
 from django.db import transaction
+from django.core.cache import cache
 import logging
 
 from ..models import Order, OrderItem, PosProduct, Setting, PosCategory, Discount, BusinessLogo, EndDay, DeliveryPerson
@@ -125,13 +126,21 @@ def order_list(request):
 
     orders = orders.select_related('user', 'delivery_person')
 
+    stats = orders_for_stats.aggregate(
+        total=Count('id'),
+        pending=Count(Case(When(order_status='Pending', then=1), output_field=IntegerField())),
+        completed=Count(Case(When(order_status='Completed', then=1), output_field=IntegerField())),
+        takeaway=Count(Case(When(order_type='Takeaway', then=1), output_field=IntegerField())),
+        dine_in=Count(Case(When(order_type='Dine In', then=1), output_field=IntegerField())),
+        delivery=Count(Case(When(order_type='Delivery', then=1), output_field=IntegerField())),
+    )
     order_stats = {
-        'total': orders_for_stats.count(),
-        'pending': orders_for_stats.filter(order_status='Pending').count(),
-        'completed': orders_for_stats.filter(order_status='Completed').count(),
-        'takeaway': orders_for_stats.filter(order_type='Takeaway').count(),
-        'dine_in': orders_for_stats.filter(order_type='Dine In').count(),
-        'delivery': orders_for_stats.filter(order_type='Delivery').count(),
+        'total': stats['total'] or 0,
+        'pending': stats['pending'] or 0,
+        'completed': stats['completed'] or 0,
+        'takeaway': stats['takeaway'] or 0,
+        'dine_in': stats['dine_in'] or 0,
+        'delivery': stats['delivery'] or 0,
     }
     
     # Pagination
@@ -155,16 +164,18 @@ def order_list(request):
         'last_end_day': last_end_day,
     }
     
-    # Check if this is an AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return render(request, 'posapp/orders/order_list.html', context)
-    
+        return render(request, 'posapp/orders/order_list_fragment.html', context)
+
     return render(request, 'posapp/orders/order_list.html', context)
 
 @login_required
 def order_detail(request, order_id):
     """Display details of a specific order"""
-    order = get_object_or_404(Order, id=order_id)
+    order = get_object_or_404(
+        Order.objects.select_related('user', 'discount', 'delivery_person'),
+        id=order_id
+    )
     
     # Check if the user has permission to view this order
     user_is_admin = is_admin(request.user)
@@ -174,9 +185,8 @@ def order_detail(request, order_id):
         messages.error(request, "You don't have permission to view this order.")
         return redirect('order_list')
     
-    order_items = OrderItem.objects.filter(order=order)
-    
-    # Calculate subtotal
+    order_items = order.items.select_related('product')
+
     subtotal = sum(item.unit_price * item.quantity for item in order_items)
     
     # Calculate discount amount based on discount type if a discount exists
@@ -279,17 +289,18 @@ def order_create(request):
 @can_edit_orders_required
 def order_edit(request, order_id):
     """Edit an existing order."""
-    order = get_object_or_404(Order, id=order_id)
-    
-    # Check if the user has permission to edit this order
+    order = get_object_or_404(
+        Order.objects.select_related('user', 'discount', 'delivery_person'),
+        id=order_id
+    )
+
     user_is_admin = is_admin(request.user)
     user_is_branch_manager = is_branch_manager(request.user)
-    
+
     if not (user_is_admin or user_is_branch_manager) and order.user != request.user:
         messages.error(request, "You don't have permission to edit this order.")
         return redirect('order_list')
-    
-    # Check if order is completed or cancelled and redirect if it is
+
     if order.order_status == 'Completed' or order.order_status == 'Cancelled':
         status = order.order_status.lower()
         messages.warning(request, f"{status.capitalize()} orders cannot be edited.")
@@ -302,9 +313,12 @@ def order_edit(request, order_id):
         is_editable = False
         messages.warning(request, "This order cannot be fully edited because it is already paid or completed.")
     
-    # Get all products and order items
-    all_products = PosProduct.objects.filter(is_available=True)
-    all_order_items = OrderItem.objects.filter(order=order)
+    all_products = (
+        PosProduct.objects.filter(is_available=True, is_archived=False)
+        .select_related('category')
+        .only('id', 'name', 'price', 'stock_quantity', 'running_item', 'calculate_price_per_kg', 'category_id', 'category__name')
+    )
+    all_order_items = order.items.select_related('product')
     
     # Create a dictionary of products for easy lookup in template
     products_dict = {product.id: product for product in all_products}
@@ -1782,7 +1796,9 @@ def create_order_api(request):
                         ['current_stock']
                     )
 
-            # Return Success
+            if request.user.is_authenticated:
+                cache.delete(f'ctx_pending_orders_{request.user.id}')
+
             return JsonResponse({
                 'status': 'success',
                 'order_id': order.id,
@@ -1964,6 +1980,8 @@ def complete_order_api(request, order_id):
                 'success': False,
                 'message': 'Order could not be completed. It may already be completed or cancelled.'
             }, status=400)
+
+        cache.delete(f'ctx_pending_orders_{request.user.id}')
 
         return JsonResponse({
             'success': True,

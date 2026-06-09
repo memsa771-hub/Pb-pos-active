@@ -1,6 +1,6 @@
-{% extends 'posapp/base.html' %}
+{% extends 'posapp/focus_base.html' %}
 {% load humanize %}
-{% block body_class %}pos-page{% endblock %}
+{% block focus_body_class %}pos-page{% endblock %}
 {% block title %}POS Terminal | POS System{% endblock %}
 
 {% block extra_css %}
@@ -2689,7 +2689,7 @@
                                 ${savedOrderType === 'Dine In' && savedTableNumber ?
                                     `<p>Table #: <strong>${savedTableNumber}</strong></p>` : ''}
                                 <div class="mt-4">
-                                    <a href="/orders/" class="btn btn-primary">View in Orders</a>
+                                    <a href="{% url 'order_list' %}" class="btn btn-primary">View in Orders</a>
                                 </div>
                             </div>
                         `);

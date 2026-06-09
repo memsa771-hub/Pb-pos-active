@@ -11,9 +11,11 @@ _timezone_cache = {'name': None, 'tz': None, 'loaded_at': 0}
 _TIMEZONE_CACHE_TTL = 300
 
 
-def _is_fast_api_path(path):
-    """POS API calls are high-frequency — skip extra session DB work."""
-    return path.startswith('/api/')
+def _skip_session_db_touch(request):
+    """Skip extra session DB work on high-frequency API and in-app fast navigation."""
+    if request.path.startswith('/api/'):
+        return True
+    return request.headers.get('HX-Request') == 'true'
 
 
 class SessionActivityMiddleware:
@@ -30,7 +32,7 @@ class SessionActivityMiddleware:
 
     def update_session_activity(self, request):
         try:
-            if _is_fast_api_path(request.path):
+            if _skip_session_db_touch(request):
                 return
 
             if hasattr(request, 'user') and not isinstance(request.user, AnonymousUser) and request.user.is_authenticated:
@@ -68,7 +70,7 @@ class SingleSessionMiddleware:
 
     def check_session_validity(self, request):
         try:
-            if _is_fast_api_path(request.path):
+            if _skip_session_db_touch(request):
                 return
 
             if hasattr(request, 'user') and not isinstance(request.user, AnonymousUser) and request.user.is_authenticated:

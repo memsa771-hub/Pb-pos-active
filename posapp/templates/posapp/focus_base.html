@@ -1,0 +1,8 @@
+{% extends 'posapp/base.html' %}
+
+{% block page_shell %}
+<div id="fast-page-root" data-body-class="{% block focus_body_class %}focus-page{% endblock %}">
+    {% block content %}{% endblock %}
+    {% block extra_js %}{% endblock %}
+</div>
+{% endblock %}
