@@ -44,6 +44,21 @@
             z-index: 1000;
             transition: transform 0.25s ease, width 0.25s ease;
             color: white;
+            overflow: hidden;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar > .nav-item.position-relative {
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav-scroll {
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
             overscroll-behavior: contain;
@@ -51,8 +66,15 @@
             list-style: none;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+        }
+
+        .sidebar-nav-scroll-inner {
+            width: 100%;
+        }
+
+        .sidebar-account-heading {
+            flex-shrink: 0;
         }
 
         @media (min-width: 768px) {
@@ -241,15 +263,15 @@
         }
 
         .sidebar-user-footer {
-            margin-top: auto;
+            flex-shrink: 0;
             width: 100%;
             padding: 1rem;
             border-top: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(0, 0, 0, 0.18);
             list-style: none;
-            position: sticky;
-            bottom: 0;
-            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
         }
 
         .sidebar-user-card {
@@ -297,6 +319,11 @@
             display: flex;
             flex-direction: column;
             gap: 0.45rem;
+            width: 100%;
+        }
+
+        .sidebar-user-actions .sidebar-user-link {
+            width: 100%;
         }
 
         .sidebar-user-link {
@@ -404,7 +431,7 @@
 
     <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-    <ul class="navbar-nav sidebar accordion" id="accordionSidebar">
+    <ul class="navbar-nav sidebar accordion">
 
         <li class="nav-item position-relative w-100">
         <a class="sidebar-brand" href="{% url 'dashboard' %}">
@@ -416,9 +443,12 @@
         </button>
         </li>
 
+        <li class="sidebar-nav-scroll">
+        <div class="sidebar-nav-scroll-inner" id="accordionSidebar">
+
         <div class="sidebar-heading">Sales</div>
 
-        <li class="nav-item">
+        <div class="nav-item">
             <a class="nav-link {% if request.resolver_match.namespace == 'inventory' or '/reports/' in request.path or '/end-day' in request.path or '/adjustments/' in request.path or '/users/' in request.path or '/settings/' in request.path or '/profile/' in request.path %}collapsed{% endif %}" 
                data-bs-toggle="collapse" href="#collapsePOS" role="button" 
                aria-expanded="{% if request.resolver_match.namespace != 'inventory' and '/reports/' not in request.path and '/end-day' not in request.path and '/adjustments/' not in request.path and '/users/' not in request.path and '/settings/' not in request.path and '/profile/' not in request.path %}true{% else %}false{% endif %}">
@@ -445,12 +475,12 @@
 
                 </div>
             </div>
-        </li>
+        </div>
 
         {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
         <!-- Reports Menu - Admin + Branch Manager -->
         <div class="sidebar-heading">Analytics</div>
-        <li class="nav-item">
+        <div class="nav-item">
             <a class="nav-link {% if request.resolver_match.namespace == 'inventory' or '/reports/' not in request.path and '/adjustments/' not in request.path %}collapsed{% endif %}" 
                data-bs-toggle="collapse" href="#collapseReports" role="button" 
                aria-expanded="{% if request.resolver_match.namespace != 'inventory' and '/reports/' in request.path or request.resolver_match.namespace != 'inventory' and '/adjustments/' in request.path %}true{% else %}false{% endif %}">
@@ -464,13 +494,13 @@
                     <a class="nav-link {% if request.resolver_match.namespace != 'inventory' and request.resolver_match.url_name == 'adjustment_dashboard' %}active{% endif %}" href="{% url 'adjustment_dashboard' %}">Adjustments</a>
                 </div>
             </div>
-        </li>
+        </div>
         {% endif %}
 
         {% if user.is_superuser or user.profile.role.name == 'Admin' or user.profile.role.name == 'Branch Manager' %}
         <!-- End Day - Admin + Branch Manager -->
         <div class="sidebar-heading">Management</div>
-        <li class="nav-item">
+        <div class="nav-item">
             <a class="nav-link {% if '/end-day' not in request.path and request.resolver_match.url_name != 'end_day_reports' %}collapsed{% endif %}" 
                data-bs-toggle="collapse" href="#collapseEndDay" role="button" 
                aria-expanded="{% if '/end-day' in request.path or request.resolver_match.url_name == 'end_day_reports' %}true{% else %}false{% endif %}">
@@ -484,13 +514,13 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'end_day_reports' %}active{% endif %}" href="{% url 'end_day_reports' %}">Past End Days</a>
                 </div>
             </div>
-        </li>
+        </div>
         {% endif %}
 
         {% if user.is_superuser or user.profile.role.name == 'Admin' %}
         <div class="sidebar-heading">Stock</div>
 
-        <li class="nav-item">
+        <div class="nav-item">
             <a class="nav-link {% if request.resolver_match.namespace != 'inventory' %}collapsed{% endif %}" 
                data-bs-toggle="collapse" href="#collapseInventory" role="button" 
                aria-expanded="{% if request.resolver_match.namespace == 'inventory' %}true{% else %}false{% endif %}">
@@ -512,13 +542,13 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' and request.resolver_match.namespace == 'inventory' %}active{% endif %}" href="{% url 'inventory:reports_dashboard' %}">Reports</a>
                 </div>
             </div>
-        </li>
+        </div>
         {% endif %}
 
         {% if user.is_superuser or user.profile.role.name == 'Admin' %}
         <div class="sidebar-heading">Admin</div>
 
-        <li class="nav-item">
+        <div class="nav-item">
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSettings" aria-expanded="false">
                 <i class="fas fa-cogs"></i>
                 <span class="nav-text">Settings</span>
@@ -530,8 +560,11 @@
                     <a class="nav-link {% if 'settings' in request.path %}active{% endif %}" href="{% url 'settings_dashboard' %}">System Config</a>
                 </div>
             </div>
-        </li>
+        </div>
         {% endif %}
+
+        </div>
+        </li>
 
         <div class="sidebar-heading sidebar-account-heading">Account</div>
 
@@ -625,7 +658,7 @@
                 }
             });
 
-            $('.sidebar').on('wheel', function(e) {
+            $('.sidebar-nav-scroll').on('wheel', function(e) {
                 if (isDrawerMode() && body.hasClass('sidebar-open')) {
                     e.stopPropagation();
                 }
