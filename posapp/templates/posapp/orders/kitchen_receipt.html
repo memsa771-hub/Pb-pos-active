@@ -51,15 +51,12 @@
     </style>
 </head>
 <body>
+    {% if not auto_print %}
     <div class="print-controls no-print">
-        {% if auto_print %}
-        <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print Additional</button>
-        <a href="{{ redirect_url }}"><i class="fas fa-arrow-left"></i> Back</a>
-        {% else %}
         <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print Kitchen</button>
         <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
-        {% endif %}
     </div>
+    {% endif %}
 
     <div class="receipt">
         <div class="thermal-header">
@@ -107,18 +104,18 @@
         {% endfor %}
     </div>
 
+    {% if auto_print %}
     <script>
         window.addEventListener('load', function() {
-            setTimeout(function() { window.print(); }, 250);
-            {% if auto_print %}
+            setTimeout(function() { window.print(); }, 150);
             window.addEventListener('afterprint', function() {
                 window.location.href = '{{ redirect_url }}';
             });
             setTimeout(function() {
                 window.location.href = '{{ redirect_url }}';
             }, 3000);
-            {% endif %}
         });
     </script>
+    {% endif %}
 </body>
 </html>
