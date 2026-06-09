@@ -1,7 +1,8 @@
-{% extends 'posapp/focus_base.html' %}
+{% extends 'posapp/base.html' %}
 {% load custom_filters %}
 
 {% block title %}Order {{ order.reference_number }} - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
 {% include 'posapp/partials/focus_page_styles.html' %}
@@ -217,8 +218,7 @@
             </div>
         </div>
         <div class="focus-toolbar-actions">
-            {% url 'order_list' as orders_url %}
-            <a href="{{ orders_url }}" class="btn btn-outline-light btn-sm" {% include 'posapp/partials/fast_nav_link.html' with nav_url=orders_url %}>
+            <a href="{% url 'order_list' %}" class="btn btn-outline-light btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Back
             </a>
             <a href="{% url 'order_receipt' order.id %}" class="btn btn-light btn-sm" target="_blank">
@@ -492,8 +492,8 @@
 
 {% block extra_js %}
 <script>
-    (function initOrderDetailPage() {
-        $('#focusMenuToggle').off('click.orderDetail').on('click.orderDetail', function() {
+    $(document).ready(function() {
+        $('#focusMenuToggle').on('click', function() {
             $('body').toggleClass('sidebar-open');
         });
 
@@ -566,7 +566,7 @@
             $('button[data-bs-target="#cancelModal"]').remove();
         }
 
-        $('#completeOrderBtn').off('click.orderDetail').on('click.orderDetail', function() {
+        $('#completeOrderBtn').on('click', function() {
             const $btn = $(this);
             if ($btn.prop('disabled')) {
                 return;
@@ -607,6 +607,6 @@
                 $btn.prop('disabled', false).html(completeBtnOriginalHtml);
             });
         });
-    })();
+    });
 </script>
 {% endblock %}
