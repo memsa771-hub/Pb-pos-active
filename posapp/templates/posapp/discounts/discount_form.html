@@ -1,151 +1,158 @@
 {% extends 'posapp/base.html' %}
 
 {% block title %}
-{% if discount.id %}Edit{% else %}New{% endif %} Discount - POS System
+{% if discount.id %}Edit Discount{% else %}New Discount{% endif %} - POS System
+{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{% if discount.id %}Edit{% else %}Create{% endif %} Discount</h2>
-        <a href="{% url 'discount_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Back to List
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1>
+                    <i class="fas fa-percent me-2"></i>
+                    {% if discount.id %}Edit Discount{% else %}Add Discount{% endif %}
+                </h1>
+                <p>
+                    {% if discount.id %}Update promo code and discount rules for {{ discount.name }}{% else %}Create a new discount code for orders{% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% if discount.id %}{% url 'discount_detail' discount.id %}{% else %}{% url 'discount_list' %}{% endif %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+        </div>
     </div>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
     {% endif %}
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Discount Information</h6>
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Discount Details</h2>
         </div>
-        <div class="card-body">
-            <form method="post" action="">
-                {% csrf_token %}
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.name.id_for_label }}" class="form-label">Discount Name *</label>
-                            {{ form.name }}
-                            <div class="form-text">Enter a descriptive name for this discount</div>
-                            {% if form.name.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.name.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.code.id_for_label }}" class="form-label">Discount Code *</label>
-                            {{ form.code }}
-                            <div class="form-text">A unique code customers will use to apply this discount</div>
-                            {% if form.code.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.code.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.type.id_for_label }}" class="form-label">Discount Type *</label>
-                            {{ form.type }}
-                            <div class="form-text">Percentage is a % of the order total, Fixed is an amount deducted</div>
-                            {% if form.type.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.type.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.value.id_for_label }}" class="form-label">Discount Value *</label>
-                            <div class="input-group">
-                                {{ form.value }}
-                                <span class="input-group-text" id="value-addon">%</span>
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+
+            <div class="admin-form-body">
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header">Basic Information</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Discount Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                <div class="form-text">A descriptive name for this discount</div>
+                                {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                                {% endif %}
                             </div>
-                            <div class="form-text">For percentage discounts, enter a value between 0-100</div>
-                            {% if form.value.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.value.errors }}
+                            <div class="col-md-6">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">Discount Code <span class="text-danger">*</span></label>
+                                {{ form.code }}
+                                <div class="form-text">Unique code customers use at checkout</div>
+                                {% if form.code.errors %}
+                                <div class="text-danger small mt-1">{{ form.code.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header">Discount Value</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.type.id_for_label }}" class="form-label">Discount Type <span class="text-danger">*</span></label>
+                                {{ form.type }}
+                                <div class="form-text">Percentage or fixed amount off the order</div>
+                                {% if form.type.errors %}
+                                <div class="text-danger small mt-1">{{ form.type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.value.id_for_label }}" class="form-label">Discount Value <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    {{ form.value }}
+                                    <span class="input-group-text" id="value-addon">%</span>
                                 </div>
-                            {% endif %}
+                                <div class="form-text">For percentage, enter 0–100</div>
+                                {% if form.value.errors %}
+                                <div class="text-danger small mt-1">{{ form.value.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date (Optional)</label>
-                            {{ form.start_date }}
-                            <div class="form-text">When this discount becomes valid</div>
-                            {% if form.start_date.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.start_date.errors }}
+
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header">Validity & Status</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                                {{ form.start_date }}
+                                <div class="form-text">When this discount becomes valid (optional)</div>
+                                {% if form.start_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.start_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date</label>
+                                {{ form.end_date }}
+                                <div class="form-text">When this discount expires (optional)</div>
+                                {% if form.end_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.end_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <div class="admin-form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active — available for use on orders</label>
                                 </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date (Optional)</label>
-                            {{ form.end_date }}
-                            <div class="form-text">When this discount expires</div>
-                            {% if form.end_date.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.end_date.errors }}
-                                </div>
-                            {% endif %}
+                                {% if form.is_active.errors %}
+                                <div class="text-danger small mt-1">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="mb-3">
-                    <div class="form-check form-switch">
-                        {{ form.is_active }}
-                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active</label>
-                    </div>
-                    <div class="form-text">Inactive discounts cannot be applied to orders</div>
-                    {% if form.is_active.errors %}
-                        <div class="invalid-feedback d-block">
-                            {{ form.is_active.errors }}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <a href="{% url 'discount_list' %}" class="btn btn-secondary me-md-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">
-                        {% if discount.id %}Update{% else %}Create{% endif %} Discount
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="admin-form-actions">
+                <a href="{% if discount.id %}{% url 'discount_detail' discount.id %}{% else %}{% url 'discount_list' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    {% if discount.id %}Update Discount{% else %}Save Discount{% endif %}
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // To update the input-group-text based on discount type
     document.addEventListener('DOMContentLoaded', function() {
         const typeSelect = document.getElementById('{{ form.type.id_for_label }}');
         const valueAddon = document.getElementById('value-addon');
-        
+
         function updateAddon() {
             if (typeSelect.value === 'Percentage') {
                 valueAddon.textContent = '%';
@@ -153,12 +160,9 @@
                 valueAddon.textContent = 'Rs.';
             }
         }
-        
-        // Initial update
+
         updateAddon();
-        
-        // Listen for changes
         typeSelect.addEventListener('change', updateAddon);
     });
 </script>
-{% endblock %} 
+{% endblock %}

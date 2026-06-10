@@ -2,184 +2,223 @@
 {% load custom_filters %}
 
 {% block title %}Discounts - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .admin-table-wrap.focus-table-wrap table {
+        min-width: 980px;
+    }
+
+    .discount-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #2b6cb0;
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        border-radius: 6px;
+        padding: 0.15rem 0.45rem;
+    }
+
+    .discount-value {
+        font-weight: 700;
+        color: #1a202c;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Discounts</h2>
-        <a href="{% url 'discount_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Add New Discount
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-percent me-2"></i>Discounts</h1>
+                <p>Manage promo codes and order discounts</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'discount_create' %}" class="btn btn-light">
+                <i class="fas fa-plus me-1"></i> Add Discount
+            </a>
+        </div>
     </div>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
     {% endif %}
 
-    <!-- Search and Filter Area -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-2" id="searchForm">
-                <div class="col-md-8">
-                    <div class="input-group">
-                        <input type="text" name="search" id="searchInput" class="form-control" placeholder="Search discounts..." value="{{ search_query }}" autocomplete="off">
-                        {% if search_query %}
-                            <a href="{% url 'discount_list' %}{% if status_filter %}?status={{ status_filter }}{% endif %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Clear
-                            </a>
-                        {% endif %}
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0" id="searchForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label" for="searchInput">Search Discounts</label>
+                    <div class="admin-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" id="searchInput" class="form-control" placeholder="Search by name or code..." value="{{ search_query }}" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <select name="status" class="form-select" onchange="this.form.submit()">
+                    <label class="form-label" for="statusFilter">Status</label>
+                    <select name="status" id="statusFilter" class="form-select">
                         <option value="">All Discounts</option>
                         <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
                         <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
                     </select>
                 </div>
-            </form>
-        </div>
-    </div>
+                {% if search_query %}
+                <div class="col-md-auto">
+                    <a href="{% url 'discount_list' %}{% if status_filter %}?status={{ status_filter }}{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </form>
 
-    <!-- Discounts Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Discount List</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="discountsTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Code</th>
-                            <th>Type</th>
-                            <th>Value</th>
-                            <th>Status</th>
-                            <th>Validity Period</th>
-                            <th style="width: 120px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for discount in discounts %}
-                        <tr>
-                            <td>{{ discount.name }}</td>
-                            <td><code>{{ discount.code }}</code></td>
-                            <td>
-                                {% if discount.type == 'Percentage' %}
-                                Percentage
-                                {% else %}
-                                Fixed Amount
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if discount.type == 'Percentage' %}
-                                {{ discount.value }}%
-                                {% else %}
-                                Rs.{{ discount.value }}
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if discount.is_active %}
-                                <span class="badge bg-success">Active</span>
-                                {% else %}
-                                <span class="badge bg-danger">Inactive</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if discount.start_date and discount.end_date %}
-                                {{ discount.start_date|pkt_date }} - {{ discount.end_date|pkt_date }}
-                                {% elif discount.start_date %}
-                                From {{ discount.start_date|pkt_date }}
-                                {% elif discount.end_date %}
-                                Until {{ discount.end_date|pkt_date }}
-                                {% else %}
-                                No expiration
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{% url 'discount_detail' discount.id %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'discount_edit' discount.id %}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ discount.id }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                                
-                                <!-- Delete Modal -->
-                                <div class="modal fade" id="deleteModal{{ discount.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ discount.id }}" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel{{ discount.id }}">Delete Discount</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Are you sure you want to delete the discount "{{ discount.name }}"?</p>
-                                                {% if discount.order_set.exists %}
-                                                    <div class="alert alert-warning">
-                                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                                        This discount has been used in orders. 
-                                                        You cannot delete it.
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{% url 'discount_delete' discount.id %}" method="post" style="display: inline;">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-danger" {% if discount.order_set.exists %}disabled{% endif %}>
-                                                        Delete
-                                                    </button>
-                                                </form>
-                                            </div>
+        <div id="discountResults">
+            <div class="admin-panel-body">
+                <div class="focus-table-wrap admin-table-wrap">
+                    <table class="admin-table" id="discountsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Type</th>
+                                <th>Value</th>
+                                <th>Status</th>
+                                <th>Validity</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for discount in discounts %}
+                            <tr>
+                                <td><strong>{{ discount.name }}</strong></td>
+                                <td><span class="discount-code">{{ discount.code }}</span></td>
+                                <td>
+                                    {% if discount.type == 'Percentage' %}
+                                    Percentage
+                                    {% else %}
+                                    Fixed Amount
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="discount-value">
+                                        {% if discount.type == 'Percentage' %}
+                                        {{ discount.value }}%
+                                        {% else %}
+                                        Rs.{{ discount.value }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if discount.is_active %}
+                                    <span class="admin-status-badge success">Active</span>
+                                    {% else %}
+                                    <span class="admin-status-badge danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if discount.start_date and discount.end_date %}
+                                    {{ discount.start_date|pkt_date }} – {{ discount.end_date|pkt_date }}
+                                    {% elif discount.start_date %}
+                                    From {{ discount.start_date|pkt_date }}
+                                    {% elif discount.end_date %}
+                                    Until {{ discount.end_date|pkt_date }}
+                                    {% else %}
+                                    <span class="text-muted">No expiration</span>
+                                    {% endif %}
+                                </td>
+                                <td class="actions-col">
+                                    <div class="admin-action-btns">
+                                        <a href="{% url 'discount_detail' discount.id %}" class="btn btn-info admin-action-btn" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'discount_edit' discount.id %}" class="btn btn-warning admin-action-btn" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-danger admin-action-btn" title="Delete" data-bs-toggle="modal" data-bs-target="#deleteModal{{ discount.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="admin-empty">
+                                        <i class="fas fa-percent"></i>
+                                        <strong>No discounts found</strong>
+                                        <div class="mt-1">{% if search_query or status_filter %}Try adjusting your search or filters.{% else %}Create your first discount to get started.{% endif %}</div>
+                                        <div class="mt-3">
+                                            <a href="{% url 'discount_create' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus me-1"></i> Add Discount
+                                            </a>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center">No discounts found</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            
-            <!-- Pagination -->
+
+            {% for discount in discounts %}
+            <div class="modal fade" id="deleteModal{{ discount.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ discount.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel{{ discount.id }}">Delete Discount</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                            <p>Are you sure you want to delete the discount <strong>{{ discount.name }}</strong>?</p>
+                            {% if discount.order_set.exists %}
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                This discount has been used in orders and cannot be deleted.
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form action="{% url 'discount_delete' discount.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" {% if discount.order_set.exists %}disabled{% endif %}>Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
             {% if discounts.has_other_pages %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mt-4">
+            <nav class="admin-pagination" aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
                     {% if discounts.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="First">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">&laquo;&laquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ discounts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ discounts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">&laquo;</a>
                     </li>
                     {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">&laquo;&laquo;</span>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link">&laquo;</span>
-                    </li>
+                    <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
                     {% endif %}
-                    
+
                     {% for i in discounts.paginator.page_range %}
                         {% if discounts.number == i %}
                         <li class="page-item active"><span class="page-link">{{ i }}</span></li>
@@ -187,25 +226,17 @@
                         <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ i }}</a></li>
                         {% endif %}
                     {% endfor %}
-                    
+
                     {% if discounts.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ discounts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ discounts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">&raquo;</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ discounts.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Last">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ discounts.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">&raquo;&raquo;</a>
                     </li>
                     {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">&raquo;</span>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link">&raquo;&raquo;</span>
-                    </li>
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -218,76 +249,49 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Real-time search
         const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
         const searchForm = document.getElementById('searchForm');
-        
-        // Focus on search input if it has a value
+
         if (searchInput.value.length > 0) {
             searchInput.focus();
-            // Place cursor at the end of text
             const length = searchInput.value.length;
             searchInput.setSelectionRange(length, length);
         }
-        
-        searchInput.addEventListener('input', function() {
-            // Short delay to prevent too many submissions while typing
-            clearTimeout(this.timer);
-            this.timer = setTimeout(function() {
-                // Store the cursor position
-                const cursorPosition = searchInput.selectionStart;
-                
-                // Build the query parameters
-                const formData = new FormData(searchForm);
-                const params = new URLSearchParams();
-                for (const [key, value] of formData.entries()) {
-                    if (value) params.append(key, value);
+
+        function performSearch() {
+            const cursorPosition = searchInput.selectionStart;
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (value) params.append(key, value);
+            }
+
+            fetch(`{% url 'discount_list' %}?${params.toString()}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newResults = doc.querySelector('#discountResults');
+                const currentResults = document.querySelector('#discountResults');
+                if (newResults && currentResults) {
+                    currentResults.innerHTML = newResults.innerHTML;
                 }
-                
-                // Use AJAX to perform the search without page reload
-                fetch(`{% url 'discount_list' %}?${params.toString()}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.text())
-                .then(html => {
-                    // Update just the table content, not the entire page
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    // Update the discounts table
-                    const tableBody = doc.querySelector('#discountsTable tbody');
-                    if (tableBody) {
-                        document.querySelector('#discountsTable tbody').innerHTML = tableBody.innerHTML;
-                    }
-                    
-                    // Update pagination if it exists
-                    const newPagination = doc.querySelector('nav[aria-label="Page navigation"]');
-                    const currentPagination = document.querySelector('nav[aria-label="Page navigation"]');
-                    
-                    if (newPagination && currentPagination) {
-                        currentPagination.innerHTML = newPagination.innerHTML;
-                    } else if (newPagination && !currentPagination) {
-                        document.querySelector('.card-body').appendChild(newPagination);
-                    } else if (!newPagination && currentPagination) {
-                        currentPagination.remove();
-                    }
-                    
-                    // Restore focus and cursor position
-                    searchInput.focus();
-                    searchInput.setSelectionRange(cursorPosition, cursorPosition);
-                    
-                    // Update the URL without reloading the page
-                    window.history.pushState({}, '', `{% url 'discount_list' %}?${params.toString()}`);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // If AJAX fails, fall back to traditional form submission
-                    searchForm.submit();
-                });
-            }, 500); // Submit after 500ms of no typing
+                searchInput.focus();
+                searchInput.setSelectionRange(cursorPosition, cursorPosition);
+                window.history.pushState({}, '', `{% url 'discount_list' %}?${params.toString()}`);
+            })
+            .catch(() => searchForm.submit());
+        }
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(this.timer);
+            this.timer = setTimeout(performSearch, 400);
         });
+
+        statusFilter.addEventListener('change', performSearch);
     });
 </script>
-{% endblock %} 
+{% endblock %}
