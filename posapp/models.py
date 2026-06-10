@@ -297,6 +297,15 @@ class Setting(models.Model):
             return default
 
     @classmethod
+    def get_currency_symbol(cls, default='$'):
+        """Return currency symbol for receipts and price displays."""
+        raw = (cls.get_value('currency_symbol', default='') or '').strip()
+        symbol = raw or default
+        if symbol.lower() in ('rs', 'rs.'):
+            return '$'
+        return symbol
+
+    @classmethod
     def set_value(cls, key, value, description=None):
         """Set setting value by key with optional description"""
         obj, created = cls.objects.update_or_create(

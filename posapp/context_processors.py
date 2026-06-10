@@ -19,7 +19,8 @@ def settings_processor(request):
         settings_dict[key] = Setting.get_value(key, default='')
     
     # Process currency symbol and position for easier use in templates
-    currency_symbol = settings_dict.get('currency_symbol', '$')
+    currency_symbol = Setting.get_currency_symbol()
+    settings_dict['currency_symbol'] = currency_symbol
     currency_position = settings_dict.get('currency_position', 'before')
     
     # Add helper function for formatting currency
@@ -31,7 +32,10 @@ def settings_processor(request):
     
     settings_dict['format_currency'] = format_currency
     
-    return {'settings': settings_dict}
+    return {
+        'settings': settings_dict,
+        'currency_symbol': currency_symbol,
+    }
 
 def pending_orders_processor(request):
     """Context processor to count pending orders for the current user"""

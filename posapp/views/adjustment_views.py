@@ -557,11 +557,7 @@ def adjustment_receipt(request):
     logo_url = BusinessLogo.get_logo_url()
     
     # Get currency symbol
-    try:
-        currency_setting = Setting.objects.get(setting_key='currency_symbol')
-        currency_symbol = currency_setting.setting_value
-    except:
-        currency_symbol = 'Rs.'
+    currency_symbol = Setting.get_currency_symbol()
     
     # Get receipt settings
     try:

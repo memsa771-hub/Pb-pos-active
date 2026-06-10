@@ -861,7 +861,7 @@ def order_receipt(request, order_id):
             discount_info['value'] = f"{order.discount.value}%"
         else:
             discount_amount = order.discount.value
-            discount_info['value'] = f"Rs. {order.discount.value}"
+            discount_info['value'] = f"{Setting.get_currency_symbol()}{order.discount.value}"
     elif order.discount_code == 'MANUAL':
         # Handle manual discount
         discount_amount = order.discount_amount
@@ -875,7 +875,7 @@ def order_receipt(request, order_id):
             discount_value = order.discount_value if order.discount_value else (discount_amount * 100 / subtotal)
             discount_info['value'] = f"{discount_value}%"
         else:
-            discount_info['value'] = f"Rs. {discount_amount}"
+            discount_info['value'] = f"{Setting.get_currency_symbol()}{discount_amount}"
     elif order.discount_amount > 0:
         # Handle legacy orders with discount_amount but no discount object
         discount_amount = order.discount_amount
@@ -883,7 +883,7 @@ def order_receipt(request, order_id):
             'name': 'Discount',
             'code': 'DISCOUNT',
             'type': 'Fixed',
-            'value': f"Rs. {discount_amount}"
+            'value': f"{Setting.get_currency_symbol()}{discount_amount}"
         }
     
     # Get business settings
@@ -896,7 +896,7 @@ def order_receipt(request, order_id):
     business_address = business_settings['business_address'].setting_value
     business_phone = business_settings['business_phone'].setting_value
     business_email = business_settings['business_email'].setting_value
-    currency_symbol = business_settings['currency_symbol'].setting_value or '$'
+    currency_symbol = Setting.get_currency_symbol()
     
     # Get tax rates from settings with fallback values
     tax_rate_card = Decimal(business_settings['tax_rate_card'].setting_value or '5.0')
@@ -2084,7 +2084,7 @@ def delivery_combined_bill(request, delivery_person_id):
         'business_address': business_settings['business_address'].setting_value or '',
         'business_phone': business_settings['business_phone'].setting_value or '',
         'business_email': business_settings['business_email'].setting_value or '',
-        'currency_symbol': business_settings['currency_symbol'].setting_value or '$',
+        'currency_symbol': Setting.get_currency_symbol(),
         'receipt_paper_size': business_settings['receipt_paper_size'].setting_value,
         'receipt_custom_css': business_settings['receipt_custom_css'].setting_value,
     }

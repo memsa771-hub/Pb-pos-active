@@ -894,7 +894,7 @@ def sales_receipt(request):
                 'business_address': business_settings['business_address'].setting_value,
                 'business_phone': business_settings['business_phone'].setting_value,
                 'business_email': business_settings['business_email'].setting_value,
-                'currency_symbol': business_settings['currency_symbol'].setting_value or '$',
+                'currency_symbol': Setting.get_currency_symbol(),
             })
             
             # Get business logo from BusinessLogo model
@@ -903,7 +903,7 @@ def sales_receipt(request):
             logger.error(f"Error getting business settings: {str(e)}")
             context.update({
                 'business_name': 'POS System',
-                'currency_symbol': '$',
+                'currency_symbol': Setting.get_currency_symbol(),
             })
         
         # Get receipt settings

@@ -27,11 +27,13 @@
         font-size: 10px;
         width: 52mm;
         {% else %}
-        font-size: 11px;
-        width: 72mm;
+        font-size: 10px;
+        width: 64mm;
+        max-width: 64mm;
         {% endif %}
         margin: 0 auto;
         padding: 0;
+        overflow-x: hidden;
         background: #fff;
         color: #000;
         line-height: 1.25;
@@ -48,6 +50,9 @@
     .receipt {
         width: 100%;
         max-width: 100%;
+        overflow: hidden;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
     }
 
     .thermal-header {
@@ -144,9 +149,10 @@
     }
 
     .thermal-item-line {
-        display: flex;
-        justify-content: space-between;
-        gap: 4px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 2px;
         margin-top: 2px;
         {% if receipt_paper_size == '58mm' %}
         font-size: 9px;
@@ -157,7 +163,9 @@
 
     .thermal-item-total {
         font-weight: bold;
-        white-space: nowrap;
+        text-align: right;
+        max-width: 42%;
+        word-break: break-all;
     }
 
     .thermal-totals {
@@ -166,9 +174,10 @@
     }
 
     .thermal-total-line {
-        display: flex;
-        justify-content: space-between;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 2px;
         padding: 1px 0;
         {% if receipt_paper_size == '58mm' %}
         font-size: 9px;
@@ -178,8 +187,9 @@
     }
 
     .thermal-total-line span:last-child {
-        white-space: nowrap;
         text-align: right;
+        max-width: 45%;
+        word-break: break-all;
     }
 
     .thermal-total-line.discount span:last-child {
@@ -284,11 +294,11 @@
             width: 52mm !important;
             max-width: 52mm !important;
             {% else %}
-            width: 72mm !important;
-            max-width: 72mm !important;
+            width: 64mm !important;
+            max-width: 64mm !important;
             {% endif %}
-            margin: 0 !important;
-            padding: 1mm 2mm !important;
+            margin: 0 auto !important;
+            padding: 1mm !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
         }
