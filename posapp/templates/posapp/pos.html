@@ -341,37 +341,6 @@
         padding-bottom: 15px;
     }
     
-    /* Media query for print */
-    @media print {
-        body, html {
-            width: 80mm !important;
-            height: auto !important;
-            min-height: 0 !important;
-            margin: 0;
-            padding: 0;
-            background: #fff;
-        }
-        body * {
-            visibility: hidden;
-        }
-        #receipt-container,
-        #receipt-container * {
-            visibility: visible;
-        }
-        #receipt-container, .receipt-preview {
-            width: 70mm !important;
-            max-width: 70mm !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-        #receipt-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-    }
     
     /* Category selector */
     .category-selector {
@@ -1529,74 +1498,7 @@
 {% endblock %}
 
 {% block head_extras %}
-<style type="text/css" media="print">
-    @page {
-        size: 80mm auto;
-        margin: 0;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    html, body {
-        width: 80mm !important;
-        height: auto !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-    }
-    body * {
-        visibility: hidden;
-    }
-    #receipt-container,
-    #receipt-container * {
-        visibility: visible;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-    }
-    #receipt-container {
-        display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 70mm !important;
-        max-width: 70mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        page-break-after: avoid !important;
-        page-break-inside: avoid !important;
-    }
-    .receipt-preview {
-        width: 70mm !important;
-        max-width: 70mm !important;
-        overflow: hidden !important;
-        font-family: 'Arial', 'Helvetica', sans-serif !important;
-        line-height: 1.3 !important;
-    }
-    /* Ensure high contrast and clean fonts for thermal printing */
-    .receipt-preview * {
-        color: #000000 !important;
-        background: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        -webkit-text-fill-color: #000000 !important;
-        text-fill-color: #000000 !important;
-    }
-    /* Make dividers clear on thermal paper */
-    .receipt-preview [style*="border-top"] {
-        border-top: 1px dashed #000 !important;
-    }
-    /* Ensure text is bold where needed */
-    .receipt-preview [style*="font-weight: bold"] {
-        font-weight: bold !important;
-        color: #000000 !important;
-    }
-    /* Improve text clarity */
-    .receipt-preview {
-        letter-spacing: 0.02em !important;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-    }
-</style>
+{% include 'posapp/partials/thermal_receipt_styles.html' %}
 {% include 'posapp/partials/thermal_receipt_print_script.html' %}
 {% endblock %}
 
@@ -3000,38 +2902,35 @@
                         const taxAmount = parseFloat(orderData.tax_amount);
                         const total = parseFloat(orderData.total_amount);
                         
-                        // Create thermal printer optimized kitchen receipt - 70mm width
+                        const tableLabel = selectedOrderType === 'Dine In' && $('#tableNumber').val()
+                            ? `<p class="thermal-label thermal-highlight">TABLE ${$('#tableNumber').val()}</p>`
+                            : selectedOrderType === 'Delivery'
+                            ? `<p class="thermal-label thermal-highlight">DELIVERY</p>`
+                            : selectedOrderType === 'Takeaway'
+                            ? `<p class="thermal-label thermal-highlight">TAKEAWAY</p>`
+                            : '';
+
                         const receiptHTML = `
-                            <div id="receipt-container" class="print-only">
-                                <div class="receipt-preview" style="width: 70mm; padding: 1mm; font-family: 'Courier New', 'Arial', monospace; font-size: 12px; line-height: 1.1; color: #000000;">
-                                    <!-- Header -->
-                                    <div style="text-align: center; margin-bottom: 8px; color: #000000;">
-                                        <h1 style="font-size: 16px; font-weight: bold; margin: 0; color: #000000;">Order ${orderNumberDisplay}</h1>
-                                        ${selectedOrderType === 'Dine In' && $('#tableNumber').val() ? 
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Table ${$('#tableNumber').val()}</p>` : 
-                                         selectedOrderType === 'Delivery' ? 
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Delivery</p>` : ''}
-                                    </div>
-                                    
-                                    <div style="border-top: 1px dashed #000; margin: 6px 0; clear: both;"></div>
-                                    
-                                    <!-- Order Items in Blocks -->
-                                    ${cart.map(item => `
-                                        <div style="display: flex; align-items: center; margin: 4px 0; padding: 4px; border: 1px solid #000; background-color: white; color: #000000;">
-                                            <div style="font-weight: bold; font-size: 14px; color: #000000; min-width: 30px; text-align: center; margin-right: 8px; border-right: 1px solid #000; padding-right: 8px;">${item.quantity}</div>
-                                            <div style="font-weight: bold; font-size: 11px; color: #000000; flex: 1;">${item.name}</div>
-                                        </div>
-                                    `).join('')}
+                            <div class="receipt" id="receipt-container">
+                                <div class="thermal-header">
+                                    <h1 class="kitchen-title">KITCHEN ORDER</h1>
+                                    <p class="thermal-label">Order #${orderNumberDisplay} · ${orderNumber}</p>
+                                    ${tableLabel}
                                 </div>
+                                <hr class="thermal-divider">
+                                ${cart.map(item => `
+                                    <div class="kitchen-item">
+                                        <div class="kitchen-qty">${item.quantity}</div>
+                                        <div class="kitchen-name-wrap">
+                                            <div class="kitchen-name">${item.name}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         `;
-                        
-                        // Add the receipt to the body
+
                         $('body').append(receiptHTML);
-
-                        window.print();
-
-                        // Remove the receipt element after printing
+                        printThermalReceipt();
                         setTimeout(function() {
                             $('#receipt-container').remove();
                         }, 1000);

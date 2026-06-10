@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adjustment Report #ADJ-{{ start_date|date:"Ymd" }}-{{ end_date|date:"Ymd" }}</title>
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
+    {% include 'posapp/partials/thermal_receipt_print_script.html' %}
     <style>
         .header {
             text-align: center;

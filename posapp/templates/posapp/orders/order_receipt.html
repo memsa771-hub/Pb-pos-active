@@ -9,202 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
     {% include 'posapp/partials/thermal_receipt_print_script.html' %}
-    <style>
-        .receipt-bill {
-            font-family: Arial, Helvetica, "Segoe UI", sans-serif !important;
-            color: #000;
-            -webkit-font-smoothing: none;
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-        }
-
-        .receipt-bill .thermal-header h1 {
-            font-size: 14px;
-            font-weight: 900;
-            letter-spacing: 0.02em;
-            word-wrap: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .receipt-bill .thermal-meta p,
-        .receipt-bill .thermal-header p {
-            font-size: 10px;
-            font-weight: 700;
-            line-height: 1.3;
-            word-wrap: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .receipt-bill .bill-order-no {
-            font-size: 12px !important;
-            font-weight: 900 !important;
-            letter-spacing: 0.03em;
-            margin: 3px 0 !important;
-        }
-
-        .receipt-bill .bill-highlight {
-            font-size: 11px !important;
-            font-weight: 900 !important;
-        }
-
-        .receipt-bill .bill-item {
-            border: 1px solid #000;
-            padding: 4px 2px;
-            margin-bottom: 5px;
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-
-        .receipt-bill .bill-item .thermal-item-name {
-            font-size: 11px;
-            font-weight: 900;
-            line-height: 1.2;
-            margin-bottom: 2px;
-            word-wrap: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .receipt-bill .bill-item .thermal-item-line {
-            font-size: 10px;
-            font-weight: 800;
-        }
-
-        .receipt-bill .bill-item .thermal-item-total {
-            font-weight: 900;
-            font-size: 10px;
-        }
-
-        .receipt-bill .bill-item .thermal-item-note {
-            font-size: 10px;
-            font-weight: 700;
-            font-style: normal;
-            margin-top: 3px;
-        }
-
-        .receipt-bill .thermal-total-line {
-            font-size: 10px;
-            font-weight: 800;
-            padding: 1px 0;
-        }
-
-        .receipt-bill .thermal-total-line.grand {
-            font-size: 12px;
-            font-weight: 900;
-            border-top: 2px solid #000;
-            padding-top: 4px;
-            margin-top: 4px;
-            letter-spacing: 0.02em;
-        }
-
-        .receipt-bill .thermal-total-line.grand span {
-            font-weight: 900 !important;
-        }
-
-        .receipt-bill .thermal-divider {
-            border: none;
-            border-top: 2px solid #000;
-            margin: 7px 0;
-            height: 0;
-        }
-
-        .receipt-bill .thermal-footer {
-            font-size: 12px;
-            font-weight: 800;
-        }
-
-        .receipt-bill .thermal-label {
-            font-weight: 900;
-        }
-
-        @media print {
-            .receipt-bill {
-                font-family: Arial, Helvetica, "Segoe UI", sans-serif !important;
-                filter: contrast(1.15);
-            }
-
-            .receipt-bill,
-            .receipt-bill * {
-                color: #000 !important;
-                -webkit-text-fill-color: #000 !important;
-                opacity: 1 !important;
-                max-width: 100%;
-            }
-
-            .receipt-bill .bill-item {
-                border: 1px solid #000 !important;
-                padding: 3px 1px !important;
-            }
-
-            .receipt-bill .thermal-header h1 {
-                font-size: 12px !important;
-            }
-
-            .receipt-bill .thermal-meta p,
-            .receipt-bill .thermal-header p {
-                font-size: 9px !important;
-            }
-
-            .receipt-bill .bill-order-no {
-                font-size: 11px !important;
-            }
-
-            .receipt-bill .bill-item .thermal-item-name {
-                font-size: 10px !important;
-            }
-
-            .receipt-bill .thermal-item-line,
-            .receipt-bill .bill-item .thermal-item-line {
-                font-size: 9px !important;
-            }
-
-            .receipt-bill .thermal-item-total,
-            .receipt-bill .bill-item .thermal-item-total {
-                font-size: 9px !important;
-                max-width: 40% !important;
-            }
-
-            .receipt-bill .thermal-total-line {
-                font-size: 9px !important;
-            }
-
-            .receipt-bill .thermal-total-line.grand {
-                font-size: 11px !important;
-            }
-
-            .receipt-bill .thermal-total-line span:last-child {
-                max-width: 42% !important;
-            }
-
-            .receipt-bill .thermal-divider {
-                border-top: 1px solid #000 !important;
-            }
-
-            .receipt-bill .thermal-item-name,
-            .receipt-bill .thermal-item-line,
-            .receipt-bill .thermal-item-total,
-            .receipt-bill .thermal-label,
-            .receipt-bill .thermal-total-line,
-            .receipt-bill .thermal-header h1,
-            .receipt-bill .thermal-meta p,
-            .receipt-bill .thermal-header p,
-            .receipt-bill .thermal-footer,
-            .receipt-bill .thermal-footer p {
-                font-weight: 800 !important;
-                color: #000 !important;
-                -webkit-text-fill-color: #000 !important;
-            }
-
-            .receipt-bill .bill-order-no,
-            .receipt-bill .bill-highlight,
-            .receipt-bill .thermal-total-line.grand,
-            .receipt-bill .thermal-total-line.grand span,
-            .receipt-bill .thermal-header h1,
-            .receipt-bill .bill-item .thermal-item-name {
-                font-weight: 900 !important;
-            }
-        }
-    </style>
 </head>
 <body>
     <div class="print-controls no-print">
@@ -213,7 +17,7 @@
         <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
     </div>
 
-    <div class="receipt receipt-bill">
+    <div class="receipt">
         <div class="thermal-header">
             {% if receipt_show_logo and business_logo %}
             <div class="thermal-logo">
@@ -231,13 +35,13 @@
         <hr class="thermal-divider">
 
         <div class="thermal-meta">
-            <p class="thermal-label bill-order-no">ORDER #{{ order.daily_order_number }}</p>
-            <p class="bill-highlight">Receipt: {{ order.reference_number }}</p>
+            <p class="thermal-label thermal-highlight">ORDER #{{ order.daily_order_number }}</p>
+            <p>Receipt: {{ order.reference_number }}</p>
             <p>Date: {{ order.created_at|pkt_datetime }}</p>
             {% if receipt_show_cashier %}<p>Cashier: {{ order.user.get_full_name|default:order.user.username }}</p>{% endif %}
             <p>Status: {{ order.order_status }} · {{ order.payment_method }} ({{ order.payment_status }})</p>
             {% if order.order_type %}<p>Type: {{ order.order_type }}</p>{% endif %}
-            {% if order.order_type == 'Dine In' and order.table_number %}<p class="thermal-label bill-highlight">Table #: {{ order.table_number }}</p>{% endif %}
+            {% if order.order_type == 'Dine In' and order.table_number %}<p class="thermal-label thermal-highlight">Table #: {{ order.table_number }}</p>{% endif %}
             {% if order.customer_name %}<p>Customer: {{ order.customer_name }}</p>{% endif %}
             {% if order.customer_phone %}<p>Phone: {{ order.customer_phone }}</p>{% endif %}
         </div>
@@ -246,7 +50,7 @@
 
         <div class="thermal-items">
             {% for item in order_items %}
-            <div class="thermal-item bill-item">
+            <div class="thermal-item-box">
                 <div class="thermal-item-name">
                     {{ item.product.name }}{% if item.product.calculate_price_per_kg %} (per kg){% endif %}
                 </div>

@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Summary Report #{{ start_date|date:"Ymd" }}-{{ end_date|date:"Ymd" }}</title>
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
+    {% include 'posapp/partials/thermal_receipt_print_script.html' %}
     <style>
         .header {
             text-align: center;
@@ -410,7 +411,7 @@
     <script>
         // Auto print when page loads
         window.onload = function() {
-            window.print();
+            printThermalReceipt();
             
             {% if redirect_to %}
             // Set up event listener for after print dialog closes

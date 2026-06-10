@@ -9,46 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
     {% include 'posapp/partials/thermal_receipt_print_script.html' %}
-    <style>
-        .kitchen-title {
-            font-size: 16px !important;
-            letter-spacing: 0.05em;
-        }
-        .kitchen-item {
-            display: flex;
-            align-items: stretch;
-            border: 2px solid #000;
-            margin-bottom: 6px;
-        }
-        .kitchen-qty {
-            min-width: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 15px;
-            border-right: 2px solid #000;
-            padding: 6px 4px;
-        }
-        .kitchen-name-wrap {
-            flex: 1;
-            padding: 6px 8px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .kitchen-name {
-            font-weight: bold;
-            font-size: 12px;
-            word-wrap: break-word;
-            overflow-wrap: anywhere;
-            line-height: 1.2;
-        }
-        .kitchen-sub {
-            font-size: 9px;
-            margin-top: 2px;
-        }
-    </style>
 </head>
 <body>
     <div class="print-controls no-print">
@@ -71,11 +31,11 @@
             <p class="thermal-label">Order #{{ order.daily_order_number }} · {{ order.reference_number }}</p>
             <p>{{ order.created_at|pkt_datetime }}</p>
             {% if order.order_type == 'Dine In' and order.table_number %}
-            <p class="thermal-label" style="font-size: 14px;">TABLE {{ order.table_number }}</p>
+            <p class="thermal-label thermal-highlight">TABLE {{ order.table_number }}</p>
             {% elif order.order_type == 'Delivery' %}
-            <p class="thermal-label">DELIVERY</p>
+            <p class="thermal-label thermal-highlight">DELIVERY</p>
             {% elif order.order_type == 'Takeaway' %}
-            <p class="thermal-label">TAKEAWAY</p>
+            <p class="thermal-label thermal-highlight">TAKEAWAY</p>
             {% endif %}
             {% if order.customer_name %}<p>Customer: {{ order.customer_name }}</p>{% endif %}
         </div>
