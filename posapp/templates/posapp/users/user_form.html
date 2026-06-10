@@ -2,373 +2,244 @@
 {% load crispy_forms_tags %}
 
 {% block title %}{{ title }}{% endblock %}
-
-{% block extra_head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
 <style>
-    .form-card {
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    .user-form-panel.loading {
+        opacity: 0.7;
+        pointer-events: none;
     }
-    .form-card .card-header {
-        background: linear-gradient(to right, #4e73df, #36b9cc);
-        color: white;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-    }
-    
-    .form-section {
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #e3e6f0;
-    }
-    .form-section:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-    }
-    
-    .form-heading {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #4e73df;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-    }
-    .form-heading i {
-        margin-right: 8px;
-    }
-    
-    .form-control, .form-select {
-        border-radius: 8px;
-        border: 1px solid #d1d3e2;
-        transition: all 0.3s ease;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #4e73df;
-        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-    }
-    
-    .btn-primary {
-        background: linear-gradient(to right, #4e73df, #2e59d9);
-        border: none;
-        box-shadow: 0 4px 10px rgba(78, 115, 223, 0.3);
-        padding: 10px 20px;
-        font-weight: bold;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-    .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 15px rgba(78, 115, 223, 0.4);
-    }
-    .btn-secondary {
-        background: #f8f9fc;
-        color: #5a5c69;
-        border: 1px solid #ddd;
-        padding: 10px 20px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-    .btn-secondary:hover {
-        background: #eaecf4;
-        color: #3a3b45;
-        transform: translateY(-1px);
-    }
-    .btn-outline-info {
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-    .btn-outline-info:hover {
-        transform: translateY(-1px);
-    }
-    
-    .password-field-wrapper {
+
+    .password-field-wrap {
         position: relative;
     }
-    .toggle-password {
+
+    .password-field-wrap .toggle-password {
         position: absolute;
-        right: 10px;
-        top: 40px;
+        right: 12px;
+        top: 2.6rem;
         cursor: pointer;
-        color: #5a5c69;
+        color: #718096;
+        z-index: 3;
     }
-    
-    .permission-section {
-        background: #f8f9fc;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border: 1px solid #e3e6f0;
-    }
-    
-    .permission-header {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 15px;
+
+    .perm-toolbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
     }
-    .permission-header i {
-        margin-right: 8px;
-    }
-    
-    .form-check {
-        padding: 8px 0;
-        border-radius: 5px;
-        transition: background-color 0.2s;
-    }
-    .form-check:hover {
-        background-color: #f8f9fc;
-    }
-    .permission-checkbox {
-        margin-right: 8px;
-        transform: scale(1.2);
-    }
-    .form-check-label {
-        cursor: pointer;
-        font-weight: 500;
-        margin-left: 5px;
-    }
-    
-    .accordion .card {
-        border: 1px solid #e3e6f0;
-        border-radius: 8px;
-        margin-top: 15px;
-    }
-    .accordion .card-header {
-        background-color: #f8f9fc;
-        border-bottom: 1px solid #e3e6f0;
-    }
-    .btn-link {
-        color: #5a5c69 !important;
-        text-decoration: none !important;
-    }
-    .btn-link:hover {
-        color: #4e73df !important;
-    }
-    
-    /* Quick Action Buttons */
-    .quick-actions {
+
+    .perm-quick-actions {
         display: flex;
-        gap: 8px;
-        align-items: center;
+        gap: 0.5rem;
     }
-    .quick-btn {
-        padding: 4px 8px;
-        font-size: 0.8rem;
-        border-radius: 6px;
+
+    .perm-quick-btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 8px;
         text-decoration: none;
-        transition: all 0.2s ease;
         border: 1px solid;
     }
-    .select-all {
-        background: rgba(72, 187, 120, 0.1);
-        color: #48bb78;
-        border-color: rgba(72, 187, 120, 0.3);
+
+    .perm-quick-btn.select-all {
+        background: #f0fff4;
+        color: #276749;
+        border-color: #9ae6b4;
     }
-    .select-all:hover {
-        background: rgba(72, 187, 120, 0.2);
-        color: #38a169;
+
+    .perm-quick-btn.clear-all {
+        background: #fff5f5;
+        color: #c53030;
+        border-color: #feb2b2;
     }
-    .clear-all {
-        background: rgba(245, 101, 101, 0.1);
-        color: #f56565;
-        border-color: rgba(245, 101, 101, 0.3);
+
+    .perm-special-check {
+        background: #fffaf0;
+        border: 1px solid #fbd38d;
+        border-radius: 10px;
+        padding: 0.75rem;
     }
-    .clear-all:hover {
-        background: rgba(245, 101, 101, 0.2);
-        color: #e53e3e;
-    }
-    
-    /* Loading Animation */
-    .form-card.loading {
-        opacity: 0.7;
-        pointer-events: none;
+
+    .role-hint {
+        font-size: 0.82rem;
+        color: #4a5568;
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        border-radius: 10px;
+        padding: 0.75rem 0.9rem;
+        margin-top: 0.5rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <a href="{% url 'user_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Users
-        </a>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow mb-4 form-card">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-white">User Information</h6>
-                </div>
-                <div class="card-body p-4">
-                    <form method="post" id="userForm">
-                        {% csrf_token %}
-                        
-                        <div class="form-section">
-                            <div class="form-heading"><i class="fas fa-user-circle"></i> Account Information</div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.username|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.email|as_crispy_field }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-section">
-                            <div class="form-heading"><i class="fas fa-address-card"></i> Personal Details</div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.first_name|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.last_name|as_crispy_field }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-section">
-                            <div class="form-heading"><i class="fas fa-key"></i> Security</div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="password-field-wrapper">
-                                        {{ form.password1|as_crispy_field }}
-                                        <span class="toggle-password" data-target="id_password1">
-                                            <i class="fas fa-eye"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="password-field-wrapper">
-                                        {{ form.password2|as_crispy_field }}
-                                        <span class="toggle-password" data-target="id_password2">
-                                            <i class="fas fa-eye"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-section">
-                            <div class="form-heading"><i class="fas fa-user-tag"></i> Role & Contact</div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.role|as_crispy_field }}
-                                    <div class="alert alert-info mt-2">
-                                        <small>
-                                            <strong><i class="fas fa-cash-register mr-1"></i> Cashier:</strong> Limited POS access only - cannot cancel orders or view dashboard<br>
-                                            <strong><i class="fas fa-user-tie mr-1"></i> Branch Manager:</strong> Custom permissions (set below as needed)
-                                        </small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.phone|as_crispy_field }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Permissions Section -->
-                        <div class="form-section" id="permissionsSection">
-                            <div class="form-heading"><i class="fas fa-shield-alt"></i> Permissions</div>
-                            <div class="alert alert-info mb-3" id="normalPermissionsAlert">
-                                <h6><i class="fas fa-info-circle mr-2"></i>Available Permissions:</h6>
-                                <p class="mb-0">Only 5 essential permissions are available for user management.</p>
-                            </div>
-                            <div class="alert alert-success mb-3 d-none" id="adminPermissionsAlert">
-                                <h6><i class="fas fa-crown mr-2"></i>Admin User - All Permissions Automatically Granted</h6>
-                                <p class="mb-0">Superusers have all permissions by default. No need to set individual permissions.</p>
-                            </div>
-                            
-                            <!-- Simple Permission List -->
-                            <div class="permission-section" id="permissionCheckboxes">
-                                <div class="permission-header text-primary">
-                                    <span><i class="fas fa-check-square"></i> User Permissions</span>
-                                    <div class="quick-actions">
-                                        <a href="#" class="quick-btn select-all">Select All</a>
-                                        <a href="#" class="quick-btn clear-all">Clear All</a>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-check">
-                                            {{ form.can_edit_orders }}
-                                            <label class="form-check-label" for="{{ form.can_edit_orders.id_for_label }}">
-                                                <strong>{{ form.can_edit_orders.label }}</strong>
-                                                <small class="text-muted d-block">{{ form.can_edit_orders.help_text }}</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-check">
-                                            {{ form.can_cancel_orders }}
-                                            <label class="form-check-label" for="{{ form.can_cancel_orders.id_for_label }}">
-                                                <strong>{{ form.can_cancel_orders.label }}</strong>
-                                                <small class="text-muted d-block">{{ form.can_cancel_orders.help_text }}</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mt-3">
-                                        <div class="form-check">
-                                            {{ form.can_apply_manual_discounts }}
-                                            <label class="form-check-label" for="{{ form.can_apply_manual_discounts.id_for_label }}">
-                                                <strong>{{ form.can_apply_manual_discounts.label }}</strong>
-                                                <small class="text-muted d-block">{{ form.can_apply_manual_discounts.help_text }}</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mt-3">
-                                        <div class="form-check">
-                                            {{ form.can_apply_discount_codes }}
-                                            <label class="form-check-label" for="{{ form.can_apply_discount_codes.id_for_label }}">
-                                                <strong>{{ form.can_apply_discount_codes.label }}</strong>
-                                                <small class="text-muted d-block">{{ form.can_apply_discount_codes.help_text }}</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12 mt-3">
-                                        <div class="form-check" style="background: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 5px; border: 1px solid rgba(255, 193, 7, 0.3);">
-                                            {{ form.can_edit_orders_with_password }}
-                                            <label class="form-check-label" for="{{ form.can_edit_orders_with_password.id_for_label }}">
-                                                <strong style="color: #856404;">{{ form.can_edit_orders_with_password.label }}</strong>
-                                                <small class="text-muted d-block">{{ form.can_edit_orders_with_password.help_text }}</small>
-                                                <small class="text-warning d-block"><i class="fas fa-key"></i> <strong>Special Permission:</strong> When deleting/reducing order items, admin password will be required</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        </div>
-                        
-                        <div class="d-flex justify-content-between mt-4">
-                            <div class="d-flex">
-                                <button type="submit" class="btn btn-primary mr-2" id="saveBtn">
-                                    <i class="fas fa-save mr-1"></i> Save User
-                                    <span class="spinner-border spinner-border-sm ml-2 d-none" role="status"></span>
-                                </button>
-                                <button type="button" class="btn btn-outline-info" id="previewBtn">
-                                    <i class="fas fa-eye mr-1"></i> Preview
-                                </button>
-                            </div>
-                            <a href="{% url 'user_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-times mr-1"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-user-plus me-2"></i>{{ title }}</h1>
+                <p>Create a staff account with role and permissions</p>
             </div>
         </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'user_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Back to Users
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-panel admin-form-panel user-form-panel">
+        <div class="admin-panel-header">
+            <h2>User Information</h2>
+        </div>
+        <form method="post" id="userForm" class="admin-form">
+            {% csrf_token %}
+
+            <div class="admin-form-body">
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header"><i class="fas fa-user-circle me-2"></i>Account Information</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">{{ form.username|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.email|as_crispy_field }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header"><i class="fas fa-address-card me-2"></i>Personal Details</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header"><i class="fas fa-key me-2"></i>Security</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="password-field-wrap">
+                                    {{ form.password1|as_crispy_field }}
+                                    <span class="toggle-password" data-target="id_password1"><i class="fas fa-eye"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="password-field-wrap">
+                                    {{ form.password2|as_crispy_field }}
+                                    <span class="toggle-password" data-target="id_password2"><i class="fas fa-eye"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-form-section">
+                    <h3 class="admin-form-section-header"><i class="fas fa-user-tag me-2"></i>Role & Contact</h3>
+                    <div class="admin-form-section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.role|as_crispy_field }}
+                                <div class="role-hint">
+                                    <strong>Cashier:</strong> Limited POS access — cannot cancel orders or view dashboard.<br>
+                                    <strong>Branch Manager:</strong> Custom permissions — set manually below.
+                                </div>
+                            </div>
+                            <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-form-section" id="permissionsSection">
+                    <h3 class="admin-form-section-header"><i class="fas fa-shield-alt me-2"></i>Permissions</h3>
+                    <div class="admin-form-section-body">
+                        <div class="admin-info-banner mb-3" id="normalPermissionsAlert">
+                            <strong>Available permissions:</strong> Select the 5 essential permissions for this user.
+                        </div>
+                        <div class="admin-success-banner mb-3 d-none" id="adminPermissionsAlert">
+                            <strong>Admin user:</strong> Superusers receive all permissions automatically.
+                        </div>
+
+                        <div class="admin-form-section" id="permissionCheckboxes" style="margin-bottom:0;">
+                            <div class="admin-form-section-body" style="padding-top:0;">
+                                <div class="perm-toolbar">
+                                    <strong class="text-primary"><i class="fas fa-check-square me-1"></i>User Permissions</strong>
+                                    <div class="perm-quick-actions">
+                                        <a href="#" class="perm-quick-btn select-all">Select All</a>
+                                        <a href="#" class="perm-quick-btn clear-all">Clear All</a>
+                                    </div>
+                                </div>
+                                <div class="admin-form-check-group">
+                                    <div class="admin-form-check">
+                                        {{ form.can_edit_orders }}
+                                        <label class="form-check-label" for="{{ form.can_edit_orders.id_for_label }}">
+                                            <strong>{{ form.can_edit_orders.label }}</strong>
+                                            <small class="text-muted d-block">{{ form.can_edit_orders.help_text }}</small>
+                                        </label>
+                                    </div>
+                                    <div class="admin-form-check">
+                                        {{ form.can_cancel_orders }}
+                                        <label class="form-check-label" for="{{ form.can_cancel_orders.id_for_label }}">
+                                            <strong>{{ form.can_cancel_orders.label }}</strong>
+                                            <small class="text-muted d-block">{{ form.can_cancel_orders.help_text }}</small>
+                                        </label>
+                                    </div>
+                                    <div class="admin-form-check">
+                                        {{ form.can_apply_manual_discounts }}
+                                        <label class="form-check-label" for="{{ form.can_apply_manual_discounts.id_for_label }}">
+                                            <strong>{{ form.can_apply_manual_discounts.label }}</strong>
+                                            <small class="text-muted d-block">{{ form.can_apply_manual_discounts.help_text }}</small>
+                                        </label>
+                                    </div>
+                                    <div class="admin-form-check">
+                                        {{ form.can_apply_discount_codes }}
+                                        <label class="form-check-label" for="{{ form.can_apply_discount_codes.id_for_label }}">
+                                            <strong>{{ form.can_apply_discount_codes.label }}</strong>
+                                            <small class="text-muted d-block">{{ form.can_apply_discount_codes.help_text }}</small>
+                                        </label>
+                                    </div>
+                                    <div class="admin-form-check perm-special-check">
+                                        {{ form.can_edit_orders_with_password }}
+                                        <label class="form-check-label" for="{{ form.can_edit_orders_with_password.id_for_label }}">
+                                            <strong>{{ form.can_edit_orders_with_password.label }}</strong>
+                                            <small class="text-muted d-block">{{ form.can_edit_orders_with_password.help_text }}</small>
+                                            <small class="text-warning d-block"><i class="fas fa-key"></i> Admin password required when deleting or reducing order items.</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-form-actions">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-save me-1"></i> Save User
+                        <span class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="previewBtn">
+                        <i class="fas fa-eye me-1"></i> Preview
+                    </button>
+                </div>
+                <a href="{% url 'user_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
@@ -376,13 +247,10 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        // Password visibility toggle
         $('.toggle-password').click(function() {
             const target = $(this).data('target');
             const input = $('#' + target);
             const icon = $(this).find('i');
-            
-            // Toggle password visibility
             if (input.attr('type') === 'password') {
                 input.attr('type', 'text');
                 icon.removeClass('fa-eye').addClass('fa-eye-slash');
@@ -391,258 +259,130 @@
                 icon.removeClass('fa-eye-slash').addClass('fa-eye');
             }
         });
-        
-        // Animate submit button on hover
-        $('.btn-primary').hover(
-            function() { $(this).css('transform', 'translateY(-2px)'); },
-            function() { $(this).css('transform', 'translateY(0)'); }
-        );
-        
-        // Highlight fields on focus
-        $('.form-control').focus(function() {
-            $(this).closest('.form-group').addClass('border-left-primary');
-        }).blur(function() {
-            $(this).closest('.form-group').removeClass('border-left-primary');
-        });
-        
-        // Role-based permission presets - Only 2 default roles
+
         const rolePermissions = {
-            'Branch Manager': {
-                // Branch Manager gets custom permissions - no default template
-                // Admin will manually select permissions for each branch manager
-            },
+            'Branch Manager': {},
             'Cashier': {
-                // Cashier - Very limited access
-                'can_edit_orders': false,
-                'can_cancel_orders': false,
-                'can_apply_manual_discounts': false,
-                'can_apply_discount_codes': false,
-                'can_edit_orders_with_password': false
+                can_edit_orders: false,
+                can_cancel_orders: false,
+                can_apply_manual_discounts: false,
+                can_apply_discount_codes: false,
+                can_edit_orders_with_password: false
             }
         };
-        
-        // Handle superuser checkbox change
+
         $('#id_is_superuser').change(function() {
             const isSuperuser = $(this).is(':checked');
-            
             if (isSuperuser) {
-                // Hide permission checkboxes and show admin alert
                 $('#permissionCheckboxes').hide();
                 $('#normalPermissionsAlert').hide();
                 $('#adminPermissionsAlert').removeClass('d-none').show();
-                
-                // Show notification
-                $('<div class="alert alert-warning alert-dismissible fade show mt-2" role="alert">' +
-                  '<i class="fas fa-crown"></i> <strong>Superuser selected!</strong> This user will have all permissions automatically.' +
-                  '<button type="button" class="close" data-dismiss="alert">' +
-                  '<span>&times;</span>' +
-                  '</button>' +
-                  '</div>').insertAfter('#id_is_superuser').delay(5000).fadeOut();
             } else {
-                // Show permission checkboxes and hide admin alert
                 $('#permissionCheckboxes').show();
                 $('#normalPermissionsAlert').show();
                 $('#adminPermissionsAlert').addClass('d-none').hide();
             }
         });
-        
-        // Auto-set permissions when role changes
+
         $('#id_role').change(function() {
             const selectedRole = $(this).find('option:selected').text();
             const permissions = rolePermissions[selectedRole];
-            
             if (permissions && Object.keys(permissions).length > 0) {
-                // Set all permissions based on role
                 Object.keys(permissions).forEach(function(permission) {
                     $('#id_' + permission).prop('checked', permissions[permission]);
                 });
-                
-                // Show notification for Cashier role
-                $('<div class="alert alert-success alert-dismissible fade show mt-2" role="alert">' +
-                  '<i class="fas fa-check-circle"></i> <strong>Cashier permissions applied!</strong> Limited to POS and basic order operations only.' +
-                  '<button type="button" class="close" data-dismiss="alert">' +
-                  '<span>&times;</span>' +
-                  '</button>' +
-                  '</div>').insertAfter('#id_role').delay(4000).fadeOut();
-                  
             } else if (selectedRole === 'Branch Manager') {
-                // Clear all permissions for Branch Manager - admin will set manually
                 $('input[type="checkbox"][name^="can_"]').prop('checked', false);
-                
-                // Show notification for Branch Manager
-                $('<div class="alert alert-warning alert-dismissible fade show mt-2" role="alert">' +
-                  '<i class="fas fa-cog"></i> <strong>Branch Manager selected!</strong> Please manually select permissions below as each branch manager has different access levels.' +
-                  '<button type="button" class="close" data-dismiss="alert">' +
-                  '<span>&times;</span>' +
-                  '</button>' +
-                  '</div>').insertAfter('#id_role').delay(6000).fadeOut();
             }
         });
-        
-        // Add "Select All" and "Clear All" buttons for each permission group
-        $('.text-primary, .text-success, .text-info, .text-warning, .text-danger').each(function() {
-            const $header = $(this);
-            const $row = $header.closest('.row');
-            const checkboxes = $row.find('input[type="checkbox"]');
-            
-            if (checkboxes.length > 0) {
-                $header.append(
-                    ' <small>' +
-                    '<a href="#" class="select-all text-success ml-2">Select All</a> | ' +
-                    '<a href="#" class="clear-all text-danger">Clear All</a>' +
-                    '</small>'
-                );
-            }
-        });
-        
-        // Handle select all / clear all
+
         $(document).on('click', '.select-all', function(e) {
             e.preventDefault();
-            $(this).closest('.permission-section').find('input[type="checkbox"]').prop('checked', true);
-            $(this).addClass('animate__animated animate__pulse');
-            setTimeout(() => $(this).removeClass('animate__animated animate__pulse'), 1000);
+            $(this).closest('.admin-form-section-body, .permission-section').find('input[type="checkbox"][name^="can_"]').prop('checked', true);
         });
-        
+
         $(document).on('click', '.clear-all', function(e) {
             e.preventDefault();
-            $(this).closest('.permission-section').find('input[type="checkbox"]').prop('checked', false);
-            $(this).addClass('animate__animated animate__pulse');
-            setTimeout(() => $(this).removeClass('animate__animated animate__pulse'), 1000);
+            $(this).closest('.admin-form-section-body, .permission-section').find('input[type="checkbox"][name^="can_"]').prop('checked', false);
         });
-        
-        // Form submission with loading state
-        $('#userForm').on('submit', function(e) {
+
+        $('#userForm').on('submit', function() {
             const $saveBtn = $('#saveBtn');
-            const $spinner = $saveBtn.find('.spinner-border');
-            const $icon = $saveBtn.find('i');
-            
-            // Show loading state
             $saveBtn.prop('disabled', true);
-            $spinner.removeClass('d-none');
-            $icon.addClass('d-none');
-            $('.form-card').addClass('loading');
-            
-            // Reset loading state if form has validation errors
+            $saveBtn.find('.spinner-border').removeClass('d-none');
+            $saveBtn.find('i').first().addClass('d-none');
+            $('.user-form-panel').addClass('loading');
             setTimeout(function() {
                 if ($('.form-control:invalid').length > 0 || $('.alert-danger').length > 0) {
                     $saveBtn.prop('disabled', false);
-                    $spinner.addClass('d-none');
-                    $icon.removeClass('d-none');
-                    $('.form-card').removeClass('loading');
+                    $saveBtn.find('.spinner-border').addClass('d-none');
+                    $saveBtn.find('i').first().removeClass('d-none');
+                    $('.user-form-panel').removeClass('loading');
                 }
             }, 1000);
         });
-        
-        // Preview permissions functionality
+
         $('#previewBtn').on('click', function() {
             const selectedPermissions = [];
             $('input[type="checkbox"]:checked').each(function() {
                 if ($(this).attr('name') && $(this).attr('name').startsWith('can_')) {
-                    selectedPermissions.push($(this).next('label').text().trim());
+                    selectedPermissions.push($(this).closest('.admin-form-check, .form-check').find('label strong').text().trim());
                 }
             });
-            
-            let modalContent = '<div class="list-group">';
+
+            let modalContent = '<div class="list-group list-group-flush">';
             if (selectedPermissions.length > 0) {
                 selectedPermissions.forEach(function(perm) {
-                    modalContent += `<div class="list-group-item"><i class="fas fa-check text-success mr-2"></i>${perm}</div>`;
+                    modalContent += `<div class="list-group-item"><i class="fas fa-check text-success me-2"></i>${perm}</div>`;
                 });
             } else {
-                modalContent += '<div class="list-group-item text-muted"><i class="fas fa-info-circle mr-2"></i>No permissions selected</div>';
+                modalContent += '<div class="list-group-item text-muted"><i class="fas fa-info-circle me-2"></i>No permissions selected</div>';
             }
             modalContent += '</div>';
-            
-            // Create and show modal
-            const modal = `
-                <div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title" id="previewModalLabel"><i class="fas fa-eye mr-2"></i>Permission Preview</h5>
-                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+
+            const modalHtml = `
+                <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+                            <div class="modal-header" style="background:linear-gradient(135deg,#1e3a5f,#2c5282);color:#fff;">
+                                <h5 class="modal-title" id="previewModalLabel"><i class="fas fa-eye me-2"></i>Permission Preview</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <h6 class="mb-3">Selected Permissions (${selectedPermissions.length}):</h6>
                                 ${modalContent}
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-            
-            // Remove existing modal and add new one
-            $('#previewModal').remove();
-            $('body').append(modal);
-            
-            // Show modal with proper event handling
-            $('#previewModal').modal('show');
-            
-            // Add click handlers for close buttons
-            $('#previewModal .close, #previewModal [data-dismiss="modal"]').on('click', function() {
-                $('#previewModal').modal('hide');
-            });
-            
-            // Handle backdrop click
-            $('#previewModal').on('click', function(e) {
-                if (e.target === this) {
-                    $('#previewModal').modal('hide');
-                }
-            });
-            
-            // Clean up modal after hiding
-            $('#previewModal').on('hidden.bs.modal', function() {
-                $(this).remove();
-            });
+                </div>`;
+
+            const existing = document.getElementById('previewModal');
+            if (existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modalEl = document.getElementById('previewModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                modalEl.remove();
+            }, { once: true });
         });
-        
-        // Real-time validation feedback
-        $('.form-control').on('input', function() {
-            const $this = $(this);
-            const value = $this.val().trim();
-            
-            if (value.length > 0) {
-                $this.removeClass('is-invalid').addClass('is-valid');
-            } else {
-                $this.removeClass('is-valid is-invalid');
-            }
-        });
-        
-        // Smooth scroll to form sections
-        $('.form-heading').on('click', function() {
-            $(this).closest('.form-section').addClass('animate__animated animate__pulse');
-            setTimeout(() => {
-                $(this).closest('.form-section').removeClass('animate__animated animate__pulse');
-            }, 1000);
-        });
-        
-        // Keyboard shortcuts
+
+        $('#saveBtn').attr('title', 'Save User (Ctrl+S)');
+        $('#previewBtn').attr('title', 'Preview Permissions (Ctrl+P)');
+
         $(document).on('keydown', function(e) {
-            // Ctrl + S to save form
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 $('#saveBtn').click();
             }
-            
-            // Ctrl + P to preview permissions
             if (e.ctrlKey && e.key === 'p') {
                 e.preventDefault();
                 $('#previewBtn').click();
             }
-            
-            // Escape to close modal
-            if (e.key === 'Escape' && $('#previewModal').is(':visible')) {
-                $('#previewModal').modal('hide');
-            }
         });
-        
-        // Show tooltip for keyboard shortcuts
-        $('#saveBtn').attr('title', 'Save User (Ctrl+S)');
-        $('#previewBtn').attr('title', 'Preview Permissions (Ctrl+P)');
     });
 </script>
-{% endblock %} 
+{% endblock %}
