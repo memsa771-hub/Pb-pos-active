@@ -2,260 +2,438 @@
 {% load custom_filters %}
 
 {% block title %}Active Sessions - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
 <style>
+    .sessions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1rem;
+        padding: 1rem 1.25rem 1.25rem;
+    }
+
     .session-card {
-        transition: all 0.2s;
-        border-radius: 8px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
+
     .session-card:hover {
-        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
         transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     }
-    .online-indicator {
-        width: 10px;
-        height: 10px;
-        background-color: #28a745;
+
+    .session-card.current-session {
+        border-color: #9ae6b4;
+        box-shadow: 0 0 0 1px rgba(56, 161, 105, 0.15);
+    }
+
+    .session-card-header {
+        padding: 1rem 1.1rem 0.85rem;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .session-user-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+    }
+
+    .session-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1e3a5f, #2c5282);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .session-user-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 0 0 0.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .online-dot {
+        width: 8px;
+        height: 8px;
+        background: #38a169;
         border-radius: 50%;
+        flex-shrink: 0;
+        animation: session-pulse 2s infinite;
+    }
+
+    @keyframes session-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.5); }
+        70% { box-shadow: 0 0 0 8px rgba(56, 161, 105, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0); }
+    }
+
+    .session-username {
+        font-size: 0.78rem;
+        color: #718096;
+    }
+
+    .session-role-badge {
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        margin-top: 0.25rem;
         display: inline-block;
-        margin-right: 8px;
-        animation: pulse 2s infinite;
     }
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+
+    .session-role-badge.admin { background: #fed7d7; color: #822727; }
+    .session-role-badge.manager { background: #fefcbf; color: #744210; }
+    .session-role-badge.staff { background: #bee3f8; color: #2c5282; }
+    .session-role-badge.muted { background: #edf2f7; color: #4a5568; }
+
+    .session-logout-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
-    .role-badge {
+
+    .session-card-body {
+        padding: 1rem 1.1rem;
+        flex: 1;
+    }
+
+    .session-orders-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .session-orders-box h4 {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #2b6cb0;
+        margin: 0 0 0.65rem;
+    }
+
+    .session-order-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .session-stat-item {
+        text-align: center;
+        background: #fff;
+        border: 1px solid #edf2f7;
+        border-radius: 10px;
+        padding: 0.55rem 0.4rem;
+    }
+
+    .session-stat-item .value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1.2;
+    }
+
+    .session-stat-item .value.primary { color: #2b6cb0; }
+    .session-stat-item .value.success { color: #38a169; }
+
+    .session-stat-item .label {
+        font-size: 0.68rem;
+        color: #718096;
+        margin-top: 0.15rem;
+    }
+
+    .session-order-breakdown {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.35rem;
+        text-align: center;
         font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
     }
-    .session-info {
-        font-size: 0.875rem;
-        color: #6c757d;
+
+    .session-order-breakdown .count {
+        font-weight: 700;
     }
-    .force-logout-btn {
-        transition: all 0.2s;
+
+    .session-order-breakdown .count.completed { color: #38a169; }
+    .session-order-breakdown .count.pending { color: #d69e2e; }
+    .session-order-breakdown .count.cancelled { color: #e53e3e; }
+
+    .session-meta {
+        display: grid;
+        gap: 0.45rem;
+        font-size: 0.82rem;
+        color: #4a5568;
     }
-    .force-logout-btn:hover {
-        transform: scale(1.05);
+
+    .session-meta-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .session-meta-row i {
+        width: 16px;
+        color: #a0aec0;
+        margin-top: 0.15rem;
+        flex-shrink: 0;
+    }
+
+    .session-meta-row code {
+        font-size: 0.75rem;
+        color: #718096;
+        background: #f1f5f9;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+    }
+
+    .session-card-footer {
+        padding: 0.75rem 1.1rem;
+        border-top: 1px solid #edf2f7;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .session-footer-note {
+        font-size: 0.78rem;
+        color: #718096;
+    }
+
+    .session-refresh-note {
+        position: fixed;
+        bottom: 12px;
+        right: 12px;
+        z-index: 100;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.75rem;
+        color: #718096;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="fas fa-users-cog me-2"></i>Active Sessions with Today's Orders</h2>
-            <p class="text-muted mb-0">Monitor currently logged-in users and their order activity 
-                {% if last_end_day %}
-                    since last end day ({{ last_end_day.end_date|date:"M j, g:i A" }})
-                {% else %}
-                    for today
-                {% endif %}
-            </p>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-users-cog me-2"></i>Active Sessions</h1>
+                <p>
+                    Monitor logged-in users and today's order activity
+                    {% if last_end_day %}since last End Day ({{ last_end_day.end_date|pkt_datetime }}){% else %}for today{% endif %}
+                </p>
+            </div>
         </div>
-        <div>
-            <span class="badge bg-primary fs-6">
-                <i class="fas fa-circle online-indicator me-1"></i>
-                {{ total_active }} Active User{{ total_active|pluralize }}
-            </span>
-            <a href="{% url 'user_list' %}" class="btn btn-secondary ms-2">
-                <i class="fas fa-arrow-left me-1"></i> Back to Users
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'user_list' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i> Manage Users
             </a>
         </div>
     </div>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
     {% endif %}
 
+    <div class="admin-stats">
+        <div class="admin-stat-card success">
+            <i class="fas fa-circle stat-icon" style="color:#38a169;font-size:0.75rem;margin-top:0.35rem;"></i>
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value">{{ total_active }}</div>
+        </div>
+        <div class="admin-stat-card primary">
+            <i class="fas fa-shopping-cart stat-icon"></i>
+            <div class="stat-label">Sessions Listed</div>
+            <div class="stat-value">{{ active_users|length }}</div>
+        </div>
+    </div>
+
     {% if active_users %}
-        <div class="row g-4">
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2>Live Sessions</h2>
+            <span class="text-muted small">Auto-refreshes every 30 seconds</span>
+        </div>
+        <div class="sessions-grid">
             {% for user_session in active_users %}
-                <div class="col-xl-4 col-lg-6 col-md-6">
-                    <div class="card session-card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-container me-3">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                            <span class="fw-bold">{{ user_session.user.first_name|first|upper }}{{ user_session.user.last_name|first|upper }}</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-1">
-                                            <span class="online-indicator"></span>
-                                            {{ user_session.user.get_full_name|default:user_session.user.username }}
-                                        </h5>
-                                        <div class="d-flex align-items-center mb-1">
-                                            <small class="text-muted me-2">@{{ user_session.user.username }}</small>
-                                            {% if user_session.user.is_superuser or user_session.user.is_staff %}
-                                                <span class="badge bg-danger role-badge">Admin</span>
-                                            {% elif user_session.user.profile.role %}
-                                                <span class="badge 
-                                                    {% if user_session.user.profile.role.name == 'Admin' %}bg-danger
-                                                    {% elif user_session.user.profile.role.name == 'Branch Manager' %}bg-warning
-                                                    {% else %}bg-info{% endif %} role-badge">
-                                                    {{ user_session.user.profile.role.name }}
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-secondary role-badge">No Role</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {% if user_session.user != request.user %}
-                                <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to force logout this user?');">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="force_logout" value="1">
-                                    <input type="hidden" name="user_id" value="{{ user_session.user.id }}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm force-logout-btn" title="Force Logout">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                    </button>
-                                </form>
-                                {% endif %}
+            <article class="session-card {% if user_session.user == request.user %}current-session{% endif %}">
+                <div class="session-card-header">
+                    <div class="session-user-wrap">
+                        <div class="session-avatar">
+                            {{ user_session.user.first_name|first|upper }}{{ user_session.user.last_name|first|upper }}
+                        </div>
+                        <div>
+                            <h3 class="session-user-name">
+                                <span class="online-dot"></span>
+                                {{ user_session.user.get_full_name|default:user_session.user.username }}
+                            </h3>
+                            <div class="session-username">@{{ user_session.user.username }}</div>
+                            {% if user_session.user.is_superuser or user_session.user.is_staff %}
+                            <span class="session-role-badge admin">Admin</span>
+                            {% elif user_session.user.profile.role %}
+                            <span class="session-role-badge {% if user_session.user.profile.role.name == 'Admin' %}admin{% elif user_session.user.profile.role.name == 'Branch Manager' %}manager{% else %}staff{% endif %}">
+                                {{ user_session.user.profile.role.name }}
+                            </span>
+                            {% else %}
+                            <span class="session-role-badge muted">No Role</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if user_session.user != request.user %}
+                    <form method="post" onsubmit="return confirm('Force logout this user?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="force_logout" value="1">
+                        <input type="hidden" name="user_id" value="{{ user_session.user.id }}">
+                        <button type="submit" class="btn btn-outline-danger session-logout-btn" title="Force Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <div class="session-card-body">
+                    <div class="session-orders-box">
+                        <h4><i class="fas fa-shopping-cart me-1"></i>Today's Orders</h4>
+                        <div class="session-order-stats">
+                            <div class="session-stat-item">
+                                <div class="value primary">{{ user_session.orders_today }}</div>
+                                <div class="label">Total Orders</div>
                             </div>
-                            
-                            <!-- Today's Orders Section -->
-                            <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
-                                <h6 class="text-primary mb-2">
-                                    <i class="fas fa-shopping-cart me-2"></i>
-                                    Today's Orders 
-                                    {% if last_end_day %}
-                                        <small class="text-muted">(Since {{ last_end_day.end_date|date:"M j, g:i A" }})</small>
-                                    {% endif %}
-                                </h6>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="text-center">
-                                            <div class="h5 mb-1 text-primary">{{ user_session.orders_today }}</div>
-                                            <small class="text-muted">Total Orders</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-center">
-                                            <div class="h5 mb-1 text-success">Rs. {{ user_session.revenue_today|floatformat:0 }}</div>
-                                            <small class="text-muted">Revenue</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row g-2 mt-1">
-                                    <div class="col-4">
-                                        <div class="text-center">
-                                            <div class="small text-success">{{ user_session.completed_orders_today }}</div>
-                                            <small class="text-muted" style="font-size: 0.7rem;">Completed</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="text-center">
-                                            <div class="small text-warning">{{ user_session.pending_orders_today }}</div>
-                                            <small class="text-muted" style="font-size: 0.7rem;">Pending</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="text-center">
-                                            <div class="small text-danger">{{ user_session.cancelled_orders_today }}</div>
-                                            <small class="text-muted" style="font-size: 0.7rem;">Cancelled</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="session-info">
-                                <div class="mb-2">
-                                    <i class="fas fa-clock me-2"></i>
-                                    <strong>Login Time:</strong> {{ user_session.login_time|pkt_datetime }}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-history me-2"></i>
-                                    <strong>Last Activity:</strong> {{ user_session.last_activity|timesince }} ago
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-map-marker-alt me-2"></i>
-                                    <strong>IP Address:</strong> {{ user_session.ip_address|default:"Unknown" }}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-desktop me-2"></i>
-                                    <strong>Session ID:</strong> 
-                                    <code class="text-muted">{{ user_session.session_key|slice:":8" }}...</code>
-                                </div>
-                                {% if user_session.user_agent %}
-                                <div class="mb-0">
-                                    <i class="fas fa-browser me-2"></i>
-                                    <strong>Browser:</strong>
-                                    <small class="text-truncate d-block" title="{{ user_session.user_agent }}">
-                                        {{ user_session.user_agent|truncatechars:40 }}
-                                    </small>
-                                </div>
-                                {% endif %}
+                            <div class="session-stat-item">
+                                <div class="value success">Rs.{{ user_session.revenue_today|floatformat:0 }}</div>
+                                <div class="label">Revenue</div>
                             </div>
                         </div>
-                        
-                        <div class="card-footer bg-light border-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    {% if user_session.user == request.user %}
-                                        <i class="fas fa-user-check text-success me-1"></i>
-                                        Your current session
-                                    {% else %}
-                                        <i class="fas fa-user text-primary me-1"></i>
-                                        Remote session
-                                    {% endif %}
-                                </small>
-                                <a href="{% url 'user_detail' user_session.user.id %}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye me-1"></i> View User
-                                </a>
+                        <div class="session-order-breakdown">
+                            <div>
+                                <div class="count completed">{{ user_session.completed_orders_today }}</div>
+                                <div class="text-muted">Completed</div>
+                            </div>
+                            <div>
+                                <div class="count pending">{{ user_session.pending_orders_today }}</div>
+                                <div class="text-muted">Pending</div>
+                            </div>
+                            <div>
+                                <div class="count cancelled">{{ user_session.cancelled_orders_today }}</div>
+                                <div class="text-muted">Cancelled</div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="session-meta">
+                        <div class="session-meta-row">
+                            <i class="fas fa-clock"></i>
+                            <span><strong>Login:</strong> {{ user_session.login_time|pkt_datetime }}</span>
+                        </div>
+                        <div class="session-meta-row">
+                            <i class="fas fa-history"></i>
+                            <span><strong>Last activity:</strong> {{ user_session.last_activity|timesince }} ago</span>
+                        </div>
+                        <div class="session-meta-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span><strong>IP:</strong> {{ user_session.ip_address|default:"Unknown" }}</span>
+                        </div>
+                        <div class="session-meta-row">
+                            <i class="fas fa-desktop"></i>
+                            <span><strong>Session:</strong> <code>{{ user_session.session_key|slice:":8" }}...</code></span>
+                        </div>
+                        {% if user_session.user_agent %}
+                        <div class="session-meta-row">
+                            <i class="fas fa-globe"></i>
+                            <span title="{{ user_session.user_agent }}"><strong>Browser:</strong> {{ user_session.user_agent|truncatechars:48 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
+
+                <div class="session-card-footer">
+                    <span class="session-footer-note">
+                        {% if user_session.user == request.user %}
+                        <i class="fas fa-user-check text-success me-1"></i>Your current session
+                        {% else %}
+                        <i class="fas fa-user text-primary me-1"></i>Remote session
+                        {% endif %}
+                    </span>
+                    <a href="{% url 'user_detail' user_session.user.id %}" class="btn btn-sm btn-outline-primary" style="border-radius:8px;font-weight:600;">
+                        <i class="fas fa-eye me-1"></i> View User
+                    </a>
+                </div>
+            </article>
             {% endfor %}
         </div>
-        
-        <div class="mt-4 text-center">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Note:</strong> This system enforces single login per user. When a user logs in from a new device/browser, their previous session will be automatically terminated.
-            </div>
-        </div>
-        
+    </div>
+
+    <div class="admin-info-banner mx-0 mb-0" style="margin: 0 0 1rem;">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Single login enforced:</strong> When a user signs in on a new device, their previous session is terminated automatically.
+    </div>
+
     {% else %}
-        <div class="text-center py-5">
-            <div class="mb-4">
-                <i class="fas fa-users-slash fa-5x text-muted"></i>
+    <div class="admin-panel">
+        <div class="admin-empty" style="padding: 3.5rem 1.5rem;">
+            <i class="fas fa-users-slash"></i>
+            <strong>No active sessions</strong>
+            <div class="mt-1">No users are currently logged in.</div>
+            <div class="mt-3">
+                <a href="{% url 'user_list' %}" class="btn btn-primary">
+                    <i class="fas fa-users me-1"></i> Manage Users
+                </a>
             </div>
-            <h4 class="text-muted">No Active Sessions</h4>
-            <p class="text-muted">No users are currently logged in to the system.</p>
-            <a href="{% url 'user_list' %}" class="btn btn-primary">
-                <i class="fas fa-users me-1"></i> Manage Users
-            </a>
         </div>
+    </div>
     {% endif %}
 </div>
 
+<div class="session-refresh-note">
+    <i class="fas fa-sync-alt me-1"></i> Auto-refreshing every 30s
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-// Auto-refresh the page every 30 seconds to show current active sessions
 setTimeout(function() {
     location.reload();
 }, 30000);
-
-// Show a subtle notification that auto-refresh is enabled
-document.addEventListener('DOMContentLoaded', function() {
-    // Add auto-refresh indicator
-    const indicator = document.createElement('div');
-    indicator.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Auto-refreshing every 30 seconds';
-    indicator.className = 'text-muted small position-fixed bottom-0 end-0 p-3';
-    indicator.style.zIndex = '1000';
-    document.body.appendChild(indicator);
-});
 </script>
-{% endblock %} 
+{% endblock %}
