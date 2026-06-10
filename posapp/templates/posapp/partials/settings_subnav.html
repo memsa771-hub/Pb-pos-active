@@ -1,0 +1,14 @@
+<nav class="settings-subnav" aria-label="Settings sections">
+    <a href="{% url 'business_settings' %}" class="settings-subnav-link{% if settings_section == 'business' %} active{% endif %}">
+        <i class="fas fa-building"></i> Business
+    </a>
+    <a href="{% url 'receipt_settings' %}" class="settings-subnav-link{% if settings_section == 'receipt' %} active{% endif %}">
+        <i class="fas fa-receipt"></i> Receipt
+    </a>
+    <a href="{% url 'theme_settings' %}" class="settings-subnav-link{% if settings_section == 'theme' %} active{% endif %}">
+        <i class="fas fa-palette"></i> Theme
+    </a>
+    <a href="{% url 'system_settings' %}" class="settings-subnav-link{% if settings_section == 'system' %} active{% endif %}">
+        <i class="fas fa-clock"></i> System
+    </a>
+</nav>

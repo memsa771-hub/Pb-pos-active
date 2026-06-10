@@ -1,235 +1,171 @@
 {% extends 'posapp/base.html' %}
-{% load crispy_forms_tags %}
-{% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title }} - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
-{% block head %}
-<style>
-    .receipt-preview {
-        background-color: #f8f9fc;
-        border: 1px dashed #d1d3e2;
-        padding: 15px;
-        border-radius: 5px;
-        font-family: 'Courier New', monospace;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-    .receipt-preview-header {
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .receipt-preview-footer {
-        text-align: center;
-        margin-top: 10px;
-        border-top: 1px dashed #d1d3e2;
-        padding-top: 10px;
-    }
-    .settings-card {
-        transition: all 0.3s;
-    }
-    .settings-card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    .textarea-settings {
-        min-height: 100px;
-        font-family: 'Courier New', monospace;
-    }
-    .settings-icon {
-        font-size: 2rem;
-        color: #4e73df;
-        margin-bottom: 15px;
-    }
-    .checkbox-setting {
-        padding: 15px;
-        border-radius: 5px;
-        background-color: #f8f9fc;
-        margin-bottom: 15px;
-    }
-    .checkbox-setting .form-check {
-        padding-left: 2rem;
-    }
-</style>
+{% block extra_css %}
+{% include 'posapp/partials/settings_form_styles.html' %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <a href="{% url 'settings_dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Settings
-        </a>
-    </div>
-
-    <!-- Settings Navigation -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Settings Navigation</h6>
-        </div>
-        <div class="card-body">
-            <div class="btn-group-vertical w-100" role="group">
-                <a href="{% url 'business_settings' %}" class="btn {% if settings_section == 'business' %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
-                    <i class="fas fa-building"></i> Business Settings
-                </a>
-                <a href="{% url 'receipt_settings' %}" class="btn {% if settings_section == 'receipt' %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
-                    <i class="fas fa-receipt"></i> Receipt Settings
-                </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-receipt me-2"></i>{{ title }}</h1>
+                <p>Customize receipt header, footer, logo, and display options</p>
             </div>
         </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'settings_dashboard' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i> System Config
+            </a>
+        </div>
     </div>
 
-    <div class="row">
-        <!-- Settings Form -->
-        <div class="col-lg-8">
-            <div class="card shadow mb-4 settings-card">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Receipt Configuration</h6>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="row mb-4">
-                            <div class="col-md-12 text-center">
-                                <div class="settings-icon">
-                                    <i class="fas fa-receipt"></i>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="admin-panel admin-form-panel">
+        {% include 'posapp/partials/settings_subnav.html' %}
+
+        <div class="settings-layout-2 sidebar-right">
+            <div>
+                <form method="post" class="admin-form">
+                    {% csrf_token %}
+                    <div class="admin-form-body">
+                        <div class="admin-form-section">
+                            <h3 class="admin-form-section-header"><i class="fas fa-align-center me-2"></i>Receipt Text</h3>
+                            <div class="admin-form-section-body">
+                                <div class="mb-3">
+                                    <label for="id_receipt_header" class="form-label">Receipt Header</label>
+                                    <textarea name="receipt_header" id="id_receipt_header" class="form-control receipt-textarea">{{ form.receipt_header.value }}</textarea>
+                                    <small class="text-muted">Appears at the top of receipts.</small>
                                 </div>
-                                <p class="text-muted">Customize how your receipts appear to customers</p>
+                                <div class="mb-0">
+                                    <label for="id_receipt_footer" class="form-label">Receipt Footer</label>
+                                    <textarea name="receipt_footer" id="id_receipt_footer" class="form-control receipt-textarea">{{ form.receipt_footer.value }}</textarea>
+                                    <small class="text-muted">Appears at the bottom of receipts.</small>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="id_receipt_header">Receipt Header</label>
-                            <textarea name="receipt_header" id="id_receipt_header" class="form-control textarea-settings">{{ form.receipt_header.value }}</textarea>
-                            <small class="form-text text-muted">This text will appear at the top of your receipts.</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="id_receipt_footer">Receipt Footer</label>
-                            <textarea name="receipt_footer" id="id_receipt_footer" class="form-control textarea-settings">{{ form.receipt_footer.value }}</textarea>
-                            <small class="form-text text-muted">This text will appear at the bottom of your receipts.</small>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="checkbox-setting">
-                                    <div class="form-check">
+                        <div class="admin-form-section">
+                            <h3 class="admin-form-section-header"><i class="fas fa-toggle-on me-2"></i>Display Options</h3>
+                            <div class="admin-form-section-body">
+                                <div class="admin-form-check-group">
+                                    <div class="admin-form-check">
                                         <input type="checkbox" name="receipt_show_logo" id="id_receipt_show_logo" class="form-check-input" {% if form.receipt_show_logo.value == 'True' %}checked{% endif %}>
                                         <label for="id_receipt_show_logo" class="form-check-label">
-                                            <i class="fas fa-image mr-2"></i> Show Business Logo
+                                            <i class="fas fa-image me-1 text-primary"></i> Show Business Logo
+                                            <div class="text-muted small fw-normal">Display your logo at the top of receipts.</div>
                                         </label>
                                     </div>
-                                    <small class="form-text text-muted mt-2">Display your business logo at the top of receipts.</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="checkbox-setting">
-                                    <div class="form-check">
+                                    <div class="admin-form-check">
                                         <input type="checkbox" name="receipt_show_cashier" id="id_receipt_show_cashier" class="form-check-input" {% if form.receipt_show_cashier.value == 'True' %}checked{% endif %}>
                                         <label for="id_receipt_show_cashier" class="form-check-label">
-                                            <i class="fas fa-user mr-2"></i> Show Cashier Name
+                                            <i class="fas fa-user me-1 text-primary"></i> Show Cashier Name
+                                            <div class="text-muted small fw-normal">Show who processed the sale.</div>
                                         </label>
                                     </div>
-                                    <small class="form-text text-muted mt-2">Display the cashier's name on the receipt.</small>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save Settings
-                            </button>
-                            <a href="{% url 'settings_dashboard' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                    </div>
 
-        <!-- Receipt Preview -->
-        <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Receipt Preview</h6>
-                </div>
-                <div class="card-body text-center">
-                    <div class="receipt-preview">
-                        <div class="receipt-preview-header">
-                            {% if form.receipt_show_logo.value == 'True' %}
-                            <div style="margin-bottom: 5px; font-style: italic;">[Your Logo]</div>
-                            {% endif %}
-                            <div style="font-weight: bold;">YOUR BUSINESS NAME</div>
-                            <div>123 Business Address</div>
-                            <div>Phone: 123-456-7890</div>
-                            {% if form.receipt_header.value %}
-                            <div style="margin-top: 5px; font-size: 0.9em;">{{ form.receipt_header.value|linebreaks }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
-                        
-                        <div style="text-align: left; font-size: 0.9em;">
-                            <div>RECEIPT #12345</div>
-                            <div>Date: {% now "Y-m-d H:i" %}</div>
-                            {% if form.receipt_show_cashier.value == 'True' %}
-                            <div>Cashier: {{ request.user.username }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
-                        
-                        <div style="text-align: left; font-size: 0.9em;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Item 1</span>
-                                <span>10.00</span>
+                    <div class="admin-form-actions">
+                        <a href="{% url 'settings_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div>
+                <div class="settings-side-panel mb-3">
+                    <div class="settings-side-panel-header">
+                        <i class="fas fa-eye me-2"></i>Receipt Preview
+                    </div>
+                    <div class="settings-side-panel-body">
+                        <div class="receipt-preview">
+                            <div class="receipt-preview-header">
+                                {% if form.receipt_show_logo.value == 'True' %}
+                                <div style="margin-bottom:5px;font-style:italic;">[Your Logo]</div>
+                                {% endif %}
+                                <div style="font-weight:bold;">YOUR BUSINESS NAME</div>
+                                <div>123 Business Address</div>
+                                <div>Phone: 123-456-7890</div>
+                                {% if form.receipt_header.value %}
+                                <div style="margin-top:5px;">{{ form.receipt_header.value|linebreaks }}</div>
+                                {% endif %}
                             </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Item 2</span>
-                                <span>15.00</span>
+
+                            <div style="border-top:1px dashed #cbd5e0;margin:10px 0;"></div>
+
+                            <div style="text-align:left;">
+                                <div>RECEIPT #12345</div>
+                                <div>Date: {% now "Y-m-d H:i" %}</div>
+                                {% if form.receipt_show_cashier.value == 'True' %}
+                                <div>Cashier: {{ request.user.username }}</div>
+                                {% endif %}
                             </div>
-                        </div>
-                        
-                        <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
-                        
-                        <div style="text-align: right; font-size: 0.9em;">
-                            <div>Subtotal: 25.00</div>
-                            <div>Tax: 2.50</div>
-                            <div style="font-weight: bold;">Total: 27.50</div>
-                        </div>
-                        
-                        <div class="receipt-preview-footer">
-                            {% if form.receipt_footer.value %}
-                            {{ form.receipt_footer.value|linebreaks }}
-                            {% else %}
-                            <div>Thank you for your purchase!</div>
-                            <div>Please come again!</div>
-                            {% endif %}
+
+                            <div style="border-top:1px dashed #cbd5e0;margin:10px 0;"></div>
+
+                            <div style="text-align:left;">
+                                <div style="display:flex;justify-content:space-between;"><span>Item 1</span><span>10.00</span></div>
+                                <div style="display:flex;justify-content:space-between;"><span>Item 2</span><span>15.00</span></div>
+                            </div>
+
+                            <div style="border-top:1px dashed #cbd5e0;margin:10px 0;"></div>
+
+                            <div style="text-align:right;">
+                                <div>Subtotal: 25.00</div>
+                                <div>Tax: 2.50</div>
+                                <div style="font-weight:bold;">Total: 27.50</div>
+                            </div>
+
+                            <div class="receipt-preview-footer">
+                                {% if form.receipt_footer.value %}
+                                {{ form.receipt_footer.value|linebreaks }}
+                                {% else %}
+                                <div>Thank you for your purchase!</div>
+                                <div>Please come again!</div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Help Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Receipt Settings Help</h6>
-                </div>
-                <div class="card-body">
-                    <p>Receipt settings control how your receipts look and what information they include:</p>
-                    <ul>
-                        <li><i class="fas fa-align-center text-primary mr-2"></i> <strong>Header and footer</strong> text appear at the top and bottom of receipts</li>
-                        <li><i class="fas fa-image text-primary mr-2"></i> <strong>Showing your logo</strong> adds brand recognition</li>
-                        <li><i class="fas fa-user text-primary mr-2"></i> <strong>Cashier name</strong> helps identify who processed the sale</li>
-                    </ul>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i> Your changes will be applied to all new receipts.
+
+                <div class="settings-side-panel">
+                    <div class="settings-side-panel-header">
+                        <i class="fas fa-info-circle me-2"></i>Help
+                    </div>
+                    <div class="settings-side-panel-body">
+                        <ul class="settings-help-list">
+                            <li><strong>Header and footer</strong> text appear at the top and bottom of receipts.</li>
+                            <li><strong>Logo</strong> adds brand recognition on printed receipts.</li>
+                            <li><strong>Cashier name</strong> helps identify who processed the sale.</li>
+                        </ul>
+                        <div class="admin-info-banner mt-3 mb-0">
+                            Changes apply to all new receipts.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

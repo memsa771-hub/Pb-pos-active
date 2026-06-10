@@ -1,251 +1,173 @@
 {% extends 'posapp/base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title }} - POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
-<style>
-    .settings-card {
-        transition: all 0.3s;
-        border-radius: 10px;
-    }
-    .settings-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-    }
-    .logo-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 180px;
-        background-color: #f8f9fc;
-        border-radius: 5px;
-    }
-    .logo-preview {
-        max-height: 150px;
-        max-width: 100%;
-    }
-    .field-container {
-        margin-bottom: 1.5rem;
-    }
-    .form-control {
-        border-radius: 8px;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .tax-settings-section {
-        transition: all 0.3s ease;
-    }
-    .tax-settings-blurred {
-        filter: blur(5px);
-        pointer-events: none;
-        user-select: none;
-    }
-    .tax-settings-revealed {
-        filter: none;
-        pointer-events: auto;
-        user-select: auto;
-    }
-    .tax-toggle-container {
-        background-color: #f8f9fc;
-        padding: 15px;
-        border-radius: 8px;
-        border: 2px dashed #e3e6f0;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-    .tax-toggle-checkbox {
-        transform: scale(1.2);
-        margin-right: 8px;
-    }
-</style>
+{% include 'posapp/partials/settings_form_styles.html' %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <a href="{% url 'settings_dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Settings
-        </a>
-    </div>
-
-    <!-- Settings Navigation -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Settings Navigation</h6>
-        </div>
-        <div class="card-body">
-            <div class="btn-group-vertical w-100" role="group">
-                <a href="{% url 'business_settings' %}" class="btn {% if settings_section == 'business' %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
-                    <i class="fas fa-building"></i> Business Settings
-                </a>
-                <a href="{% url 'receipt_settings' %}" class="btn {% if settings_section == 'receipt' %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
-                    <i class="fas fa-receipt"></i> Receipt Settings
-                </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-building me-2"></i>{{ title }}</h1>
+                <p>Business name, contact details, currency, tax, and service charge</p>
             </div>
         </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'settings_dashboard' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i> System Config
+            </a>
+        </div>
     </div>
 
-    <div class="row">
-        <!-- Business Logo -->
-        <div class="col-lg-4 mb-4">
-            <div class="card settings-card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Business Logo</h6>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="admin-panel admin-form-panel">
+        {% include 'posapp/partials/settings_subnav.html' %}
+
+        <div class="settings-layout-2 sidebar-left">
+            <div class="settings-side-panel">
+                <div class="settings-side-panel-header">
+                    <i class="fas fa-image me-2"></i>Business Logo
                 </div>
-                <div class="card-body">
-                    <div class="logo-container mb-4">
+                <div class="settings-side-panel-body">
+                    <div class="settings-logo-preview-wrap">
                         {% if current_logo %}
-                            <img src="{{ current_logo }}" alt="Business Logo" class="logo-preview">
+                        <img src="{{ current_logo }}" alt="Business Logo" class="settings-logo-preview">
                         {% else %}
-                            <div class="text-center text-muted">
-                                <i class="fas fa-image fa-5x mb-3"></i>
-                                <p>No logo uploaded yet</p>
-                            </div>
+                        <div class="settings-logo-empty">
+                            <i class="fas fa-image"></i>
+                            <div>No logo uploaded</div>
+                        </div>
                         {% endif %}
                     </div>
-                    
+
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div class="custom-file mb-3">
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ logo_form.image.id_for_label }}">Upload Logo</label>
                             {{ logo_form.image }}
-                            <label class="custom-file-label" for="{{ logo_form.image.id_for_label }}">Choose file</label>
                         </div>
-                        <button type="submit" name="upload_logo" class="btn btn-primary btn-block">
-                            <i class="fas fa-upload"></i> Upload Logo
+                        <button type="submit" name="upload_logo" class="btn btn-primary w-100" style="border-radius:10px;font-weight:600;">
+                            <i class="fas fa-upload me-1"></i> Upload Logo
                         </button>
                     </form>
-                    
-                    <div class="small text-muted mt-4">
-                        <p><strong>Recommended:</strong></p>
-                        <ul>
-                            <li>Format: PNG or JPG</li>
-                            <li>Size: Max 3MB</li>
-                            <li>Transparent background</li>
-                        </ul>
+
+                    <div class="admin-info-banner mt-3 mb-0" style="font-size:0.82rem;">
+                        <strong>Recommended:</strong> PNG or JPG, max 3MB, transparent background.
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Business Settings Form -->
-        <div class="col-lg-8">
-            <div class="card settings-card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Business Information</h6>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="row">
-                            <div class="col-md-12">
-                                <!-- Business Name -->
-                                <div class="field-container">
-                                    <label for="{{ form.business_name.id_for_label }}" class="form-label">Business Name</label>
-                                    <input type="text" name="business_name" id="{{ form.business_name.id_for_label }}" class="form-control"
-                                        value="{{ form.business_name.value|default:'' }}" {% if form.business_name.field.required %}required{% endif %}>
+
+            <div>
+                <form method="post" class="admin-form">
+                    {% csrf_token %}
+                    <div class="admin-form-body">
+                        <div class="admin-form-section">
+                            <h3 class="admin-form-section-header"><i class="fas fa-store me-2"></i>Business Information</h3>
+                            <div class="admin-form-section-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="{{ form.business_name.id_for_label }}" class="form-label">Business Name</label>
+                                        <input type="text" name="business_name" id="{{ form.business_name.id_for_label }}" class="form-control"
+                                            value="{{ form.business_name.value|default:'' }}" {% if form.business_name.field.required %}required{% endif %}>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="{{ form.business_address.id_for_label }}" class="form-label">Business Address</label>
+                                        <textarea name="business_address" id="{{ form.business_address.id_for_label }}" class="form-control"
+                                            rows="3" {% if form.business_address.field.required %}required{% endif %}>{{ form.business_address.value|default:'' }}</textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.business_phone.id_for_label }}" class="form-label">Contact Phone</label>
+                                        <input type="text" name="business_phone" id="{{ form.business_phone.id_for_label }}" class="form-control"
+                                            value="{{ form.business_phone.value|default:'' }}" {% if form.business_phone.field.required %}required{% endif %}>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.business_email.id_for_label }}" class="form-label">Contact Email</label>
+                                        <input type="email" name="business_email" id="{{ form.business_email.id_for_label }}" class="form-control"
+                                            value="{{ form.business_email.value|default:'' }}" {% if form.business_email.field.required %}required{% endif %}>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.currency_symbol.id_for_label }}" class="form-label">Currency Symbol</label>
+                                        <input type="text" name="currency_symbol" id="{{ form.currency_symbol.id_for_label }}" class="form-control"
+                                            value="{{ form.currency_symbol.value|default:'Rs.' }}" {% if form.currency_symbol.field.required %}required{% endif %}>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.default_service_charge.id_for_label }}" class="form-label">Default Service Charge (%)</label>
+                                        <input type="number" name="default_service_charge" id="{{ form.default_service_charge.id_for_label }}" class="form-control"
+                                            value="{{ form.default_service_charge.value|default:'5.0' }}" step="0.01" min="0" max="100"
+                                            {% if form.default_service_charge.field.required %}required{% endif %}>
+                                        <small class="text-muted">Default for Dine In orders</small>
+                                    </div>
                                 </div>
-                                
-                                <!-- Business Address -->
-                                <div class="field-container">
-                                    <label for="{{ form.business_address.id_for_label }}" class="form-label">Business Address</label>
-                                    <textarea name="business_address" id="{{ form.business_address.id_for_label }}" class="form-control"
-                                        rows="3" {% if form.business_address.field.required %}required{% endif %}>{{ form.business_address.value|default:'' }}</textarea>
-                                </div>
-                                
-                                <!-- Business Phone -->
-                                <div class="field-container">
-                                    <label for="{{ form.business_phone.id_for_label }}" class="form-label">Contact Phone</label>
-                                    <input type="text" name="business_phone" id="{{ form.business_phone.id_for_label }}" class="form-control"
-                                        value="{{ form.business_phone.value|default:'' }}" {% if form.business_phone.field.required %}required{% endif %}>
-                                </div>
-                                
-                                <!-- Business Email -->
-                                <div class="field-container">
-                                    <label for="{{ form.business_email.id_for_label }}" class="form-label">Contact Email</label>
-                                    <input type="email" name="business_email" id="{{ form.business_email.id_for_label }}" class="form-control"
-                                        value="{{ form.business_email.value|default:'' }}" {% if form.business_email.field.required %}required{% endif %}>
-                                </div>
-                                
-                                <!-- Currency Symbol -->
-                                <div class="field-container">
-                                    <label for="{{ form.currency_symbol.id_for_label }}" class="form-label">Currency Symbol</label>
-                                    <input type="text" name="currency_symbol" id="{{ form.currency_symbol.id_for_label }}" class="form-control"
-                                        value="{{ form.currency_symbol.value|default:'Rs.' }}" {% if form.currency_symbol.field.required %}required{% endif %}>
-                                </div>
-                                
-                                <!-- Tax Settings Section -->
-                                <h5 class="mt-4 mb-3 text-primary">Tax Settings</h5>
-                                
-                                <!-- Tax Settings Toggle -->
-                                <div class="tax-toggle-container">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input tax-toggle-checkbox" id="showTaxSettings">
-                                        <label class="form-check-label font-weight-bold" for="showTaxSettings">
+                            </div>
+                        </div>
+
+                        <div class="admin-form-section">
+                            <h3 class="admin-form-section-header"><i class="fas fa-percent me-2"></i>Tax Settings</h3>
+                            <div class="admin-form-section-body">
+                                <div class="tax-toggle-box">
+                                    <div class="form-check d-inline-block">
+                                        <input type="checkbox" class="form-check-input" id="showTaxSettings">
+                                        <label class="form-check-label fw-bold" for="showTaxSettings">
                                             <i class="fas fa-eye me-2"></i>Show Tax Settings
                                         </label>
                                     </div>
                                     <small class="text-muted d-block mt-2">
-                                        Check this box to reveal and modify tax settings. Leave unchecked if you don't use taxes.
+                                        Check to reveal tax fields. Leave unchecked if you don't use taxes.
                                     </small>
                                 </div>
-                                
-                                <!-- Tax Settings Container (Initially Blurred) -->
+
                                 <div class="tax-settings-section tax-settings-blurred" id="taxSettingsContainer">
-                                    <!-- Tax Rate for Card Payments -->
-                                    <div class="field-container">
-                                        <label for="{{ form.tax_rate_card.id_for_label }}" class="form-label">Tax Rate (%) for Card Payments</label>
-                                        <input type="number" name="tax_rate_card" id="{{ form.tax_rate_card.id_for_label }}" class="form-control"
-                                            value="{{ form.tax_rate_card.value|default:'5.0' }}" step="0.01" min="0" max="100" 
-                                            {% if form.tax_rate_card.field.required %}required{% endif %}>
-                                        <small class="form-text text-muted">Tax percentage applied to card payments</small>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.tax_rate_card.id_for_label }}" class="form-label">Tax Rate (%) — Card</label>
+                                            <input type="number" name="tax_rate_card" id="{{ form.tax_rate_card.id_for_label }}" class="form-control"
+                                                value="{{ form.tax_rate_card.value|default:'5.0' }}" step="0.01" min="0" max="100"
+                                                {% if form.tax_rate_card.field.required %}required{% endif %}>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.tax_rate_cash.id_for_label }}" class="form-label">Tax Rate (%) — Cash</label>
+                                            <input type="number" name="tax_rate_cash" id="{{ form.tax_rate_cash.id_for_label }}" class="form-control"
+                                                value="{{ form.tax_rate_cash.value|default:'15.0' }}" step="0.01" min="0" max="100"
+                                                {% if form.tax_rate_cash.field.required %}required{% endif %}>
+                                        </div>
                                     </div>
-                                    
-                                    <!-- Tax Rate for Cash Payments -->
-                                    <div class="field-container">
-                                        <label for="{{ form.tax_rate_cash.id_for_label }}" class="form-label">Tax Rate (%) for Cash Payments</label>
-                                        <input type="number" name="tax_rate_cash" id="{{ form.tax_rate_cash.id_for_label }}" class="form-control"
-                                            value="{{ form.tax_rate_cash.value|default:'15.0' }}" step="0.01" min="0" max="100"
-                                            {% if form.tax_rate_cash.field.required %}required{% endif %}>
-                                        <small class="form-text text-muted">Tax percentage applied to cash payments</small>
-                                    </div>
-                                    
-                                    <div class="alert alert-info mt-3">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Note:</strong> If you don't collect taxes, set both values to 0 and uncheck "Show Tax Settings" to keep them hidden.
+                                    <div class="admin-info-banner mt-3 mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        If you don't collect taxes, set both values to 0 and keep tax settings hidden.
                                     </div>
                                 </div>
-                                
-                                <!-- Default Service Charge -->
-                                <div class="field-container">
-                                    <label for="{{ form.default_service_charge.id_for_label }}" class="form-label">Default Service Charge (%)</label>
-                                    <input type="number" name="default_service_charge" id="{{ form.default_service_charge.id_for_label }}" class="form-control"
-                                        value="{{ form.default_service_charge.value|default:'5.0' }}" step="0.01" min="0" max="100"
-                                        {% if form.default_service_charge.field.required %}required{% endif %}>
-                                    <small class="form-text text-muted">Default service charge percentage for Dine In orders</small>
-                                </div>
-                                
-                                <!-- Hidden fields, not shown to user but still submitted -->
-                                {{ form.business_website.as_hidden }}
-                                {{ form.business_tagline.as_hidden }}
                             </div>
                         </div>
-                        
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="fas fa-save mr-1"></i> Save Settings
-                            </button>
-                            <a href="{% url 'settings_dashboard' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+
+                        {{ form.business_website.as_hidden }}
+                        {{ form.business_tagline.as_hidden }}
+                    </div>
+
+                    <div class="admin-form-actions">
+                        <a href="{% url 'settings_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -254,78 +176,51 @@
 
 {% block extra_js %}
 <script>
-    // Update file input label with filename
-    $('.custom-file-input').on('change', function() {
-        var fileName = $(this).val().split('\\').pop();
-        $(this).next('.custom-file-label').html(fileName || 'Choose file');
-    });
-    
-    // Tax Settings Toggle Functionality
     function toggleTaxSettings() {
         const checkbox = document.getElementById('showTaxSettings');
         const container = document.getElementById('taxSettingsContainer');
         const isChecked = checkbox.checked;
-        
+
         if (isChecked) {
-            // Show tax settings
             container.classList.remove('tax-settings-blurred');
             container.classList.add('tax-settings-revealed');
-            
-            // Update checkbox label
             checkbox.nextElementSibling.innerHTML = '<i class="fas fa-eye-slash me-2"></i>Hide Tax Settings';
         } else {
-            // Hide tax settings
             container.classList.remove('tax-settings-revealed');
             container.classList.add('tax-settings-blurred');
-            
-            // Update checkbox label  
             checkbox.nextElementSibling.innerHTML = '<i class="fas fa-eye me-2"></i>Show Tax Settings';
         }
-        
-        // Save preference to localStorage
+
         localStorage.setItem('showTaxSettings', isChecked);
     }
-    
-    // Initialize form components
-    $(document).ready(function() {
-        // Set value for hidden currency symbol if empty
+
+    document.addEventListener('DOMContentLoaded', function() {
         if (!$('input[name="currency_symbol"]').val()) {
             $('input[name="currency_symbol"]').val('Rs');
         }
-        
-        // Restore tax settings preference from localStorage
-        const savedPreference = localStorage.getItem('showTaxSettings');
+
         const checkbox = document.getElementById('showTaxSettings');
-        
-        if (savedPreference === 'true') {
-            checkbox.checked = true;
-            toggleTaxSettings();
-        } else {
-            checkbox.checked = false;
-            toggleTaxSettings();
-        }
-        
-        // Add event listener for tax settings toggle
+        const savedPreference = localStorage.getItem('showTaxSettings');
+
+        checkbox.checked = savedPreference === 'true';
+        toggleTaxSettings();
         checkbox.addEventListener('change', toggleTaxSettings);
-        
-        // Form submission warning if tax settings are hidden
-        $('form').on('submit', function(e) {
+
+        $('form.admin-form').on('submit', function(e) {
             const taxSettingsHidden = !document.getElementById('showTaxSettings').checked;
             const cardTax = parseFloat($('#{{ form.tax_rate_card.id_for_label }}').val()) || 0;
             const cashTax = parseFloat($('#{{ form.tax_rate_cash.id_for_label }}').val()) || 0;
-            
+
             if (taxSettingsHidden && (cardTax > 0 || cashTax > 0)) {
                 const confirmSave = confirm(
                     'Warning: Tax settings are hidden but tax rates are set above 0%. ' +
-                    'This means taxes will still be applied to orders. ' +
-                    'Do you want to continue saving?'
+                    'Taxes will still be applied to orders. Continue saving?'
                 );
                 if (!confirmSave) {
                     e.preventDefault();
-                    return false;
                 }
             }
         });
     });
 </script>
-{% endblock %} 
+{% endblock %}

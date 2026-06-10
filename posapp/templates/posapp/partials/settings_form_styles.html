@@ -1,0 +1,225 @@
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .settings-subnav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #f8fafc;
+    }
+
+    .settings-subnav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #4a5568;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        transition: all 0.15s ease;
+    }
+
+    .settings-subnav-link:hover {
+        border-color: #90cdf4;
+        color: #2b6cb0;
+        background: #ebf8ff;
+    }
+
+    .settings-subnav-link.active {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .settings-layout-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem 1.25rem 1.25rem;
+    }
+
+    @media (min-width: 992px) {
+        .settings-layout-2.sidebar-left {
+            grid-template-columns: 320px 1fr;
+        }
+
+        .settings-layout-2.sidebar-right {
+            grid-template-columns: 1fr 320px;
+        }
+    }
+
+    .settings-side-panel {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .settings-side-panel-header {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2d3748;
+        background: #fff;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .settings-side-panel-body {
+        padding: 1rem;
+    }
+
+    .settings-logo-preview-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 160px;
+        background: #fff;
+        border: 1px dashed #cbd5e0;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .settings-logo-preview {
+        max-height: 140px;
+        max-width: 100%;
+        border-radius: 8px;
+    }
+
+    .settings-logo-empty {
+        text-align: center;
+        color: #a0aec0;
+    }
+
+    .settings-logo-empty i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .settings-help-list {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: #4a5568;
+        font-size: 0.86rem;
+        line-height: 1.55;
+    }
+
+    .settings-help-list li {
+        margin-bottom: 0.45rem;
+    }
+
+    .tax-toggle-box {
+        background: #fff;
+        border: 2px dashed #cbd5e0;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .tax-settings-section.tax-settings-blurred {
+        filter: blur(5px);
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .tax-settings-section.tax-settings-revealed {
+        filter: none;
+        pointer-events: auto;
+        user-select: auto;
+    }
+
+    .receipt-preview {
+        background: #fff;
+        border: 1px dashed #cbd5e0;
+        padding: 14px;
+        border-radius: 10px;
+        font-family: 'Courier New', monospace;
+        max-width: 280px;
+        margin: 0 auto;
+        font-size: 0.78rem;
+        color: #2d3748;
+    }
+
+    .receipt-preview-header,
+    .receipt-preview-footer {
+        text-align: center;
+    }
+
+    .receipt-preview-footer {
+        margin-top: 10px;
+        border-top: 1px dashed #cbd5e0;
+        padding-top: 10px;
+    }
+
+    .receipt-textarea {
+        font-family: 'Courier New', monospace;
+        min-height: 110px;
+    }
+
+    .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .theme-card {
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 3px solid transparent;
+        background: #fff;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .theme-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    }
+
+    .theme-card.selected {
+        border-color: #38a169;
+        box-shadow: 0 8px 20px rgba(56, 161, 105, 0.15);
+    }
+
+    .theme-color-preview {
+        height: 110px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .theme-color-row {
+        display: flex;
+        flex: 1;
+    }
+
+    .theme-color-block {
+        flex: 1;
+    }
+
+    .theme-card-name {
+        padding: 0.75rem;
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #2d3748;
+        border-top: 1px solid #edf2f7;
+        background: #f8fafc;
+    }
+
+    .tz-badge {
+        display: inline-block;
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        border-radius: 999px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2b6cb0;
+    }
+</style>
