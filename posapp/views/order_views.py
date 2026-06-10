@@ -2084,7 +2084,7 @@ def delivery_combined_bill(request, delivery_person_id):
         'business_address': business_settings['business_address'].setting_value or '',
         'business_phone': business_settings['business_phone'].setting_value or '',
         'business_email': business_settings['business_email'].setting_value or '',
-        'currency_symbol': business_settings['currency_symbol'].setting_value or 'Rs.',
+        'currency_symbol': business_settings['currency_symbol'].setting_value or '$',
         'receipt_paper_size': business_settings['receipt_paper_size'].setting_value,
         'receipt_custom_css': business_settings['receipt_custom_css'].setting_value,
     }

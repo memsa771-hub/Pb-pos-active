@@ -34,14 +34,16 @@
         </div>
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
+    <div id="productAlerts">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
     <div class="admin-panel">
         <form id="searchForm" action="{% url 'product_list' %}" method="get" class="admin-filters">
@@ -79,6 +81,7 @@
         </form>
 
         <div class="admin-panel-body">
+            <div id="productResults">
             <div class="focus-table-wrap admin-table-wrap">
                 <table class="admin-table" id="productsTable">
                     <thead>
@@ -127,30 +130,12 @@
                                     <a href="{% url 'product_edit' product.id %}" class="btn btn-warning admin-action-btn" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger admin-action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal{{ product.id }}" title="Delete">
+                                    <button type="button" class="btn btn-danger admin-action-btn js-delete-product" title="Delete"
+                                        data-bs-toggle="modal" data-bs-target="#deleteProductModal"
+                                        data-product-name="{{ product.name }}"
+                                        data-delete-url="{% url 'product_delete' product.id %}">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                </div>
-
-                                <div class="modal fade" id="deleteModal{{ product.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ product.id }}" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel{{ product.id }}">Delete Product</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Are you sure you want to delete {{ product.name }}?
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{% url 'product_delete' product.id %}" method="post" style="display: inline;">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -213,6 +198,29 @@
                 </ul>
             </nav>
             {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e3a5f,#2c5282);color:#fff;">
+                <h5 class="modal-title" id="deleteProductModalLabel">Delete Product</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong id="deleteProductName"></strong>?
+                <p class="text-danger mt-2 mb-0 small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteProductForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" id="deleteProductSubmit">Delete</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -226,8 +234,84 @@
         const showArchivedCheckbox = document.getElementById('showArchived');
         const searchForm = document.getElementById('searchForm');
         const archiveToggleLabel = document.querySelector('label[for="showArchived"] span');
+        const deleteModalEl = document.getElementById('deleteProductModal');
+        const deleteForm = document.getElementById('deleteProductForm');
+        const deleteNameEl = document.getElementById('deleteProductName');
+        const deleteSubmitBtn = document.getElementById('deleteProductSubmit');
+        const productAlerts = document.getElementById('productAlerts');
+        let deleteModalInstance = null;
 
-        if (searchInput.value.length > 0) {
+        if (deleteModalEl) {
+            deleteModalInstance = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
+            deleteModalEl.addEventListener('show.bs.modal', function(event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+                deleteNameEl.textContent = trigger.getAttribute('data-product-name') || '';
+                deleteForm.action = trigger.getAttribute('data-delete-url') || '';
+            });
+            deleteModalEl.addEventListener('hidden.bs.modal', function() {
+                document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            });
+        }
+
+        function showProductAlert(message, level) {
+            if (!productAlerts || !message) return;
+            const alertClass = level === 'warning' ? 'warning' : (level === 'error' ? 'danger' : 'success');
+            productAlerts.innerHTML = `
+                <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+
+        function cleanupModalBackdrop() {
+            if (deleteModalInstance) {
+                deleteModalInstance.hide();
+            }
+            document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (!deleteForm.action) return;
+
+                deleteSubmitBtn.disabled = true;
+                const formData = new FormData(deleteForm);
+
+                fetch(deleteForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    },
+                    body: formData
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    cleanupModalBackdrop();
+                    showProductAlert(data.message, data.level || (data.success ? 'success' : 'danger'));
+                    if (data.success) {
+                        performSearch();
+                    }
+                })
+                .catch(function() {
+                    deleteForm.submit();
+                })
+                .finally(function() {
+                    deleteSubmitBtn.disabled = false;
+                });
+            });
+        }
+
+        if (searchInput && searchInput.value.length > 0) {
             searchInput.focus();
             const length = searchInput.value.length;
             searchInput.setSelectionRange(length, length);
@@ -268,21 +352,11 @@
             .then(html => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
+                const newResults = doc.querySelector('#productResults');
+                const currentResults = document.querySelector('#productResults');
 
-                const tableBody = doc.querySelector('#productsTable tbody');
-                if (tableBody) {
-                    document.querySelector('#productsTable tbody').innerHTML = tableBody.innerHTML;
-                }
-
-                const newPagination = doc.querySelector('nav[aria-label="Page navigation"]');
-                const currentPagination = document.querySelector('nav[aria-label="Page navigation"]');
-
-                if (newPagination && currentPagination) {
-                    currentPagination.innerHTML = newPagination.innerHTML;
-                } else if (newPagination && !currentPagination) {
-                    document.querySelector('.admin-panel-body').appendChild(newPagination);
-                } else if (!newPagination && currentPagination) {
-                    currentPagination.remove();
+                if (newResults && currentResults) {
+                    currentResults.innerHTML = newResults.innerHTML;
                 }
 
                 if (document.activeElement === searchInput) {

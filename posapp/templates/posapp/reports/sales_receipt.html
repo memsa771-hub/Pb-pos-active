@@ -10,44 +10,71 @@
     <style>
         .header {
             text-align: center;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .header h1 {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             margin: 0 0 2px 0;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
         .header p {
-            margin: 2px 0;
-            font-size: 10px;
+            margin: 1px 0;
+            font-size: 9px;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
         .divider {
             border-top: 1px dashed #000;
-            margin: 6px 0;
+            margin: 4px 0;
         }
         .report-info {
-            margin: 6px 0;
-            font-size: 10px;
+            margin: 4px 0;
+            font-size: 9px;
         }
         .report-info p {
-            margin: 2px 0;
+            margin: 1px 0;
             font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
         table {
             width: 100%;
+            max-width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
-            font-size: 9px;
-            margin: 4px 0;
+            font-size: 8px;
+            margin: 3px 0;
         }
         th, td {
             text-align: left;
-            padding: 2px 0;
+            padding: 1px 1px;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
         th {
             font-weight: bold;
         }
+        .col-label {
+            width: 58%;
+        }
+        .col-value {
+            width: 42%;
+        }
+        .col-item {
+            width: 52%;
+        }
+        .col-qty {
+            width: 14%;
+        }
+        .col-amt {
+            width: 34%;
+        }
         .right {
             text-align: right;
+            white-space: nowrap;
         }
         .center {
             text-align: center;
@@ -56,22 +83,22 @@
             font-weight: bold;
         }
         h2 {
-            font-size: 11px !important;
-            margin: 6px 0 3px 0 !important;
+            font-size: 9px !important;
+            margin: 4px 0 2px 0 !important;
             text-decoration: underline;
         }
         .footer {
             text-align: center;
-            margin-top: 8px;
-            font-size: 9px;
-            padding-top: 4px;
+            margin-top: 6px;
+            font-size: 8px;
+            padding-top: 3px;
             border-top: 1px dashed #000;
         }
         .footer p {
-            margin: 2px 0;
+            margin: 1px 0;
         }
         .small-text {
-            font-size: 8px;
+            font-size: 7px;
             color: #000;
             font-style: italic;
         }
@@ -79,29 +106,32 @@
             color: #000;
             font-weight: bold;
         }
-        .print-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 5px;
-            background-color: #f8f9fa;
-            border-radius: 3px;
-        }
         .section-box {
             border: 1px solid #000;
-            padding: 4px;
-            margin: 6px 0;
-            border-radius: 2px;
+            padding: 2px;
+            margin: 4px 0;
+            max-width: 100%;
+            overflow: hidden;
         }
-        .section-box {
-            border: 1px solid #000;
-            padding: 4px;
-            margin: 6px 0;
+        .report-title {
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 4px;
         }
-        h2 {
-            font-size: 11px !important;
-            margin: 6px 0 3px !important;
-            text-decoration: underline;
+        .net-revenue-row td {
+            font-size: 10px !important;
+            padding-top: 3px;
+        }
+        @media print {
+            table, th, td, h2, .header h1, .report-info p {
+                font-size: 8px !important;
+            }
+            .net-revenue-row td {
+                font-size: 9px !important;
+            }
+            .section-box {
+                padding: 1px !important;
+            }
         }
     </style>
 </head>
@@ -135,7 +165,7 @@
         
         <!-- Report Info -->
         <div class="report-info section-box">
-            <p style="font-size: 15px; text-align: center; margin-bottom: 6px;">
+            <p class="report-title">
                 {% if filtered_user %}USER SALES REPORT{% else %}SALES SUMMARY REPORT{% endif %}
             </p>
             {% if filtered_user %}
@@ -154,18 +184,17 @@
         <table>
             <tbody>
                 <tr>
-                    <td>Total Orders:</td>
-                    <td class="right"><strong>{{ completed_orders.count }}</strong></td>
+                    <td class="col-label">Total Orders:</td>
+                    <td class="col-value right"><strong>{{ completed_orders.count }}</strong></td>
                 </tr>
                 <tr>
-                    <td>Completed Sales:</td>
-                    <td class="right"><strong>{{ currency_symbol }} {{ total_sales|floatformat:2 }}</strong></td>
+                    <td class="col-label">Completed Sales:</td>
+                    <td class="col-value right"><strong>{{ currency_symbol }}{{ total_sales|floatformat:2 }}</strong></td>
                 </tr>
                 <tr>
-                    <td>Service Charges:</td>
-                    <td class="right">{{ currency_symbol }} {{ total_service_charge|floatformat:2 }}</td>
+                    <td class="col-label">Service Charges:</td>
+                    <td class="col-value right">{{ currency_symbol }}{{ total_service_charge|floatformat:2 }}</td>
                 </tr>
-
             </tbody>
         </table>
         
@@ -177,19 +206,16 @@
             <table>
                 <tbody>
                     <tr>
-                        <td><strong>Take Away:</strong></td>
-                        <td class="right">{{ takeaway_stats.count }} orders</td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ takeaway_stats.total_amount|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>Take Away</strong> ({{ takeaway_stats.count }})</td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ takeaway_stats.total_amount|floatformat:2 }}</strong></td>
                     </tr>
                     <tr>
-                        <td><strong>Dine In:</strong></td>
-                        <td class="right">{{ dinein_stats.count }} orders</td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ dinein_stats.total_amount|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>Dine In</strong> ({{ dinein_stats.count }})</td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ dinein_stats.total_amount|floatformat:2 }}</strong></td>
                     </tr>
                     <tr>
-                        <td><strong>Delivery:</strong></td>
-                        <td class="right">{{ delivery_stats.count }} orders</td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ delivery_stats.total_amount|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>Delivery</strong> ({{ delivery_stats.count }})</td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ delivery_stats.total_amount|floatformat:2 }}</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -205,9 +231,8 @@
                 <tbody>
                     {% for delivery_person in delivery_person_stats %}
                     <tr>
-                        <td><strong>{{ delivery_person.delivery_person__name }}:</strong></td>
-                        <td class="right">{{ delivery_person.order_count }} orders</td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ delivery_person.total_amount|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>{{ delivery_person.delivery_person__name }}</strong> ({{ delivery_person.order_count }})</td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ delivery_person.total_amount|floatformat:2 }}</strong></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -222,16 +247,16 @@
         <table>
             <tbody>
                 <tr>
-                    <td>Bill Adjustments:</td>
-                    <td class="right">{{ currency_symbol }} {{ total_bill_adjustments|floatformat:2 }}</td>
+                    <td class="col-label">Bill Adjustments:</td>
+                    <td class="col-value right">{{ currency_symbol }}{{ total_bill_adjustments|floatformat:2 }}</td>
                 </tr>
                 <tr>
-                    <td>Advance Adjustments:</td>
-                    <td class="right">{{ currency_symbol }} {{ total_advance_adjustments|floatformat:2 }}</td>
+                    <td class="col-label">Advance Adjustments:</td>
+                    <td class="col-value right">{{ currency_symbol }}{{ total_advance_adjustments|floatformat:2 }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td>Total Adjustments:</td>
-                    <td class="right"><strong>{{ currency_symbol }} {{ total_adjustments|floatformat:2 }}</strong></td>
+                    <td class="col-label">Total Adjustments:</td>
+                    <td class="col-value right"><strong>{{ currency_symbol }}{{ total_adjustments|floatformat:2 }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -244,37 +269,37 @@
             <table>
                 <tbody>
                     <tr>
-                        <td><strong>Gross Sales:</strong></td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ total_sales|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>Gross Sales:</strong></td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ total_sales|floatformat:2 }}</strong></td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 8px;">Less: Service Charges</td>
-                        <td class="right">-{{ currency_symbol }} {{ total_service_charge|floatformat:2 }}</td>
+                        <td class="col-label">Less: Service Chg.</td>
+                        <td class="col-value right">-{{ currency_symbol }}{{ total_service_charge|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 8px;">Less: Discounts Given</td>
-                        <td class="right">-{{ currency_symbol }} {{ total_discounts|floatformat:2 }}</td>
+                        <td class="col-label">Less: Discounts</td>
+                        <td class="col-value right">-{{ currency_symbol }}{{ total_discounts|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 8px;">Less: Bill Adjustments</td>
-                        <td class="right">-{{ currency_symbol }} {{ total_bill_adjustments|floatformat:2 }}</td>
+                        <td class="col-label">Less: Bill Adj.</td>
+                        <td class="col-value right">-{{ currency_symbol }}{{ total_bill_adjustments|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 8px;">Less: Advance Adjustments</td>
-                        <td class="right">-{{ currency_symbol }} {{ total_advance_adjustments|floatformat:2 }}</td>
+                        <td class="col-label">Less: Advance Adj.</td>
+                        <td class="col-value right">-{{ currency_symbol }}{{ total_advance_adjustments|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 8px;">Less: Delivery Charges</td>
-                        <td class="right">-{{ currency_symbol }} {{ total_delivery_charges|floatformat:2 }}</td>
+                        <td class="col-label">Less: Delivery Chg.</td>
+                        <td class="col-value right">-{{ currency_symbol }}{{ total_delivery_charges|floatformat:2 }}</td>
                     </tr>
-                    <tr style="border-top: 2px solid #000; margin-top: 4px;" class="total-row">
-                        <td style="font-size: 14px;"><strong>NET REVENUE:</strong></td>
-                        <td class="right" style="font-size: 14px;"><strong>{{ currency_symbol }} {{ net_revenue|floatformat:2 }}</strong></td>
+                    <tr class="total-row net-revenue-row" style="border-top: 1px solid #000;">
+                        <td class="col-label"><strong>NET REVENUE:</strong></td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ net_revenue|floatformat:2 }}</strong></td>
                     </tr>
                     {% if is_shortage %}
                     <tr>
-                        <td style="color: red;"><strong>SHORT AMOUNT:</strong></td>
-                        <td class="right negative-amount"><strong>{{ currency_symbol }} {{ shortage_amount|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>SHORT AMOUNT:</strong></td>
+                        <td class="col-value right negative-amount"><strong>{{ currency_symbol }}{{ shortage_amount|floatformat:2 }}</strong></td>
                     </tr>
                     {% endif %}
                 </tbody>
@@ -292,20 +317,20 @@
                         <td colspan="2" style="font-weight: bold; text-decoration: underline;">REVENUE SOURCES</td>
                     </tr>
                     <tr>
-                        <td>Take Away Sales:</td>
-                        <td class="right">{{ currency_symbol }} {{ takeaway_stats.total_amount|floatformat:2 }}</td>
+                        <td class="col-label">Take Away Sales:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ takeaway_stats.total_amount|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td>Dine In Sales:</td>
-                        <td class="right">{{ currency_symbol }} {{ dinein_stats.total_amount|floatformat:2 }}</td>
+                        <td class="col-label">Dine In Sales:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ dinein_stats.total_amount|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td>Delivery Sales:</td>
-                        <td class="right">{{ currency_symbol }} {{ delivery_stats.total_amount|floatformat:2 }}</td>
+                        <td class="col-label">Delivery Sales:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ delivery_stats.total_amount|floatformat:2 }}</td>
                     </tr>
                     <tr class="total-row">
-                        <td><strong>Total Revenue:</strong></td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ total_sales|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>Total Revenue:</strong></td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ total_sales|floatformat:2 }}</strong></td>
                     </tr>
                     <tr>
                         <td colspan="2">&nbsp;</td>
@@ -314,30 +339,29 @@
                         <td colspan="2" style="font-weight: bold; text-decoration: underline;">DEDUCTIONS</td>
                     </tr>
                     <tr>
-                        <td>Service Charges:</td>
-                        <td class="right">{{ currency_symbol }} {{ total_service_charge|floatformat:2 }}</td>
+                        <td class="col-label">Service Charges:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ total_service_charge|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td>Customer Discounts:</td>
-                        <td class="right">{{ currency_symbol }} {{ total_discounts|floatformat:2 }}</td>
+                        <td class="col-label">Customer Discounts:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ total_discounts|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td>Bill Adjustments:</td>
-                        <td class="right">{{ currency_symbol }} {{ total_bill_adjustments|floatformat:2 }}</td>
+                        <td class="col-label">Bill Adjustments:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ total_bill_adjustments|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td>Advance Adjustments:</td>
-                        <td class="right">{{ currency_symbol }} {{ total_advance_adjustments|floatformat:2 }}</td>
+                        <td class="col-label">Advance Adjustments:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ total_advance_adjustments|floatformat:2 }}</td>
                     </tr>
                     <tr>
-                        <td>Delivery Charges:</td>
-                        <td class="right">{{ currency_symbol }} {{ total_delivery_charges|floatformat:2 }}</td>
+                        <td class="col-label">Delivery Charges:</td>
+                        <td class="col-value right">{{ currency_symbol }}{{ total_delivery_charges|floatformat:2 }}</td>
                     </tr>
                     <tr class="total-row">
-                        <td><strong>Total Deductions:</strong></td>
-                        <td class="right"><strong>{{ currency_symbol }} {{ total_deductions|floatformat:2 }}</strong></td>
+                        <td class="col-label"><strong>Total Deductions:</strong></td>
+                        <td class="col-value right"><strong>{{ currency_symbol }}{{ total_deductions|floatformat:2 }}</strong></td>
                     </tr>
-
                 </tbody>
             </table>
         </div>
@@ -350,18 +374,18 @@
         <table>
             <thead>
                 <tr>
-                    <th>ITEM</th>
-                    <th class="right">QTY</th>
-                    <th class="right">AMOUNT</th>
+                    <th class="col-item">ITEM</th>
+                    <th class="col-qty right">QTY</th>
+                    <th class="col-amt right">AMT</th>
                 </tr>
             </thead>
             <tbody>
                 <tr><td colspan="3" class="divider"></td></tr>
                 {% for product in products_sold %}
                 <tr>
-                    <td>{{ product.product__name }}</td>
-                    <td class="right"><strong>{% if product.total_quantity %}{{ product.total_quantity }}{% else %}-{% endif %}</strong></td>
-                    <td class="right">{{ currency_symbol }} {{ product.total_sales|floatformat:2 }}</td>
+                    <td class="col-item">{{ product.product__name }}</td>
+                    <td class="col-qty right"><strong>{% if product.total_quantity %}{{ product.total_quantity }}{% else %}-{% endif %}</strong></td>
+                    <td class="col-amt right">{{ currency_symbol }}{{ product.total_sales|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
                 <tr><td colspan="3" class="divider"></td></tr>

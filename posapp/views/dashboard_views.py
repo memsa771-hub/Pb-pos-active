@@ -443,12 +443,12 @@ def sales_summary(request, end_day_id=None):
             'business_email', 'currency_symbol'
         ])
         
-        currency_symbol = business_settings['currency_symbol'].setting_value or 'Rs.'
+        currency_symbol = business_settings['currency_symbol'].setting_value or '$'
         business_name = business_settings['business_name'].setting_value or 'POS System'
         business_address = business_settings['business_address'].setting_value or ''
         business_phone = business_settings['business_phone'].setting_value or ''
     except Exception:
-        currency_symbol = 'Rs.'
+        currency_symbol = '$'
         business_name = 'POS System'
         business_address = ''
         business_phone = ''

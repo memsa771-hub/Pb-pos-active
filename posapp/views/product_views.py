@@ -134,6 +134,23 @@ def product_edit(request, product_id):
     
     return render(request, 'posapp/products/product_form.html', context)
 
+def _product_delete_response(request, success, message, level='success', redirect_name='product_list'):
+    """Return JSON for AJAX deletes or redirect with a flash message."""
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': success,
+            'message': message,
+            'level': level,
+        })
+    if level == 'warning':
+        messages.warning(request, message)
+    elif level == 'error' or not success:
+        messages.error(request, message)
+    else:
+        messages.success(request, message)
+    return redirect(redirect_name)
+
+
 @login_required
 @admin_required
 def product_delete(request, product_id):
@@ -153,12 +170,16 @@ def product_delete(request, product_id):
             product.is_archived = True
             product.save()
             
-            messages.warning(
-                request, 
-                f'This product cannot be deleted because it is referenced in {pending_order_items.count()} pending ' 
-                f'order(s). It has been archived instead.'
+            message = (
+                f'This product cannot be deleted because it is referenced in '
+                f'{pending_order_items.count()} pending order(s). It has been archived instead.'
             )
-            return redirect('product_detail', product_id=product_id)
+            return _product_delete_response(
+                request,
+                success=True,
+                message=message,
+                level='warning',
+            )
         
         try:
             # Find completed or cancelled order items
@@ -177,8 +198,16 @@ def product_delete(request, product_id):
                 product_name = product.name
                 product.delete()
                 
-            messages.success(request, f'Product "{product_name}" and its {item_count} references in completed/cancelled orders deleted successfully.')
-            return redirect('product_list')
+            message = (
+                f'Product "{product_name}" and its {item_count} references in '
+                f'completed/cancelled orders deleted successfully.'
+            )
+            return _product_delete_response(
+                request,
+                success=True,
+                message=message,
+                level='success',
+            )
             
         except Exception as e:
             # If any exception occurs
@@ -186,12 +215,16 @@ def product_delete(request, product_id):
             product.is_archived = True
             product.save()
             
-            messages.warning(
-                request, 
-                f'This product could not be deleted due to an error: {str(e)}. ' 
+            message = (
+                f'This product could not be deleted due to an error: {str(e)}. '
                 f'It has been archived instead.'
             )
-            return redirect('product_detail', product_id=product_id)
+            return _product_delete_response(
+                request,
+                success=True,
+                message=message,
+                level='warning',
+            )
     
     return redirect('product_detail', product_id=product_id)
 

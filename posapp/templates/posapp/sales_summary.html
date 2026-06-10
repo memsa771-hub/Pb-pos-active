@@ -7,17 +7,19 @@
     <title>Sales Summary | POS System</title>
     <style>
         @page {
-            size: 70mm auto;
+            size: 80mm auto;
             margin: 0;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
         body {
             font-family: "Courier New", Courier, monospace;
-            font-size: 10px;
-            width: 68mm;
+            font-size: 9px;
+            width: 72mm;
+            max-width: 72mm;
             margin: 0 auto;
-            padding: 1mm;
+            padding: 1mm 2mm;
+            overflow: hidden;
             background-color: white;
             color: black;
             line-height: 1.1;
@@ -26,14 +28,16 @@
         }
         .receipt {
             width: 100%;
-            max-width: 68mm;
+            max-width: 72mm;
             margin: 0;
             padding: 0;
         }
         pre.receipt {
             font-family: "Courier New", Courier, monospace;
-            font-size: 10px;
-            white-space: pre;
+            font-size: 9px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
             line-height: 1.1;
             margin: 0;
             padding: 0;
@@ -46,7 +50,7 @@
         }
         @media print {
             body, html {
-                width: 70mm;
+                width: 80mm;
                 margin: 0;
                 padding: 0;
                 background: #fff;
@@ -54,8 +58,8 @@
                 print-color-adjust: exact;
             }
             .receipt {
-                width: 68mm;
-                max-width: 68mm;
+                width: 72mm;
+                max-width: 72mm;
                 margin: 0;
                 box-shadow: none;
                 border: none;
@@ -102,45 +106,45 @@ Generated: {% now "Y-m-d H:i" %}
 ----------------------------------------
 SALES SUMMARY
 Total Orders:        {{ completed_orders.count }}
-Completed Sales:     {{ currency_symbol|default:"Rs." }} {{ total_sales|floatformat:2 }}
+Completed Sales:     {{ currency_symbol|default:"$" }} {{ total_sales|floatformat:2 }}
 ----------------------------------------
 ORDER TYPE BREAKDOWN
 Take Away:           {{ takeaway_stats.count }} orders
-                     {{ currency_symbol|default:"Rs." }} {{ takeaway_stats.total_amount|floatformat:2 }}
+                     {{ currency_symbol|default:"$" }} {{ takeaway_stats.total_amount|floatformat:2 }}
 Dine In:             {{ dinein_stats.count }} orders
-                     {{ currency_symbol|default:"Rs." }} {{ dinein_stats.total_amount|floatformat:2 }}
+                     {{ currency_symbol|default:"$" }} {{ dinein_stats.total_amount|floatformat:2 }}
 Delivery:            {{ delivery_stats.count }} orders
-                     {{ currency_symbol|default:"Rs." }} {{ delivery_stats.total_amount|floatformat:2 }}
+                     {{ currency_symbol|default:"$" }} {{ delivery_stats.total_amount|floatformat:2 }}
 ----------------------------------------{% if delivery_person_stats %}
 DELIVERY PERSON BREAKDOWN{% for delivery_person in delivery_person_stats %}
 {{ delivery_person.delivery_person__name|ljust:15 }} {{ delivery_person.order_count }} orders
-                     {{ currency_symbol|default:"Rs." }} {{ delivery_person.total_amount|floatformat:2 }}{% endfor %}
+                     {{ currency_symbol|default:"$" }} {{ delivery_person.total_amount|floatformat:2 }}{% endfor %}
 ----------------------------------------{% endif %}
 ADJUSTMENTS
-Bill Adjustments:    {{ currency_symbol|default:"Rs." }} {{ total_bill_adjustments|floatformat:2 }}
-Advance Adjustments: {{ currency_symbol|default:"Rs." }} {{ total_advance_adjustments|floatformat:2 }}
-Total Adjustments:   {{ currency_symbol|default:"Rs." }} {{ total_adjustments|floatformat:2 }}
+Bill Adjustments:    {{ currency_symbol|default:"$" }} {{ total_bill_adjustments|floatformat:2 }}
+Advance Adjustments: {{ currency_symbol|default:"$" }} {{ total_advance_adjustments|floatformat:2 }}
+Total Adjustments:   {{ currency_symbol|default:"$" }} {{ total_adjustments|floatformat:2 }}
 ----------------------------------------
 NET REVENUE CALCULATION
-Gross Sales:         {{ currency_symbol|default:"Rs." }} {{ total_sales|floatformat:2 }}
-Less: Service Charge -{{ currency_symbol|default:"Rs." }} {{ total_service_charge|floatformat:2 }}
-Less: Discounts      -{{ currency_symbol|default:"Rs." }} {{ total_discounts|floatformat:2 }}
-Less: Bill Adj.      -{{ currency_symbol|default:"Rs." }} {{ total_bill_adjustments|floatformat:2 }}
-Less: Advance Adj.   -{{ currency_symbol|default:"Rs." }} {{ total_advance_adjustments|floatformat:2 }}
-Less: Delivery Chg.  -{{ currency_symbol|default:"Rs." }} {{ total_delivery_charges|floatformat:2 }}
-NET REVENUE:         {{ currency_symbol|default:"Rs." }} {{ net_revenue|floatformat:2 }}
-{% if is_shortage %}SHORT AMOUNT:        {{ currency_symbol|default:"Rs." }} {{ shortage_amount|floatformat:2 }}
+Gross Sales:         {{ currency_symbol|default:"$" }} {{ total_sales|floatformat:2 }}
+Less: Service Charge -{{ currency_symbol|default:"$" }} {{ total_service_charge|floatformat:2 }}
+Less: Discounts      -{{ currency_symbol|default:"$" }} {{ total_discounts|floatformat:2 }}
+Less: Bill Adj.      -{{ currency_symbol|default:"$" }} {{ total_bill_adjustments|floatformat:2 }}
+Less: Advance Adj.   -{{ currency_symbol|default:"$" }} {{ total_advance_adjustments|floatformat:2 }}
+Less: Delivery Chg.  -{{ currency_symbol|default:"$" }} {{ total_delivery_charges|floatformat:2 }}
+NET REVENUE:         {{ currency_symbol|default:"$" }} {{ net_revenue|floatformat:2 }}
+{% if is_shortage %}SHORT AMOUNT:        {{ currency_symbol|default:"$" }} {{ shortage_amount|floatformat:2 }}
 {% endif %}----------------------------------------
 DETAILED FINANCIAL BREAKDOWN
-Take Away Revenue:   {{ currency_symbol|default:"Rs." }} {{ takeaway_stats.total_amount|floatformat:2 }}
-Dine In Revenue:     {{ currency_symbol|default:"Rs." }} {{ dinein_stats.total_amount|floatformat:2 }}
-Delivery Revenue:    {{ currency_symbol|default:"Rs." }} {{ delivery_stats.total_amount|floatformat:2 }}
-Total Deductions:    {{ currency_symbol|default:"Rs." }} {{ total_deductions|floatformat:2 }}
+Take Away Revenue:   {{ currency_symbol|default:"$" }} {{ takeaway_stats.total_amount|floatformat:2 }}
+Dine In Revenue:     {{ currency_symbol|default:"$" }} {{ dinein_stats.total_amount|floatformat:2 }}
+Delivery Revenue:    {{ currency_symbol|default:"$" }} {{ delivery_stats.total_amount|floatformat:2 }}
+Total Deductions:    {{ currency_symbol|default:"$" }} {{ total_deductions|floatformat:2 }}
 ----------------------------------------
 PRODUCTS SOLD
 {% if products_sold %}Name                Qty     Amount
 ----------------------------------------{% for product in products_sold %}
-{{ product.product__name|ljust:20 }}{% if product.total_quantity %}{{ product.total_quantity|stringformat:"d"|rjust:5 }}{% else %}-{% endif %}     {{ currency_symbol|default:"Rs." }}{{ product.total_sales|floatformat:2 }}{% endfor %}
+{{ product.product__name|ljust:20 }}{% if product.total_quantity %}{{ product.total_quantity|stringformat:"d"|rjust:5 }}{% else %}-{% endif %}     {{ currency_symbol|default:"$" }}{{ product.total_sales|floatformat:2 }}{% endfor %}
 {% else %}No products sold in this period
 {% endif %}----------------------------------------
 Thank you for your business!
