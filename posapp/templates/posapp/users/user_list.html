@@ -2,147 +2,176 @@
 {% load custom_filters %}
 
 {% block title %}User Management{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .admin-table-wrap.focus-table-wrap table {
+        min-width: 980px;
+    }
+
+    .user-role-badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+    }
+
+    .user-role-badge.admin { background: #fed7d7; color: #822727; }
+    .user-role-badge.manager { background: #fefcbf; color: #744210; }
+    .user-role-badge.staff { background: #bee3f8; color: #2c5282; }
+    .user-role-badge.muted { background: #edf2f7; color: #4a5568; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">User Management</h1>
-        <div>
-            <a href="{% url 'active_sessions' %}" class="d-none d-sm-inline-block btn btn-info shadow-sm me-2">
-                <i class="fas fa-users-cog fa-sm text-white-50"></i> Active Sessions
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-users me-2"></i>Manage Users</h1>
+                <p>Create accounts, assign roles, and control access</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'active_sessions' %}" class="btn btn-outline-light">
+                <i class="fas fa-users-cog me-1"></i> Active Sessions
             </a>
-            <a href="{% url 'user_create' %}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
-                <i class="fas fa-plus fa-sm text-white-50"></i> Add New User
+            <a href="{% url 'user_create' %}" class="btn btn-light">
+                <i class="fas fa-plus me-1"></i> Add User
             </a>
         </div>
     </div>
 
-    <!-- Search Card -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Search Users</h6>
-        </div>
-        <div class="card-body">
-            <form method="get" class="mb-3" id="searchForm">
-                <div class="input-group">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search by username, name or email" name="search" value="{{ search_query }}" autocomplete="off">
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0" id="searchForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label" for="searchInput">Search Users</label>
+                    <div class="admin-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search by username, name, or email..." name="search" value="{{ search_query }}" autocomplete="off">
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
+                {% if search_query %}
+                <div class="col-md-auto">
+                    <a href="{% url 'user_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </form>
 
-    <!-- Users List Card -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">All Users</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Date Joined</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user_obj in users %}
-                        <tr>
-                            <td>{{ user_obj.username }}</td>
-                            <td>{{ user_obj.get_full_name }}</td>
-                            <td>{{ user_obj.email }}</td>
-                            <td>
-                                {% if user_obj.is_superuser or user_obj.is_staff %}
-                                    <span class="badge bg-danger">Admin</span>
-                                {% elif user_obj.profile.role %}
-                                    <span class="badge 
-                                        {% if user_obj.profile.role.name == 'Admin' %}bg-danger
-                                        {% elif user_obj.profile.role.name == 'Branch Manager' %}bg-warning
-                                        {% else %}bg-info{% endif %}">
+        <div id="userResults">
+            <div class="admin-panel-body">
+                <div class="focus-table-wrap admin-table-wrap">
+                    <table class="admin-table" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_obj in users %}
+                            <tr>
+                                <td><strong>{{ user_obj.username }}</strong></td>
+                                <td>{{ user_obj.get_full_name|default:"—" }}</td>
+                                <td>{{ user_obj.email|default:"—" }}</td>
+                                <td>
+                                    {% if user_obj.is_superuser or user_obj.is_staff %}
+                                    <span class="user-role-badge admin">Admin</span>
+                                    {% elif user_obj.profile.role %}
+                                    <span class="user-role-badge {% if user_obj.profile.role.name == 'Admin' %}admin{% elif user_obj.profile.role.name == 'Branch Manager' %}manager{% else %}staff{% endif %}">
                                         {{ user_obj.profile.role.name }}
                                     </span>
-                                {% else %}
-                                    <span class="badge bg-secondary">No Role</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if user_obj.is_active %}
-                                    <span class="badge bg-success text-white">Active</span>
-                                {% else %}
-                                    <span class="badge bg-danger text-white">Inactive</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ user_obj.date_joined|pkt_date }}</td>
-                            <td>
-                                <a href="{% url 'user_detail' user_obj.id %}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{% url 'user_edit' user_obj.id %}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% if user_obj.id != request.user.id %}
-                                <a href="{% url 'user_delete' user_obj.id %}" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center">No users found</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    {% else %}
+                                    <span class="user-role-badge muted">No Role</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user_obj.is_active %}
+                                    <span class="admin-status-badge success">Active</span>
+                                    {% else %}
+                                    <span class="admin-status-badge danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user_obj.date_joined|pkt_date }}</td>
+                                <td class="actions-col">
+                                    <div class="admin-action-btns">
+                                        <a href="{% url 'user_detail' user_obj.id %}" class="btn btn-info admin-action-btn" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'user_edit' user_obj.id %}" class="btn btn-warning admin-action-btn" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if user_obj.id != request.user.id %}
+                                        <a href="{% url 'user_delete' user_obj.id %}" class="btn btn-danger admin-action-btn" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="admin-empty">
+                                        <i class="fas fa-users"></i>
+                                        <strong>No users found</strong>
+                                        <div class="mt-1">{% if search_query %}Try a different search term.{% else %}Add your first user to get started.{% endif %}</div>
+                                        <div class="mt-3">
+                                            <a href="{% url 'user_create' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus me-1"></i> Add User
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            
-            <!-- Pagination -->
+
             {% if users.has_other_pages %}
-            <div class="pagination justify-content-center mt-4">
-                <ul class="pagination">
+            <nav class="admin-pagination" aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
                     {% if users.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">&laquo;</a>
                     </li>
                     {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
                     {% endif %}
-                    
+
                     {% for i in users.paginator.page_range %}
                         {% if users.number == i %}
-                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
                         {% else %}
                         <li class="page-item"><a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a></li>
                         {% endif %}
                     {% endfor %}
-                    
+
                     {% if users.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
+                        <a class="page-link" href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">&raquo;</a>
                     </li>
                     {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
                     {% endif %}
                 </ul>
-            </div>
+            </nav>
             {% endif %}
         </div>
     </div>
@@ -152,70 +181,40 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Real-time search
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
-        
-        // Focus on search input if it has a value
+
         if (searchInput.value.length > 0) {
             searchInput.focus();
-            // Place cursor at the end of text
             const length = searchInput.value.length;
             searchInput.setSelectionRange(length, length);
         }
-        
+
         searchInput.addEventListener('input', function() {
-            // Short delay to prevent too many submissions while typing
             clearTimeout(this.timer);
             this.timer = setTimeout(function() {
-                // Store the cursor position
                 const cursorPosition = searchInput.selectionStart;
                 const searchValue = searchInput.value;
-                
-                // Use AJAX to perform the search without page reload
+
                 fetch(`?search=${encodeURIComponent(searchValue)}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => response.text())
                 .then(html => {
-                    // Update just the table content, not the entire page
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    
-                    // Update the users table
-                    const tableBody = doc.querySelector('#dataTable tbody');
-                    if (tableBody) {
-                        document.querySelector('#dataTable tbody').innerHTML = tableBody.innerHTML;
+                    const newResults = doc.querySelector('#userResults');
+                    const currentResults = document.querySelector('#userResults');
+                    if (newResults && currentResults) {
+                        currentResults.innerHTML = newResults.innerHTML;
                     }
-                    
-                    // Update pagination if it exists
-                    const newPagination = doc.querySelector('.pagination');
-                    const currentPagination = document.querySelector('.pagination');
-                    
-                    if (newPagination && currentPagination) {
-                        currentPagination.innerHTML = newPagination.innerHTML;
-                    } else if (newPagination && !currentPagination) {
-                        document.querySelector('.card-body').appendChild(newPagination);
-                    } else if (!newPagination && currentPagination) {
-                        currentPagination.remove();
-                    }
-                    
-                    // Restore focus and cursor position
                     searchInput.focus();
                     searchInput.setSelectionRange(cursorPosition, cursorPosition);
-                    
-                    // Update the URL without reloading the page
                     window.history.pushState({}, '', `?search=${encodeURIComponent(searchValue)}`);
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // If AJAX fails, fall back to traditional form submission
-                    searchForm.submit();
-                });
-            }, 500); // Submit after 500ms of no typing
+                .catch(() => searchForm.submit());
+            }, 400);
         });
     });
 </script>
-{% endblock %} 
+{% endblock %}
