@@ -1,61 +1,85 @@
 {% extends 'posapp/base.html' %}
 {% load custom_filters %}
-{% load crispy_forms_tags %}
 
 {% block title %}{% if object %}Edit{% else %}New{% endif %} Advance Adjustment | POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .admin-form input:not([type="file"]):not([type="checkbox"]),
+    .admin-form textarea,
+    .admin-form select {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        min-height: 42px;
+    }
+
+    .admin-form textarea {
+        min-height: 100px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{% if object %}Edit{% else %}New{% endif %} Advance Adjustment</h1>
-        <a href="{% url 'advance_adjustment_list' %}" class="d-none d-sm-inline-block btn btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
-        </a>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-8 col-md-10 mx-auto">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold">Advance Adjustment Information</h6>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.name|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.amount|as_crispy_field }}
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                {{ form.notes|as_crispy_field }}
-                            </div>
-                        </div>
-                        
-                        <div class="alert alert-info mt-3">
-                            <i class="fas fa-info-circle mr-2"></i> The date will be automatically set to today's date.
-                            {% if object %}
-                            <br>Current date: <strong>{{ object.date|pkt_date }}</strong>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mt-4 text-center">
-                            <button type="submit" class="btn btn-primary px-5">
-                                <i class="fas fa-save mr-1"></i> {% if object %}Update{% else %}Save{% endif %}
-                            </button>
-                            <a href="{% url 'advance_adjustment_list' %}" class="btn btn-secondary px-5 ml-2">
-                                <i class="fas fa-times mr-1"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1>
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    {% if object %}Edit Advance Adjustment{% else %}Add Advance Adjustment{% endif %}
+                </h1>
+                <p>{% if object %}Update advance adjustment details{% else %}Record a new advance payment adjustment{% endif %}</p>
             </div>
         </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'advance_adjustment_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Advance Adjustment Details</h2>
+        </div>
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                <div class="admin-info-banner mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    The date is set automatically to today.
+                    {% if object %}Current date: <strong>{{ object.date|pkt_date }}</strong>{% endif %}
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_name" class="form-label">Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_amount" class="form-label">Amount <span class="text-danger">*</span></label>
+                        {{ form.amount }}
+                    </div>
+                    <div class="col-12">
+                        <label for="id_notes" class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% url 'advance_adjustment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {% if object %}Update{% else %}Save{% endif %} Advance Adjustment
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

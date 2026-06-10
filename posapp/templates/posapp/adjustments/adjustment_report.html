@@ -2,143 +2,113 @@
 {% load custom_filters %}
 
 {% block title %}Adjustment Report | POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% include 'posapp/partials/admin_page_styles.html' %}
 <style>
-    .negative-amount {
-        color: #e74a3b;
+    .adj-report-table-wrap.focus-table-wrap table {
+        min-width: 860px;
+    }
+
+    .adj-negative {
+        color: #e53e3e;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .adj-stat-sub {
+        font-size: 0.72rem;
+        color: #a0aec0;
+        margin-top: 0.2rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Adjustment Report</h1>
-        <div>
-            <a href="{% url 'adjustment_receipt' %}?start_date={{ start_date_str|urlencode }}&end_date={{ end_date_str|urlencode }}" class="btn btn-info shadow-sm mr-2" target="_blank">
-                <i class="fas fa-print fa-sm text-white-50"></i> Print Receipt
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-file-alt me-2"></i>Adjustment Report</h1>
+                <p>Bill and advance adjustments for the selected period</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'adjustment_receipt' %}?start_date={{ start_date_str|urlencode }}&end_date={{ end_date_str|urlencode }}" class="btn btn-outline-light" target="_blank">
+                <i class="fas fa-print me-1"></i> Print Receipt
             </a>
-            <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary shadow-sm">
-                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Reports
+            <a href="{% url 'adjustment_dashboard' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i> Adjustments
             </a>
         </div>
     </div>
 
     {% if not is_admin %}
-    <div class="alert alert-info mb-4">
-        <i class="fas fa-info-circle me-2"></i> <strong>Current Period Data:</strong> 
-        As a branch manager, you are only seeing adjustments since the last day end operation.
-        Date filtering is only available to admin users.
+    <div class="admin-info-banner">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Current Period Data:</strong>
+        As a Branch Manager, you only see adjustments since the last End Day. Date filtering is available to admin users.
     </div>
     {% endif %}
 
     {% if is_admin %}
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold">Filter Adjustments</h6>
-        </div>
-        <div class="card-body">
-            <form method="get" class="mb-4">
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="start_date">Start Date</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="end_date">End Date</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
-                        </div>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                    </div>
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
                 </div>
-            </form>
-        </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100" style="min-height: 42px; border-radius: 10px; font-weight: 600;">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
     {% endif %}
 
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Bill Adjustments Total
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 negative-amount">
-                                -{{ bill_total|floatformat:2 }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-file-invoice-dollar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="admin-stats">
+        <div class="admin-stat-card primary">
+            <i class="fas fa-file-invoice-dollar stat-icon"></i>
+            <div class="stat-label">Bill Adjustments</div>
+            <div class="stat-value adj-negative">-{{ bill_total|floatformat:2 }}</div>
         </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Advance Adjustments Total
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 negative-amount">
-                                -{{ advance_total|floatformat:2 }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="admin-stat-card success">
+            <i class="fas fa-money-bill-wave stat-icon"></i>
+            <div class="stat-label">Advance Adjustments</div>
+            <div class="stat-value adj-negative">-{{ advance_total|floatformat:2 }}</div>
         </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Total Adjustments
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 negative-amount">
-                                -{{ total_adjustments|floatformat:2 }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="admin-stat-card danger">
+            <i class="fas fa-calculator stat-icon"></i>
+            <div class="stat-label">Total Adjustments</div>
+            <div class="stat-value adj-negative">-{{ total_adjustments|floatformat:2 }}</div>
         </div>
     </div>
 
-    <!-- Bill Adjustments -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold">Bill Adjustments</h6>
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Bill Adjustments</h2>
+            <span class="text-muted small">{{ bill_adjustments|length }} record{{ bill_adjustments|length|pluralize }}</span>
         </div>
-        <div class="card-body">
+        <div class="admin-panel-body">
             {% if bill_adjustments %}
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+            <div class="focus-table-wrap adj-report-table-wrap">
+                <table class="admin-table">
                     <thead>
                         <tr>
                             <th>Date/Time</th>
                             <th>Name</th>
-                            <th>Quantity</th>
+                            <th>Qty</th>
                             <th>Price</th>
                             <th>Total</th>
                             <th>Created By</th>
@@ -148,10 +118,10 @@
                         {% for adjustment in bill_adjustments %}
                         <tr>
                             <td>{{ adjustment.created_at|pkt_datetime }}</td>
-                            <td>{{ adjustment.name }}</td>
-                            <td>{{ adjustment.quantity|default:'-' }}</td>
-                            <td>{{ adjustment.price }}</td>
-                            <td class="negative-amount">-{{ adjustment.price|floatformat:2 }}</td>
+                            <td><strong>{{ adjustment.name }}</strong></td>
+                            <td>{{ adjustment.quantity|default:'—' }}</td>
+                            <td>Rs.{{ adjustment.price|floatformat:2 }}</td>
+                            <td><span class="adj-negative">-Rs.{{ adjustment.price|floatformat:2 }}</span></td>
                             <td>{{ adjustment.created_by.username }}</td>
                         </tr>
                         {% endfor %}
@@ -159,20 +129,24 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-center py-3">No bill adjustments found for the selected date range.</p>
+            <div class="admin-empty">
+                <i class="fas fa-inbox"></i>
+                <strong>No bill adjustments found</strong>
+                <div class="mt-1">Try a different date range.</div>
+            </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Advance Adjustments -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold">Advance Adjustments</h6>
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2><i class="fas fa-money-bill-wave me-2 text-primary"></i>Advance Adjustments</h2>
+            <span class="text-muted small">{{ advance_adjustments|length }} record{{ advance_adjustments|length|pluralize }}</span>
         </div>
-        <div class="card-body">
+        <div class="admin-panel-body">
             {% if advance_adjustments %}
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+            <div class="focus-table-wrap adj-report-table-wrap">
+                <table class="admin-table">
                     <thead>
                         <tr>
                             <th>Date/Time</th>
@@ -185,8 +159,8 @@
                         {% for adjustment in advance_adjustments %}
                         <tr>
                             <td>{{ adjustment.created_at|pkt_datetime }}</td>
-                            <td>{{ adjustment.name }}</td>
-                            <td class="negative-amount">-{{ adjustment.amount|floatformat:2 }}</td>
+                            <td><strong>{{ adjustment.name }}</strong></td>
+                            <td><span class="adj-negative">-Rs.{{ adjustment.amount|floatformat:2 }}</span></td>
                             <td>{{ adjustment.created_by.username }}</td>
                         </tr>
                         {% endfor %}
@@ -194,27 +168,13 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-center py-3">No advance adjustments found for the selected date range.</p>
+            <div class="admin-empty">
+                <i class="fas fa-inbox"></i>
+                <strong>No advance adjustments found</strong>
+                <div class="mt-1">Try a different date range.</div>
+            </div>
             {% endif %}
         </div>
     </div>
-
 </div>
 {% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("#start_date", {
-            dateFormat: "Y-m-d",
-            maxDate: "today"
-        });
-        
-        flatpickr("#end_date", {
-            dateFormat: "Y-m-d",
-            maxDate: "today"
-        });
-    });
-</script>
-{% endblock %} 
