@@ -52,7 +52,6 @@
             border: 1px solid #000;
             padding: 4px 2px;
             margin-bottom: 5px;
-            page-break-inside: avoid;
             max-width: 100%;
             box-sizing: border-box;
         }
@@ -119,22 +118,6 @@
         }
 
         @media print {
-            html, body {
-                width: 80mm !important;
-                max-width: 80mm !important;
-                overflow: hidden !important;
-            }
-
-            .receipt.receipt-bill {
-                width: 64mm !important;
-                max-width: 64mm !important;
-                left: 0 !important;
-                right: 0 !important;
-                margin: 0 auto !important;
-                padding: 1mm !important;
-                overflow: hidden !important;
-            }
-
             .receipt-bill {
                 font-family: Arial, Helvetica, "Segoe UI", sans-serif !important;
                 filter: contrast(1.15);

@@ -275,6 +275,7 @@
             print-color-adjust: exact;
         }
 
+        /* Print only the receipt block */
         body * {
             visibility: hidden;
         }
@@ -297,8 +298,8 @@
             width: 64mm !important;
             max-width: 64mm !important;
             {% endif %}
-            margin: 0 auto !important;
-            padding: 1mm !important;
+            margin: 0 !important;
+            padding: 1mm 2mm !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
         }

@@ -51,27 +51,36 @@
         @media print {
             body, html {
                 width: 80mm;
+                height: auto !important;
+                min-height: 0 !important;
                 margin: 0;
                 padding: 0;
                 background: #fff;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+            body * {
+                visibility: hidden;
+            }
+            .receipt,
+            .receipt * {
+                visibility: visible;
+            }
             .receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
                 width: 72mm;
                 max-width: 72mm;
                 margin: 0;
                 box-shadow: none;
                 border: none;
                 padding: 1mm;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
             }
             nav, .sidebar, .main-content, .navbar, .notification-container, .debug {
                 display: none !important;
-            }
-            .receipt, .receipt * {
-                page-break-inside: avoid !important;
-                page-break-before: avoid !important;
-                page-break-after: avoid !important;
             }
             pre, body {
                 color: black !important;
