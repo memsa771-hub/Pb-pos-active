@@ -138,6 +138,33 @@ def order_list(request):
     page_number = request.GET.get('page')
     orders_page = paginator.get_page(page_number)
     
+    # Quick date presets for history view
+    today = timezone.now().date()
+    today_str = today.strftime('%Y-%m-%d')
+    seven_days_ago = (today - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
+    thirty_days_ago = (today - datetime.timedelta(days=30)).strftime('%Y-%m-%d')
+    quick_date_preset = ''
+    if show_history:
+        if not date_from and not date_to:
+            quick_date_preset = 'all'
+        elif date_from == today_str and date_to == today_str:
+            quick_date_preset = 'today'
+        elif date_from == seven_days_ago and not date_to:
+            quick_date_preset = '7d'
+        elif date_from == thirty_days_ago and not date_to:
+            quick_date_preset = '30d'
+
+    # Build export URL for history view (admin)
+    export_orders_url = None
+    if show_history and user_is_admin:
+        export_start = date_from or '2000-01-01'
+        export_end = date_to or timezone.localtime().strftime('%Y-%m-%d')
+        export_orders_url = (
+            reverse('export_orders_excel')
+            + f'?start={export_start}&end={export_end}'
+            + (f'&status={status_filter}' if status_filter else '')
+        )
+
     context = {
         'orders': orders_page,
         'order_stats': order_stats,
@@ -152,6 +179,12 @@ def order_list(request):
         'is_branch_manager': user_is_branch_manager,
         'show_history': show_history,
         'last_end_day': last_end_day,
+        'last_end_day_time': last_end_day_time,
+        'export_orders_url': export_orders_url,
+        'seven_days_ago': seven_days_ago,
+        'thirty_days_ago': thirty_days_ago,
+        'today_str': today_str,
+        'quick_date_preset': quick_date_preset,
     }
     
     # Check if this is an AJAX request

@@ -283,6 +283,95 @@
         border-color: #2b6cb0;
     }
 
+    .orders-view-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .orders-view-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1rem;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+        transition: all 0.15s ease;
+    }
+
+    .orders-view-tab:hover {
+        border-color: #90cdf4;
+        color: #2b6cb0;
+        background: #ebf8ff;
+    }
+
+    .orders-view-tab.active {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .orders-quick-dates {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding: 0 1.25rem 0.85rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #fff;
+    }
+
+    .orders-quick-date {
+        padding: 0.35rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+        background: #f8fafc;
+    }
+
+    .orders-quick-date:hover {
+        border-color: #90cdf4;
+        color: #2b6cb0;
+    }
+
+    .orders-quick-date.active {
+        background: #ebf8ff;
+        border-color: #90cdf4;
+        color: #2b6cb0;
+    }
+
+    .orders-archived-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: #edf2f7;
+        color: #718096;
+        margin-top: 0.2rem;
+    }
+
+    .orders-table tbody tr.order-row-archived {
+        opacity: 0.92;
+    }
+
+    .orders-search-meta {
+        font-size: 0.82rem;
+        color: #718096;
+        margin-top: 0.5rem;
+    }
+
 </style>
 {% endblock %}
 
@@ -299,21 +388,26 @@
             </div>
         </div>
         <div class="focus-toolbar-actions orders-toolbar-actions">
+            {% if show_history and is_admin and export_orders_url %}
+            <a href="{{ export_orders_url }}" class="btn btn-outline-light" title="Export filtered orders to Excel">
+                <i class="fas fa-file-excel me-1"></i> Export
+            </a>
+            {% endif %}
             <a href="{% url 'pos' %}" class="btn btn-light">
                 <i class="fas fa-cash-register me-1"></i> Open POS
             </a>
-            {% if is_admin %}
-                {% if show_history %}
-                <a href="{% url 'order_list' %}" class="btn btn-outline-light">
-                    <i class="fas fa-clock me-1"></i> Current Session
-                </a>
-                {% else %}
-                <a href="{% url 'order_list' %}?history=1" class="btn btn-outline-light">
-                    <i class="fas fa-history me-1"></i> Full History
-                </a>
-                {% endif %}
-            {% endif %}
         </div>
+    </div>
+
+    <div class="orders-view-tabs" id="ordersViewTabs">
+        <a href="{% url 'order_list' %}" class="orders-view-tab{% if not show_history %} active{% endif %}">
+            <i class="fas fa-clock"></i> Current Session
+        </a>
+        {% if is_admin %}
+        <a href="{% url 'order_list' %}?history=1" class="orders-view-tab{% if show_history %} active{% endif %}">
+            <i class="fas fa-history"></i> Full History
+        </a>
+        {% endif %}
     </div>
 
     {% if messages %}
@@ -327,17 +421,28 @@
         {% endfor %}
     {% endif %}
 
+    <div id="ordersInfoBanner">
     {% if show_history %}
     <div class="orders-info-banner">
-        <i class="fas fa-info-circle me-2"></i>
-        <strong>Order History:</strong> Showing complete order history including all orders before day-end events.
+        <i class="fas fa-history me-2"></i>
+        <strong>Full History:</strong> {{ order_stats.total }} order{{ order_stats.total|pluralize }} found across all time.
+        {% if search_query %} Matching "<strong>{{ search_query }}</strong>".{% endif %}
+        {% if last_end_day %} Orders before {{ last_end_day.end_date|pkt_datetime }} are read-only.{% endif %}
     </div>
     {% elif last_end_day %}
     <div class="orders-info-banner">
-        <i class="fas fa-info-circle me-2"></i>
-        <strong>Current Session:</strong> Showing orders since last day end ({{ last_end_day.end_date|pkt_datetime }}).
+        <i class="fas fa-clock me-2"></i>
+        <strong>Current Session:</strong> {{ order_stats.total }} order{{ order_stats.total|pluralize }} since last End Day ({{ last_end_day.end_date|pkt_datetime }}).
+        {% if search_query %} Matching "<strong>{{ search_query }}</strong>".{% endif %}
+    </div>
+    {% else %}
+    <div class="orders-info-banner">
+        <i class="fas fa-clock me-2"></i>
+        <strong>Current Session:</strong> {{ order_stats.total }} order{{ order_stats.total|pluralize }} (no End Day completed yet).
+        {% if search_query %} Matching "<strong>{{ search_query }}</strong>".{% endif %}
     </div>
     {% endif %}
+    </div>
 
     <div class="orders-stats">
         <div class="orders-stat-card">
@@ -383,9 +488,9 @@
                         <div class="orders-search-wrap">
                             <i class="fas fa-search"></i>
                             {% if show_history %}
-                            <input type="text" class="form-control" id="searchInput" name="history_search" placeholder="Reference #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
+                            <input type="text" class="form-control" id="searchInput" name="history_search" placeholder="Search any order — ref #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
                             {% else %}
-                            <input type="text" class="form-control" id="searchInput" name="search" placeholder="Reference #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
+                            <input type="text" class="form-control" id="searchInput" name="search" placeholder="Search this session — ref #, customer, phone, table #" value="{{ search_query }}" autocomplete="off">
                             {% endif %}
                         </div>
                     </div>
@@ -421,6 +526,19 @@
                 </div>
             </form>
         </div>
+
+        {% if show_history and is_admin %}
+        <div class="orders-quick-dates" id="ordersQuickDates">
+            <a href="?history=1{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}"
+               class="orders-quick-date{% if quick_date_preset == 'all' %} active{% endif %}">All Time</a>
+            <a href="?history=1&history_date_from={{ today_str }}&history_date_to={{ today_str }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}"
+               class="orders-quick-date{% if quick_date_preset == 'today' %} active{% endif %}">Today</a>
+            <a href="?history=1&history_date_from={{ seven_days_ago }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}"
+               class="orders-quick-date{% if quick_date_preset == '7d' %} active{% endif %}">Last 7 Days</a>
+            <a href="?history=1&history_date_from={{ thirty_days_ago }}{% if search_query %}&history_search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&history_status={{ status_filter|urlencode }}{% endif %}{% if type_filter %}&history_type={{ type_filter|urlencode }}{% endif %}"
+               class="orders-quick-date{% if quick_date_preset == '30d' %} active{% endif %}">Last 30 Days</a>
+        </div>
+        {% endif %}
 
         <div class="orders-type-pills" id="ordersTypePills">
             {% if show_history %}
@@ -478,7 +596,7 @@
                     </thead>
                     <tbody>
                         {% for order in orders %}
-                        <tr class="order-row-clickable" data-order-url="{% url 'order_detail' order.id %}" tabindex="0" aria-label="View order {{ order.reference_number }}">
+                        <tr class="order-row-clickable{% if show_history and last_end_day and order.created_at < last_end_day.end_date %} order-row-archived{% endif %}" data-order-url="{% url 'order_detail' order.id %}" tabindex="0" aria-label="View order {{ order.reference_number }}">
                             <td><span class="order-ref">{{ order.reference_number }}</span></td>
                             <td>
                                 {% if order.order_type == 'Takeaway' %}
@@ -522,10 +640,23 @@
                                 <span class="order-status-badge cancelled">Cancelled</span>
                                 {% endif %}
                             </td>
-                            <td>{{ order.created_at|pkt_datetime_short }}</td>
+                            <td>
+                                {{ order.created_at|pkt_datetime_short }}
+                                {% if show_history and last_end_day and order.created_at < last_end_day.end_date %}
+                                <div class="orders-archived-badge">Archived</div>
+                                {% endif %}
+                            </td>
                             <td>{{ order.user.get_full_name|default:order.user.username }}</td>
                             <td class="text-end actions-col">
                                 <div class="order-actions">
+                                    {% if show_history and last_end_day and order.created_at < last_end_day.end_date %}
+                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-primary order-action-btn" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'order_receipt' order.id %}" class="btn btn-outline-success order-action-btn" title="Print" target="_blank">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    {% else %}
                                     {% if user_permissions.can_edit_orders %}
                                     <a href="{% url 'order_edit' order.id %}" class="btn btn-outline-primary order-action-btn" title="Edit">
                                         <i class="fas fa-edit"></i>
@@ -544,6 +675,7 @@
                                             <i class="fas fa-ban"></i>
                                         </button>
                                         {% endif %}
+                                    {% endif %}
                                     {% endif %}
                                 </div>
                             </td>
@@ -565,6 +697,7 @@
 
             {% for order in orders %}
                 {% if order.order_status != 'Cancelled' and order.order_status != 'Completed' and user_permissions.can_cancel_orders %}
+                {% if not show_history or not last_end_day or order.created_at >= last_end_day.end_date %}
                 <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderModalLabel{{ order.id }}" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -585,6 +718,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 {% endif %}
             {% endfor %}
 
@@ -687,6 +821,18 @@
                 const currentPills = document.querySelector('#ordersTypePills');
                 if (newPills && currentPills) {
                     currentPills.innerHTML = newPills.innerHTML;
+                }
+
+                const newBanner = doc.querySelector('#ordersInfoBanner');
+                const currentBanner = document.querySelector('#ordersInfoBanner');
+                if (newBanner && currentBanner) {
+                    currentBanner.innerHTML = newBanner.innerHTML;
+                }
+
+                const newQuickDates = doc.querySelector('#ordersQuickDates');
+                const currentQuickDates = document.querySelector('#ordersQuickDates');
+                if (newQuickDates && currentQuickDates) {
+                    currentQuickDates.innerHTML = newQuickDates.innerHTML;
                 }
 
                 searchInput.focus();
