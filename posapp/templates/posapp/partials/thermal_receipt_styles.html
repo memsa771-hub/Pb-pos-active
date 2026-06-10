@@ -3,17 +3,22 @@
     {% if receipt_paper_size == '58mm' %}
     @page {
         size: 58mm auto;
-        margin: 1mm 0;
+        margin: 0;
     }
     {% else %}
     @page {
         size: 80mm auto;
-        margin: 2mm 0;
+        margin: 0;
     }
     {% endif %}
 
     * {
         box-sizing: border-box;
+    }
+
+    html {
+        height: auto;
+        background: #fff;
     }
 
     body {
@@ -26,10 +31,18 @@
         width: 72mm;
         {% endif %}
         margin: 0 auto;
-        padding: 2mm 1mm;
+        padding: 0;
         background: #fff;
         color: #000;
         line-height: 1.25;
+        height: auto;
+        min-height: 0;
+    }
+
+    @media screen {
+        .receipt {
+            padding: 2mm 1mm;
+        }
     }
 
     .receipt {
@@ -104,7 +117,7 @@
     .thermal-item {
         margin: 0 0 5px;
         padding-bottom: 4px;
-        border-bottom: 1px dotted #bbb;
+        border-bottom: 1px solid #000;
         page-break-inside: avoid;
     }
 
@@ -237,54 +250,93 @@
     }
 
     @media print {
-        body, html {
+        html, body {
             {% if receipt_paper_size == '58mm' %}
-            width: 58mm;
+            width: 58mm !important;
             {% else %}
-            width: 80mm;
+            width: 80mm !important;
             {% endif %}
-            margin: 0;
-            padding: 0;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background: #fff !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
 
-        .receipt {
-            {% if receipt_paper_size == '58mm' %}
-            width: 52mm;
-            max-width: 52mm;
-            {% else %}
-            width: 72mm;
-            max-width: 72mm;
-            {% endif %}
-            margin: 0 auto;
-            padding: 2mm 1mm;
+        body * {
+            visibility: hidden;
         }
 
-        .print-controls {
+        .receipt,
+        .receipt * {
+            visibility: visible;
+        }
+
+        .receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            {% if receipt_paper_size == '58mm' %}
+            width: 52mm !important;
+            max-width: 52mm !important;
+            {% else %}
+            width: 72mm !important;
+            max-width: 72mm !important;
+            {% endif %}
+            margin: 0 !important;
+            padding: 1mm 2mm !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+        }
+
+        .print-controls,
+        .no-print {
             display: none !important;
         }
 
         body, .receipt, .receipt * {
             color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+            opacity: 1 !important;
+            background: transparent !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
 
         .thermal-divider {
-            border-top: 1px dashed #000 !important;
+            border-top: 1px solid #000 !important;
+        }
+
+        .thermal-item {
+            border-bottom: 1px solid #000 !important;
         }
 
         .thermal-item-name,
+        .thermal-item-line,
+        .thermal-item-total,
+        .thermal-total-line,
         .thermal-total-line.grand,
-        .thermal-label {
-            font-weight: bold !important;
+        .thermal-label,
+        .thermal-header h1,
+        .thermal-meta p,
+        .thermal-footer,
+        .thermal-footer p {
+            color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+            font-weight: 700 !important;
         }
 
-        * {
-            text-rendering: optimizeSpeed !important;
+        .thermal-total-line.grand,
+        .thermal-header h1 {
+            font-weight: 900 !important;
+        }
+
+        .receipt, .receipt * {
             -webkit-font-smoothing: none !important;
+            -moz-osx-font-smoothing: unset !important;
+            text-shadow: none !important;
         }
     }
 

@@ -1562,7 +1562,7 @@
     }
     /* Control sheet count by limiting height */
     .receipt-preview {
-        page-break-after: always;
+        page-break-after: avoid;
         page-break-inside: avoid;
         max-height: 100%;
         overflow: visible;
@@ -1594,6 +1594,7 @@
         -moz-osx-font-smoothing: grayscale !important;
     }
 </style>
+{% include 'posapp/partials/thermal_receipt_print_script.html' %}
 {% endblock %}
 
 {% block content %}
@@ -3024,12 +3025,11 @@
                         
                         // Add the receipt to the body
                         $('body').append(receiptHTML);
-                        
-                        // Trigger print
+
                         window.print();
-                        
+
                         // Remove the receipt element after printing
-                        setTimeout(() => {
+                        setTimeout(function() {
                             $('#receipt-container').remove();
                         }, 1000);
                         

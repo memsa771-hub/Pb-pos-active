@@ -8,6 +8,7 @@
     <title>Kitchen Order #{{ order.reference_number }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
+    {% include 'posapp/partials/thermal_receipt_print_script.html' %}
     <style>
         .kitchen-title {
             font-size: 16px !important;
@@ -53,10 +54,10 @@
 <body>
     <div class="print-controls no-print">
         {% if auto_print %}
-        <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print Additional</button>
+        <button type="button" onclick="printThermalReceipt()"><i class="fas fa-print"></i> Print Additional</button>
         <a href="{{ redirect_url }}"><i class="fas fa-arrow-left"></i> Back</a>
         {% else %}
-        <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print Kitchen</button>
+        <button type="button" onclick="printThermalReceipt()"><i class="fas fa-print"></i> Print Kitchen</button>
         <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
         {% endif %}
     </div>
@@ -109,7 +110,7 @@
 
     <script>
         window.addEventListener('load', function() {
-            setTimeout(function() { window.print(); }, 250);
+            setTimeout(function() { printThermalReceipt(); }, 500);
             {% if auto_print %}
             window.addEventListener('afterprint', function() {
                 window.location.href = '{{ redirect_url }}';

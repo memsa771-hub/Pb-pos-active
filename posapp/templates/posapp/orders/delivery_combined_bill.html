@@ -7,6 +7,7 @@
     <title>Combined Delivery Bill - {{ delivery_person.name }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
+    {% include 'posapp/partials/thermal_receipt_print_script.html' %}
     <style>
         .order-block-title {
             font-weight: bold;
@@ -18,7 +19,7 @@
 </head>
 <body>
     <div class="print-controls no-print">
-        <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+        <button type="button" onclick="printThermalReceipt()"><i class="fas fa-print"></i> Print</button>
     </div>
 
     <div class="receipt">
@@ -151,7 +152,7 @@
 
     <script>
         window.addEventListener('load', function() {
-            setTimeout(function() { window.print(); }, 250);
+            setTimeout(function() { printThermalReceipt(); }, 300);
         });
     </script>
 </body>
