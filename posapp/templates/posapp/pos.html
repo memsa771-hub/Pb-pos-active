@@ -1494,12 +1494,52 @@
             max-height: 45vh;
         }
     }
-</style>
-{% endblock %}
 
-{% block head_extras %}
-{% include 'posapp/partials/thermal_receipt_styles.html' %}
-{% include 'posapp/partials/thermal_receipt_print_script.html' %}
+    /* Kitchen receipt — hidden on screen, print-only block */
+    .print-only {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    @media print {
+        body, html {
+            width: 80mm !important;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+        body * {
+            visibility: hidden;
+        }
+        #receipt-container,
+        #receipt-container * {
+            visibility: visible;
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
+        #receipt-container,
+        .receipt-preview {
+            width: 70mm !important;
+            max-width: 70mm !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        #receipt-container {
+            display: block !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -2898,43 +2938,31 @@
                             discountAmount = discount;
                         }
                         
-                        // Calculate tax amount for display
-                        const taxAmount = parseFloat(orderData.tax_amount);
-                        const total = parseFloat(orderData.total_amount);
-                        
-                        const tableLabel = selectedOrderType === 'Dine In' && $('#tableNumber').val()
-                            ? `<p class="thermal-label thermal-highlight">TABLE ${$('#tableNumber').val()}</p>`
-                            : selectedOrderType === 'Delivery'
-                            ? `<p class="thermal-label thermal-highlight">DELIVERY</p>`
-                            : selectedOrderType === 'Takeaway'
-                            ? `<p class="thermal-label thermal-highlight">TAKEAWAY</p>`
-                            : '';
+                        // Snapshot cart and form before reset (for kitchen receipt + success modal)
+                        const kitchenItems = cart.map(item => ({
+                            name: item.name,
+                            quantity: item.quantity
+                        }));
+                        const completedOrderType = selectedOrderType;
+                        const completedTableNumber = $('#tableNumber').val();
 
-                        const receiptHTML = `
-                            <div class="receipt" id="receipt-container">
-                                <div class="thermal-header">
-                                    <h1 class="kitchen-title">KITCHEN ORDER</h1>
-                                    <p class="thermal-label">Order #${orderNumberDisplay} · ${orderNumber}</p>
-                                    ${tableLabel}
-                                </div>
-                                <hr class="thermal-divider">
-                                ${cart.map(item => `
-                                    <div class="kitchen-item">
-                                        <div class="kitchen-qty">${item.quantity}</div>
-                                        <div class="kitchen-name-wrap">
-                                            <div class="kitchen-name">${item.name}</div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
+                        // Clear cart and refresh UI immediately
+                        cart = [];
+                        updateCart();
 
-                        $('body').append(receiptHTML);
-                        printThermalReceipt();
-                        setTimeout(function() {
-                            $('#receipt-container').remove();
-                        }, 1000);
-                        
+                        // Reset order form
+                        $('#tableNumber').val('');
+                        $('#customerName').val('');
+                        $('#customerPhone').val('');
+                        $('#orderNotes').val('');
+                        selectedOrderType = 'Dine In';
+                        $('.order-type').removeClass('selected');
+                        $('.order-type[data-type="Dine In"]').addClass('selected');
+                        selectedPaymentMethod = 'Cash';
+                        $('.payment-method').removeClass('selected');
+                        $('.payment-method[data-method="Cash"]').addClass('selected');
+                        resetDiscount();
+
                         // Show success message with link to orders
                         $('#successModalContent').html(`
                             <div class="text-center mb-4">
@@ -2943,39 +2971,48 @@
                                 <p>The order has been processed successfully.</p>
                                 <p>Order #: <strong>${orderNumberDisplay}</strong></p>
                                 <p>Receipt #: <strong>${orderNumber}</strong></p>
-                                <p>Order Type: <strong>${selectedOrderType}</strong></p>
-                                ${selectedOrderType === 'Dine In' && $('#tableNumber').val() ? 
-                                    `<p>Table #: <strong>${$('#tableNumber').val()}</strong></p>` : ''}
+                                <p>Order Type: <strong>${completedOrderType}</strong></p>
+                                ${completedOrderType === 'Dine In' && completedTableNumber ?
+                                    `<p>Table #: <strong>${completedTableNumber}</strong></p>` : ''}
                                 <div class="mt-4">
                                     <a href="/orders/" class="btn btn-primary">View in Orders</a>
                                 </div>
                             </div>
                         `);
-                        
                         $('#successModal').modal('show');
-                        
-                        // Clear cart
-                        cart = [];
-                        updateCart();
-                        
-                        // Reset order form
-                        $('#tableNumber').val('');  // Clear table number
-                        $('#customerName').val('');  // Clear customer name
-                        $('#customerPhone').val('');  // Clear customer phone
-                        $('#orderNotes').val('');  // Clear order notes
-                        selectedOrderType = 'Dine In';  // Reset to default order type
-                        $('.order-type').removeClass('selected');  // Clear order type selection
-                        $('.order-type[data-type="Dine In"]').addClass('selected');  // Select default order type
-                        
-                        // Reset payment method
-                        selectedPaymentMethod = 'Cash';  // Reset to default payment method
-                        $('.payment-method').removeClass('selected');  // Clear payment method selection
-                        $('.payment-method[data-method="Cash"]').addClass('selected');  // Select default payment method
-                        
-                        // Cash payment details handled at order completion
-                        
-                        // Reset discount
-                        resetDiscount();
+
+                        // Auto-print kitchen receipt
+                        const receiptHTML = `
+                            <div id="receipt-container" class="print-only">
+                                <div class="receipt-preview" style="width: 70mm; padding: 1mm; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.1; color: #000000;">
+                                    <div style="text-align: center; margin-bottom: 8px; color: #000000;">
+                                        <h1 style="font-size: 16px; font-weight: bold; margin: 0; color: #000000;">Order ${orderNumberDisplay}</h1>
+                                        ${completedOrderType === 'Dine In' && completedTableNumber ?
+                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Table ${completedTableNumber}</p>` :
+                                         completedOrderType === 'Delivery' ?
+                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Delivery</p>` :
+                                         completedOrderType === 'Takeaway' ?
+                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Takeaway</p>` : ''}
+                                    </div>
+                                    <div style="border-top: 1px dashed #000; margin: 6px 0; clear: both;"></div>
+                                    ${kitchenItems.map(item => `
+                                        <div style="display: flex; align-items: center; margin: 4px 0; padding: 4px; border: 1px solid #000; background-color: white; color: #000000;">
+                                            <div style="font-weight: bold; font-size: 14px; color: #000000; min-width: 30px; text-align: center; margin-right: 8px; border-right: 1px solid #000; padding-right: 8px;">${item.quantity}</div>
+                                            <div style="font-weight: bold; font-size: 11px; color: #000000; flex: 1;">${item.name}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                        $('body').append(receiptHTML);
+                        try {
+                            window.print();
+                        } catch (printError) {
+                            console.error('Kitchen receipt print failed:', printError);
+                        }
+                        setTimeout(function() {
+                            $('#receipt-container').remove();
+                        }, 1000);
                     },
                     error: function(xhr, status, error) {
                         console.error('Error saving order:', error);
