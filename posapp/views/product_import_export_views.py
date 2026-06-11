@@ -1,4 +1,5 @@
 import csv
+import logging
 import re
 from decimal import Decimal, InvalidOperation
 from io import BytesIO, StringIO
@@ -14,12 +15,14 @@ from ..decorators import admin_required
 from ..forms import ProductForm
 from ..models import PosCategory, PosProduct
 
+logger = logging.getLogger('posapp')
+
 EXCEL_AVAILABLE = False
 try:
     import pandas as pd
     import openpyxl  # noqa: F401
     EXCEL_AVAILABLE = True
-except ImportError:
+except Exception:
     pd = None
 
 EXPORT_COLUMNS = [
@@ -88,6 +91,13 @@ def _product_to_row(product):
 
 def _normalize_header(value):
     return re.sub(r'[\s_]+', ' ', str(value).strip().lower())
+
+
+def _normalize_product_code(value):
+    text = str(value).strip() if value is not None else ''
+    if text.endswith('.0') and text[:-2].isdigit():
+        text = text[:-2]
+    return text
 
 
 def _map_row_headers(row):
@@ -169,7 +179,7 @@ def _build_product_payload(row_data, update_existing=False):
     else:
         payload['name'] = name
 
-    product_code = str(row_data.get('product_code', '')).strip()
+    product_code = _normalize_product_code(row_data.get('product_code', ''))
     if not product_code:
         errors.append('Product code is required.')
     elif not product_code.isdigit():
@@ -260,20 +270,35 @@ def _save_product(payload, existing=None):
 def _read_uploaded_rows(uploaded_file):
     filename = uploaded_file.name.lower()
     if filename.endswith('.csv'):
-        decoded = uploaded_file.read().decode('utf-8-sig')
+        try:
+            decoded = uploaded_file.read().decode('utf-8-sig')
+        except UnicodeDecodeError as exc:
+            raise ValueError('CSV file must be UTF-8 encoded.') from exc
         reader = csv.DictReader(StringIO(decoded))
         return [row for row in reader if any(str(v).strip() for v in row.values() if v is not None)]
 
-    if not EXCEL_AVAILABLE:
-        raise ValueError('Excel import requires pandas and openpyxl.')
+    if filename.endswith('.xls'):
+        raise ValueError('Old .xls format is not supported. Save the file as .xlsx or .csv and try again.')
 
-    if filename.endswith(('.xlsx', '.xls')):
+    if filename.endswith('.xlsx'):
+        if not EXCEL_AVAILABLE:
+            raise ValueError(
+                'Excel import is not available on this server. '
+                'Install pandas and openpyxl, or upload a .csv file instead.'
+            )
         uploaded_file.seek(0)
-        df = pd.read_excel(uploaded_file, dtype=str)
+        content = uploaded_file.read()
+        if not content:
+            raise ValueError('The uploaded file is empty.')
+        try:
+            df = pd.read_excel(BytesIO(content), dtype=str, engine='openpyxl')
+        except Exception as exc:
+            logger.exception('Failed to parse uploaded Excel file')
+            raise ValueError(f'Could not read Excel file. Use the template or save as .csv. ({exc})') from exc
         df = df.fillna('')
         return df.to_dict(orient='records')
 
-    raise ValueError('Unsupported file type. Upload a .csv, .xlsx, or .xls file.')
+    raise ValueError('Unsupported file type. Upload a .csv or .xlsx file.')
 
 
 def _export_filename(extension):
@@ -378,6 +403,10 @@ def import_products(request):
         raw_rows = _read_uploaded_rows(uploaded_file)
     except ValueError as exc:
         messages.error(request, str(exc))
+        return redirect('category_list')
+    except Exception as exc:
+        logger.exception('Unexpected product import failure while reading upload')
+        messages.error(request, f'Could not process the uploaded file: {exc}')
         return redirect('category_list')
 
     if not raw_rows:
