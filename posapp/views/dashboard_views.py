@@ -1,3 +1,7 @@
+import json
+from datetime import datetime, timedelta
+from decimal import Decimal
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, F, Value, ExpressionWrapper, DecimalField
@@ -5,9 +9,10 @@ from django.db.models.functions import Coalesce
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from datetime import timedelta
-from decimal import Decimal
-from ..models import PosCategory, PosProduct, Order, UserProfile, Setting, BusinessSettings, EndDay, BillAdjustment, AdvanceAdjustment, OrderItem
+from ..models import (
+    PosCategory, PosProduct, Order, UserProfile, Setting, BusinessSettings,
+    EndDay, BillAdjustment, AdvanceAdjustment, OrderItem, BusinessLogo,
+)
 from ..query_utils import SOLD_PRODUCT_NAME_EXPR
 from ..datetime_utils import format_local_datetime_param
 
@@ -21,9 +26,7 @@ def dashboard(request):
     if not is_admin(request.user):
         return redirect('pos')
     
-    # Check if user is admin or branch manager
     user_is_admin = is_admin(request.user)
-    user_is_branch_manager = is_branch_manager(request.user)
     
     # Get the last end day timestamp
     last_end_day = EndDay.get_last_end_day()
@@ -41,72 +44,70 @@ def dashboard(request):
             del request.session['sales_receipt_url']
         request.session.modified = True
     
-    # Fetch summary data
-    total_products = PosProduct.objects.count()
-    total_categories = PosCategory.objects.count()
-    total_users = User.objects.count()
-    
-    # Filter orders based on role and last end day
-    if user_is_admin:
-        # Admin sees all orders
-        all_orders = Order.objects.all()
-        active_orders = Order.objects.filter(order_status='Pending').count()
-        total_revenue = Order.objects.exclude(order_status='Cancelled').aggregate(total=Sum('total_amount'))['total'] or 0
-        recent_orders = Order.objects.all().order_by('-created_at')[:5]
+    # Current business period (since last end day)
+    if last_end_day_time:
+        period_orders = Order.objects.filter(created_at__gte=last_end_day_time)
     else:
-        # Branch manager sees only orders since last end day
-        if last_end_day_time:
-            all_orders = Order.objects.filter(created_at__gte=last_end_day_time)
-            active_orders = Order.objects.filter(
-                created_at__gte=last_end_day_time,
-                order_status='Pending'
-            ).count()
-            total_revenue = Order.objects.filter(
-                created_at__gte=last_end_day_time
-            ).exclude(order_status='Cancelled').aggregate(total=Sum('total_amount'))['total'] or 0
-            recent_orders = Order.objects.filter(
-                created_at__gte=last_end_day_time
-            ).order_by('-created_at')[:5]
-        else:
-            # If no end day record exists, show all
-            all_orders = Order.objects.all()
-            active_orders = Order.objects.filter(order_status='Pending').count()
-            total_revenue = Order.objects.exclude(order_status='Cancelled').aggregate(total=Sum('total_amount'))['total'] or 0
-            recent_orders = Order.objects.all().order_by('-created_at')[:5]
-    
-    # Count total orders
-    total_orders = all_orders.count()
-    
-    # Recent products (latest 5)
-    recent_products = PosProduct.objects.all().order_by('-created_at')[:5]
-    
-    # Top selling products - since sold_count doesn't exist, 
-    # we'll just use the most expensive products instead
-    top_products = PosProduct.objects.all().order_by('-price')[:5]
-    
-    # All categories
-    categories = PosCategory.objects.all()
-    
-    # All users with their roles
-    users = User.objects.select_related('profile__role').all()
-    
+        period_orders = Order.objects.all()
+
+    pending_orders = period_orders.filter(order_status='Pending').count()
+    completed_orders = period_orders.filter(order_status='Completed').count()
+    period_revenue = period_orders.filter(order_status='Completed').aggregate(
+        total=Coalesce(Sum('total_amount'), Decimal('0.00'))
+    )['total']
+
+    recent_orders = period_orders.select_related('user').order_by('-created_at')[:8]
+
+    # Product health
+    available_products = PosProduct.objects.filter(is_available=True, is_archived=False).count()
+    archived_products = PosProduct.objects.filter(is_archived=True).count()
+    unavailable_products = PosProduct.objects.filter(is_available=False, is_archived=False).count()
+
+    period_delivery_orders = period_orders.filter(order_type='Delivery')
+    delivery_orders_count = period_delivery_orders.count()
+    pending_delivery_orders = period_delivery_orders.filter(order_status='Pending').count()
+    recent_delivery_orders = period_delivery_orders.select_related(
+        'user', 'delivery_person',
+    ).order_by('-created_at')[:8]
+
+    # Last 7 days sales trend (completed orders)
+    chart_days = 7
+    today_local = timezone.localtime().date()
+    daily_sales_data = []
+    for offset in range(chart_days - 1, -1, -1):
+        day = today_local - timedelta(days=offset)
+        day_start = timezone.make_aware(datetime.combine(day, datetime.min.time()))
+        day_end = timezone.make_aware(datetime.combine(day, datetime.max.time()))
+        sales = Order.objects.filter(
+            created_at__gte=day_start,
+            created_at__lte=day_end,
+            order_status='Completed',
+        ).aggregate(total=Coalesce(Sum('total_amount'), Decimal('0.00')))['total']
+        daily_sales_data.append({
+            'date': day.strftime('%a %d'),
+            'sales': float(sales),
+        })
+
     # Get business information
     business_settings = {}
-    for setting in Setting.objects.filter(setting_key__in=['business_name', 'business_address', 'business_phone', 'tax_rate']):
+    for setting in Setting.objects.filter(setting_key__in=[
+        'business_name', 'business_address', 'business_phone', 'business_email', 'tax_rate',
+    ]):
         business_settings[setting.setting_key] = setting.setting_value
-    
+
     context = {
-        'total_products': total_products,
-        'total_categories': total_categories,
-        'total_users': total_users,
-        'total_orders': total_orders,
-        'active_orders': active_orders,
-        'total_revenue': total_revenue,
-        'recent_products': recent_products,
+        'business_logo': BusinessLogo.get_logo_url(),
+        'period_revenue': period_revenue,
+        'pending_orders': pending_orders,
+        'completed_orders': completed_orders,
+        'available_products': available_products,
+        'archived_products': archived_products,
+        'unavailable_products': unavailable_products,
+        'delivery_orders_count': delivery_orders_count,
+        'pending_delivery_orders': pending_delivery_orders,
+        'recent_delivery_orders': recent_delivery_orders,
         'recent_orders': recent_orders,
-        'top_products': top_products,
-        'categories': categories,
-        'users': users,
+        'daily_sales_data': json.dumps(daily_sales_data),
         'business_settings': business_settings,
         'last_end_day': last_end_day,
         'is_admin': user_is_admin,
