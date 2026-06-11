@@ -53,7 +53,7 @@
         <div class="thermal-items">
             {% for order_item in order.orderitem_set.all %}
             <div class="thermal-item">
-                <div class="thermal-item-name">{{ order_item.product.name }}</div>
+                <div class="thermal-item-name">{{ order_item.display_name }}</div>
                 <div class="thermal-item-line">
                     <span>{{ order_item.quantity|stringformat:"g" }} x {{ currency_symbol }}{{ order_item.unit_price|floatformat:2 }}</span>
                     <span class="thermal-item-total">{{ currency_symbol }}{{ order_item.total_price|floatformat:2 }}</span>

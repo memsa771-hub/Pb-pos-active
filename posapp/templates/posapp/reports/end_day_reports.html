@@ -119,19 +119,19 @@
                             <td>{{ data.end_day.notes|default:"-" }}</td>
                             <td class="actions-col">
                                 <div class="admin-action-btns">
-                                    <a href="{% url 'sales_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                    <a href="{% url 'sales_receipt' %}?start_date={{ data.period_start_str|urlencode }}&end_date={{ data.period_end_str|urlencode }}"
                                        class="btn btn-primary admin-action-btn" target="_blank" title="Sales Report">
                                         <i class="fas fa-file-alt"></i>
                                     </a>
-                                    <a href="{% url 'adjustment_receipt' %}?start_date={{ data.period_start|date:'Y-m-d H:i:s' }}&end_date={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                    <a href="{% url 'adjustment_receipt' %}?start_date={{ data.period_start_str|urlencode }}&end_date={{ data.period_end_str|urlencode }}"
                                        class="btn btn-danger admin-action-btn" target="_blank" title="Adjustment Report">
                                         <i class="fas fa-sliders-h"></i>
                                     </a>
-                                    <a href="{% url 'export_orders_excel' %}?start={{ data.period_start|date:'Y-m-d H:i:s' }}&end={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                    <a href="{% url 'export_orders_excel' %}?start={{ data.period_start_str|urlencode }}&end={{ data.period_end_str|urlencode }}"
                                        class="btn btn-success admin-action-btn" title="Orders Excel Report">
                                         <i class="fas fa-file-excel"></i>
                                     </a>
-                                    <a href="{% url 'export_order_items_excel' %}?start={{ data.period_start|date:'Y-m-d H:i:s' }}&end={{ data.period_end|date:'Y-m-d H:i:s' }}"
+                                    <a href="{% url 'export_order_items_excel' %}?start={{ data.period_start_str|urlencode }}&end={{ data.period_end_str|urlencode }}"
                                        class="btn btn-info admin-action-btn" title="Products Excel Report">
                                         <i class="fas fa-box"></i>
                                     </a>

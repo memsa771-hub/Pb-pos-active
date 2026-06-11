@@ -384,7 +384,7 @@
                 <tr><td colspan="3" class="divider"></td></tr>
                 {% for product in products_sold %}
                 <tr>
-                    <td class="col-item">{{ product.product__name }}</td>
+                    <td class="col-item">{{ product.sold_product_name }}</td>
                     <td class="col-qty right"><strong>{% if product.total_quantity %}{{ product.total_quantity }}{% else %}-{% endif %}</strong></td>
                     <td class="col-amt right">{{ currency_symbol }}{{ product.total_sales|floatformat:2 }}</td>
                 </tr>

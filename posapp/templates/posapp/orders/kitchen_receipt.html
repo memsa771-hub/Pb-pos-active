@@ -53,8 +53,8 @@
         <div class="kitchen-item">
             <div class="kitchen-qty">{{ item.quantity|stringformat:"g" }}</div>
             <div class="kitchen-name-wrap">
-                <div class="kitchen-name">{{ item.product.name }}</div>
-                {% if item.product.calculate_price_per_kg %}
+                <div class="kitchen-name">{{ item.display_name }}</div>
+                {% if item.is_per_kg %}
                 <div class="kitchen-sub">Weight item (kg)</div>
                 {% endif %}
                 {% if item.notes %}

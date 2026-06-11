@@ -52,7 +52,7 @@
             {% for item in order_items %}
             <div class="thermal-item-box">
                 <div class="thermal-item-name">
-                    {{ item.product.name }}{% if item.product.calculate_price_per_kg %} (per kg){% endif %}
+                    {{ item.display_name }}{% if item.is_per_kg %} (per kg){% endif %}
                 </div>
                 <div class="thermal-item-line">
                     <span>{{ item.quantity|stringformat:"g" }} x {{ currency_symbol }}{{ item.unit_price|floatformat:2 }}</span>

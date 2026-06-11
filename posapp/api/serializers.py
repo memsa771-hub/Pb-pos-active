@@ -97,7 +97,10 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_name = serializers.SerializerMethodField()
+
+    def get_product_name(self, obj):
+        return obj.display_name
     
     class Meta:
         model = OrderItem

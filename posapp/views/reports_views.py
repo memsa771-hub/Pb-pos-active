@@ -16,6 +16,8 @@ import logging
 from ..decorators import management_required, admin_required
 from ..permissions import is_admin, is_branch_manager, can_access_management
 from ..models import Order, OrderItem, PosProduct, PosCategory, BusinessSettings, BillAdjustment, AdvanceAdjustment, BusinessLogo, Setting, EndDay
+from ..query_utils import SOLD_PRODUCT_NAME_EXPR
+from ..datetime_utils import format_local_datetime_param, parse_local_datetime_param
 
 import io
 from openpyxl import Workbook
@@ -272,7 +274,9 @@ def sales_report(request):
     top_products = OrderItem.objects.filter(
         order__in=Order.objects.filter(base_filter),
         order__order_status='Completed'  # Only include completed orders
-    ).values('product__name', 'product__category__name').annotate(
+    ).annotate(
+        sold_product_name=SOLD_PRODUCT_NAME_EXPR
+    ).values('sold_product_name', 'product__category__name').annotate(
         total_quantity=Sum('quantity'),
         total_sales=Sum('total_price')
     ).order_by('-total_quantity')[:10]
@@ -360,30 +364,28 @@ def export_orders_excel(request):
     today = timezone.now()
 
     try:
-        # Parse and validate start/end dates
-        def parse_date(value, default, end=False):
-            if not value:
-                return default
-            try:
-                dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                dt = datetime.strptime(value, '%Y-%m-%d')
-                if not end:
-                    dt = datetime.combine(dt, datetime.min.time())
-                else:
-                    dt = datetime.combine(dt, datetime.max.time())
-            if timezone.is_naive(dt):
-                dt = timezone.make_aware(dt)
-            return dt
-
-        start_date_obj = parse_date(start_date, today - timedelta(days=30))
-        end_date_obj = parse_date(end_date, today, end=True)
+        try:
+            start_date_obj = (
+                parse_local_datetime_param(start_date)
+                if start_date
+                else today - timedelta(days=30)
+            )
+            end_date_obj = (
+                parse_local_datetime_param(end_date, end_of_day_if_date_only=True)
+                if end_date
+                else today
+            )
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format in export request.'}, status=400)
 
         if start_date_obj > end_date_obj:
             return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
 
-        # Filter orders
-        orders = Order.objects.filter(created_at__gte=start_date_obj, created_at__lte=end_date_obj)
+        # Filter orders (same range logic as end-day screen)
+        orders = Order.objects.filter(
+            created_at__gte=start_date_obj,
+            created_at__lte=end_date_obj,
+        ).order_by('-created_at')
         if status:
             orders = orders.filter(order_status=status)
 
@@ -471,22 +473,19 @@ def export_order_items_excel(request):
         category = request.GET.get('category')
         today = timezone.now()
 
-        # Date parsing
-        def parse_date(date_str, is_end=False):
-            if not date_str:
-                return today if is_end else today - timedelta(days=30)
-            try:
-                dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                dt = datetime.strptime(date_str, '%Y-%m-%d')
-            if timezone.is_naive(dt):
-                dt = timezone.make_aware(dt)
-            if is_end:
-                dt = dt.replace(hour=23, minute=59, second=59)
-            return dt
-
-        start_date_obj = parse_date(start_date)
-        end_date_obj = parse_date(end_date, True)
+        try:
+            start_date_obj = (
+                parse_local_datetime_param(start_date)
+                if start_date
+                else today - timedelta(days=30)
+            )
+            end_date_obj = (
+                parse_local_datetime_param(end_date, end_of_day_if_date_only=True)
+                if end_date
+                else today
+            )
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format in export request.'}, status=400)
 
         if start_date_obj > end_date_obj:
             return JsonResponse({'error': 'Start date cannot be after end date.'}, status=400)
@@ -507,8 +506,10 @@ def export_order_items_excel(request):
                 category_name = "Unknown Category"
 
         # Aggregation
-        product_sales = product_sales.values(
-            'product__name', 
+        product_sales = product_sales.annotate(
+            sold_product_name=SOLD_PRODUCT_NAME_EXPR
+        ).values(
+            'sold_product_name',
             'product__category__name'
         ).annotate(
             total_quantity=Sum('quantity'),
@@ -556,7 +557,7 @@ def export_order_items_excel(request):
         grand_total_sales = 0.0
         for p in product_sales:
             ws.append([
-                p['product__name'],
+                p['sold_product_name'],
                 p['product__category__name'] or 'Unknown',
                 p['total_quantity'],
                 round(p['avg_unit_price'], 2),
@@ -831,8 +832,10 @@ def sales_receipt(request):
                 # Invalid user_id, ignore the filter
                 pass
         
-        products_sold = products_sold_query.values(
-            'product__name'
+        products_sold = products_sold_query.annotate(
+            sold_product_name=SOLD_PRODUCT_NAME_EXPR
+        ).values(
+            'sold_product_name'
         ).annotate(
             total_quantity=Sum('quantity'),
             total_sales=Sum('total_price')
@@ -1011,6 +1014,8 @@ def end_day_reports(request):
             'end_day': end_day,
             'period_start': period_start,
             'period_end': period_end,
+            'period_start_str': format_local_datetime_param(period_start),
+            'period_end_str': format_local_datetime_param(period_end),
             'orders_count': orders.count(),
             'order_total': order_total,
             'bill_adjustment_total': bill_adjustment_total,

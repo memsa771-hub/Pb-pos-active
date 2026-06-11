@@ -8,6 +8,8 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from ..models import PosCategory, PosProduct, Order, UserProfile, Setting, BusinessSettings, EndDay, BillAdjustment, AdvanceAdjustment, OrderItem
+from ..query_utils import SOLD_PRODUCT_NAME_EXPR
+from ..datetime_utils import format_local_datetime_param
 
 from ..permissions import is_admin, is_branch_manager, can_access_management
 
@@ -200,9 +202,9 @@ def end_day(request):
         end_day.end_date = business_end_date
         end_day.save()
         
-        # Format dates for sales receipt URL using the EXACT same dates
-        start_date_str = business_start_date.strftime('%Y-%m-%d %H:%M:%S')
-        end_date_str = business_end_date.strftime('%Y-%m-%d %H:%M:%S')
+        # Format dates for reports using local business time (matches on-screen period)
+        start_date_str = format_local_datetime_param(business_start_date)
+        end_date_str = format_local_datetime_param(business_end_date)
         
         # Add success message with notification
         messages.success(request, f"Day ended successfully at {timezone.localtime().strftime('%Y-%m-%d %H:%M')}.")
@@ -237,17 +239,19 @@ def end_day(request):
         order__created_at__gte=start_date,
         order__created_at__lte=end_date,
         order__order_status='Completed'  # Only include completed orders
+    ).annotate(
+        sold_product_name=SOLD_PRODUCT_NAME_EXPR
     ).values(
-        'product__name', 
+        'sold_product_name',
         'product__category__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_sales=Sum('total_price')
     ).order_by('-total_quantity')
     
-    # Format dates for URL parameters - preserve time part as well
-    start_date_str = start_date.strftime('%Y-%m-%d %H:%M:%S')
-    end_date_str = end_date.strftime('%Y-%m-%d %H:%M:%S')
+    # Format dates for URL parameters in local business time
+    start_date_str = format_local_datetime_param(start_date)
+    end_date_str = format_local_datetime_param(end_date)
     
     context = {
         'last_end_day': last_end_day,
@@ -428,8 +432,10 @@ def sales_summary(request, end_day_id=None):
         order__created_at__gte=start_date,
         order__created_at__lte=end_date,
         order__order_status='Completed'
+    ).annotate(
+        sold_product_name=SOLD_PRODUCT_NAME_EXPR
     ).values(
-        'product__name'
+        'sold_product_name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_sales=Sum('total_price')

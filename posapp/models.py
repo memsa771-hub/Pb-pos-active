@@ -237,7 +237,16 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(PosProduct, on_delete=models.PROTECT, help_text="Products can only be deleted if they're not in pending orders")
+    product = models.ForeignKey(
+        PosProduct,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Linked product; order history keeps snapshots if product is removed from catalog",
+    )
+    product_name = models.CharField(max_length=255, blank=True, default='')
+    product_code = models.CharField(max_length=20, blank=True, default='')
+    is_weight_based = models.BooleanField(default=False)
     quantity = models.DecimalField(max_digits=10, decimal_places=3, help_text="Quantity - supports decimal values for weight-based products")
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -246,10 +255,42 @@ class OrderItem(models.Model):
     is_temporary = models.BooleanField(default=False, help_text="Indicates if this item is temporary and not yet saved")
     original_quantity = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, help_text="Original quantity for tracking stock adjustments")
 
+    @property
+    def display_name(self):
+        if self.product_name:
+            return self.product_name
+        if self.product_id and self.product:
+            return self.product.name
+        return 'Removed product'
+
+    @property
+    def display_code(self):
+        if self.product_code:
+            return self.product_code
+        if self.product_id and self.product:
+            return self.product.product_code or ''
+        return ''
+
+    @property
+    def is_per_kg(self):
+        if self.is_weight_based:
+            return True
+        if self.product_id and self.product:
+            return self.product.calculate_price_per_kg
+        return False
+
+    def sync_product_snapshot(self):
+        if self.product_id and self.product:
+            self.product_name = self.product.name
+            self.product_code = self.product.product_code or ''
+            self.is_weight_based = self.product.calculate_price_per_kg
+
     def __str__(self):
-        return f"{self.order.reference_number} - {self.product.name}"
+        return f"{self.order.reference_number} - {self.display_name}"
     
     def save(self, *args, **kwargs):
+        if self.product_id and self.product:
+            self.sync_product_snapshot()
         # Set original quantity on first save if not already set
         if self.pk is None and self.original_quantity is None:
             self.original_quantity = self.quantity

@@ -231,7 +231,7 @@
                             <tbody>
                                 {% for product in top_products %}
                                 <tr>
-                                    <td>{{ product.product__name }}</td>
+                                    <td>{{ product.sold_product_name }}</td>
                                     <td>{{ product.product__category__name|default:"Unknown" }}</td>
                                     <td>{{ product.total_quantity }}</td>
                                     <td>{{ currency_symbol }}{{ product.total_sales|floatformat:2 }}</td>

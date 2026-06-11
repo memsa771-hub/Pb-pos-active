@@ -363,13 +363,13 @@
                     {% for item in order_items %}
                     <tr>
                         <td>
-                            <div class="order-item-name">{{ item.product.name }}</div>
-                            {% if item.product.product_code %}
-                            <div class="order-item-code">#{{ item.product.product_code }}</div>
+                            <div class="order-item-name">{{ item.display_name }}</div>
+                            {% if item.display_code %}
+                            <div class="order-item-code">#{{ item.display_code }}</div>
                             {% endif %}
                         </td>
                         <td>{{ currency_symbol }}{{ item.unit_price }}</td>
-                        <td>{{ item.quantity|stringformat:"g" }}{% if item.product.calculate_price_per_kg %} kg{% endif %}</td>
+                        <td>{{ item.quantity|stringformat:"g" }}{% if item.is_per_kg %} kg{% endif %}</td>
                         <td><strong>{{ currency_symbol }}{{ item.total_price|floatformat:2 }}</strong></td>
                         <td class="text-muted small">{{ item.notes|default:"-" }}</td>
                     </tr>

@@ -73,7 +73,7 @@ Total Deductions:    {{ currency_symbol|default:"Rs" }} {{ total_deductions|floa
 PRODUCTS SOLD
 {% if products_sold %}Name                Qty     Amount
 ----------------------------------------{% for product in products_sold %}
-{{ product.product__name|ljust:20 }}{% if product.total_quantity %}{{ product.total_quantity|stringformat:"d"|rjust:5 }}{% else %}-{% endif %}     {{ currency_symbol|default:"Rs" }}{{ product.total_sales|floatformat:2 }}{% endfor %}
+{{ product.sold_product_name|ljust:20 }}{% if product.total_quantity %}{{ product.total_quantity|stringformat:"d"|rjust:5 }}{% else %}-{% endif %}     {{ currency_symbol|default:"Rs" }}{{ product.total_sales|floatformat:2 }}{% endfor %}
 {% else %}No products sold in this period
 {% endif %}----------------------------------------
 Thank you for your business!

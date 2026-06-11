@@ -7,8 +7,6 @@ from django.http import JsonResponse
 from ..models import PosProduct, PosCategory, OrderItem
 from ..forms import ProductForm
 from ..decorators import admin_required
-import django.db.models.deletion
-from django.db import transaction
 
 @login_required
 @admin_required
@@ -158,21 +156,17 @@ def product_delete(request, product_id):
     product = get_object_or_404(PosProduct, id=product_id)
     
     if request.method == 'POST':
-        # Check if product is in any pending orders
-        pending_order_items = OrderItem.objects.filter(
-            product=product,
-            order__order_status='Pending'
-        )
-        
-        if pending_order_items.exists():
-            # If product is in pending orders, archive it instead of deleting
+        order_item_count = OrderItem.objects.filter(product=product).count()
+
+        if order_item_count > 0:
+            # Never delete sales history — archive product and keep all order references intact
             product.is_available = False
             product.is_archived = True
             product.save()
-            
+
             message = (
-                f'This product cannot be deleted because it is referenced in '
-                f'{pending_order_items.count()} pending order(s). It has been archived instead.'
+                f'Product "{product.name}" is used in {order_item_count} order record(s) '
+                f'and was archived instead of deleted to preserve sales and end-day history.'
             )
             return _product_delete_response(
                 request,
@@ -180,41 +174,22 @@ def product_delete(request, product_id):
                 message=message,
                 level='warning',
             )
-        
+
         try:
-            # Find completed or cancelled order items
-            completed_cancelled_items = OrderItem.objects.filter(
-                product=product,
-                order__order_status__in=['Completed', 'Cancelled']
-            )
-            
-            item_count = completed_cancelled_items.count()
-            
-            with transaction.atomic():
-                # First, delete the order items from completed/cancelled orders
-                completed_cancelled_items.delete()
-                
-                # Now try to delete the product
-                product_name = product.name
-                product.delete()
-                
-            message = (
-                f'Product "{product_name}" and its {item_count} references in '
-                f'completed/cancelled orders deleted successfully.'
-            )
+            product_name = product.name
+            product.delete()
+            message = f'Product "{product_name}" deleted successfully.'
             return _product_delete_response(
                 request,
                 success=True,
                 message=message,
                 level='success',
             )
-            
         except Exception as e:
-            # If any exception occurs
             product.is_available = False
             product.is_archived = True
             product.save()
-            
+
             message = (
                 f'This product could not be deleted due to an error: {str(e)}. '
                 f'It has been archived instead.'
