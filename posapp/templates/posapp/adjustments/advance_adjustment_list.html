@@ -88,7 +88,7 @@
                         {% for adjustment in advance_adjustments %}
                         <tr>
                             <td><strong>{{ adjustment.name }}</strong></td>
-                            <td>Rs.{{ adjustment.amount|floatformat:2 }}</td>
+                            <td>{{ currency_symbol }}{{ adjustment.amount|floatformat:2 }}</td>
                             <td>{{ adjustment.date|pkt_date }}</td>
                             <td>{{ adjustment.created_by.username }}</td>
                             <td class="actions-col">

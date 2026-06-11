@@ -43,7 +43,7 @@
         <div class="admin-stat-card primary">
             <i class="fas fa-tag stat-icon"></i>
             <div class="stat-label">Price</div>
-            <div class="stat-value" style="font-size:1.2rem;">Rs.{{ product.price }}</div>
+            <div class="stat-value" style="font-size:1.2rem;">{{ currency_symbol }}{{ product.price }}</div>
         </div>
         <div class="admin-stat-card {% if product.is_available and not product.is_archived %}success{% elif product.is_archived %}warning{% else %}danger{% endif %}">
             <i class="fas fa-circle stat-icon"></i>
@@ -80,7 +80,7 @@
             </div>
             <div class="admin-detail-item">
                 <div class="label">Price</div>
-                <div class="value">Rs.{{ product.price }}</div>
+                <div class="value">{{ currency_symbol }}{{ product.price }}</div>
             </div>
             <div class="admin-detail-item">
                 <div class="label">Stock</div>

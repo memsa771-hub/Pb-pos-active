@@ -117,7 +117,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Total Sales ({{ start_date|date:'M d, Y' }} - {{ end_date|date:'M d, Y' }})</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs.{{ total_sales|floatformat:2 }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }}{{ total_sales|floatformat:2 }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
@@ -234,7 +234,7 @@
                                     <td>{{ product.product__name }}</td>
                                     <td>{{ product.product__category__name|default:"Unknown" }}</td>
                                     <td>{{ product.total_quantity }}</td>
-                                    <td>Rs.{{ product.total_sales|floatformat:2 }}</td>
+                                    <td>{{ currency_symbol }}{{ product.total_sales|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -246,7 +246,7 @@
                                 <tr class="bg-light">
                                     <td colspan="2" class="text-right font-weight-bold">GRAND TOTAL:</td>
                                     <td class="font-weight-bold">{{ top_products|dictsumattr:"total_quantity" }}</td>
-                                    <td class="font-weight-bold">Rs.{{ top_products|dictsumattr:"total_sales"|floatformat:2 }}</td>
+                                    <td class="font-weight-bold">{{ currency_symbol }}{{ top_products|dictsumattr:"total_sales"|floatformat:2 }}</td>
                                 </tr>
                                 {% endif %}
                             </tbody>
@@ -285,7 +285,7 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ item.order_count }}</td>
-                                    <td>Rs.{{ item.total_sales|floatformat:2 }}</td>
+                                    <td>{{ currency_symbol }}{{ item.total_sales|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -325,7 +325,7 @@
             labels: {{ chart_labels|safe }},
             datasets: [
                 {
-                    label: 'Sales (Rs.)',
+                    label: 'Sales ({{ currency_symbol }})',
                     data: {{ chart_sales|safe }},
                     backgroundColor: 'rgba(78, 115, 223, 0.05)',
                     borderColor: 'rgba(78, 115, 223, 1)',
@@ -368,7 +368,7 @@
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Sales (Rs.)'
+                        text: 'Sales ({{ currency_symbol }})'
                     }
                 },
                 y1: {

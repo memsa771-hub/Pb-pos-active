@@ -13,6 +13,9 @@ from .views.category_views import (
     category_list, category_detail, category_create,
     category_edit, category_delete
 )
+from .views.product_import_export_views import (
+    export_products, import_products, download_product_import_template
+)
 from .views.order_views import (
     order_list, order_detail, order_create, 
     order_edit, order_delete, order_receipt,
@@ -96,6 +99,9 @@ urlpatterns = [
     path('categories/<int:category_id>/', category_detail, name='category_detail'),
     path('categories/<int:category_id>/edit/', category_edit, name='category_edit'),
     path('categories/<int:category_id>/delete/', category_delete, name='category_delete'),
+    path('categories/products/export/', export_products, name='export_products'),
+    path('categories/products/import/', import_products, name='import_products'),
+    path('categories/products/template/', download_product_import_template, name='product_import_template'),
     
     # Order management - orders are created from POS section only
     path('orders/', order_list, name='order_list'),

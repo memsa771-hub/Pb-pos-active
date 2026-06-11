@@ -112,9 +112,9 @@
                                 </div>
                             </td>
                             <td>{{ data.orders_count }}</td>
-                            <td><span class="end-day-amount">Rs. {{ data.order_total|floatformat:2 }}</span></td>
-                            <td><span class="end-day-amount">Rs. {{ data.adjustment_total|floatformat:2 }}</span></td>
-                            <td><span class="end-day-amount net">Rs. {{ data.net_total|floatformat:2 }}</span></td>
+                            <td><span class="end-day-amount">{{ currency_symbol }} {{ data.order_total|floatformat:2 }}</span></td>
+                            <td><span class="end-day-amount">{{ currency_symbol }} {{ data.adjustment_total|floatformat:2 }}</span></td>
+                            <td><span class="end-day-amount net">{{ currency_symbol }} {{ data.net_total|floatformat:2 }}</span></td>
                             <td>{{ data.end_day.ended_by.username }}</td>
                             <td>{{ data.end_day.notes|default:"-" }}</td>
                             <td class="actions-col">

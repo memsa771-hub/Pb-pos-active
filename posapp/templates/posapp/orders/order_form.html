@@ -279,7 +279,7 @@
                                             <i class="fas fa-money-bill text-primary me-1"></i> Delivery Charges
                                         </label>
                                         <div class="input-group">
-                                            <span class="input-group-text">Rs.</span>
+                                            <span class="input-group-text">{{ currency_symbol }}</span>
                                             <input type="number" name="delivery_charges" id="id_delivery_charges" class="form-control" 
                                                    step="0.01" value="{{ order.delivery_charges|default:'0.00' }}">
                                         </div>
@@ -345,16 +345,16 @@
                                                     {% if order.discount.type == 'Percentage' %}
                                                         {{ order.discount.value }}% off ({{ order.discount.name }})
                                                     {% else %}
-                                                        Rs.{{ order.discount.value }} off ({{ order.discount.name }})
+                                                        {{ currency_symbol }}{{ order.discount.value }} off ({{ order.discount.name }})
                                                     {% endif %}
                                                 {% elif order.discount_code == 'MANUAL' %}
                                                     {% if order.discount_type == 'percentage' %}
                                                         {{ order.discount_value }}% off (Manual)
                                                     {% else %}
-                                                        Rs.{{ order.discount_value }} off (Manual)
+                                                        {{ currency_symbol }}{{ order.discount_value }} off (Manual)
                                                     {% endif %}
                                                 {% elif order.discount_amount > 0 %}
-                                                    Rs.{{ order.discount_amount }} off (Manual)
+                                                    {{ currency_symbol }}{{ order.discount_amount }} off (Manual)
                                                 {% endif %}
                                             </span>
                                         </div>
@@ -453,7 +453,7 @@
                                                     <option value="{{ product.id }}" 
                                                             data-code="{{ product.product_code|default:'' }}"
                                                             data-per-kg="{{ product.calculate_price_per_kg|yesno:'true,false' }}">
-                                                        {{ product.name }} - Rs.{{ product.price }}{% if product.calculate_price_per_kg %} per kg{% endif %}
+                                                        {{ product.name }} - {{ currency_symbol }}{{ product.price }}{% if product.calculate_price_per_kg %} per kg{% endif %}
                                                     </option>
                                             {% endfor %}
                                         </select>
@@ -514,7 +514,7 @@
                                                         <small class="text-muted d-block">#{{ item.product.product_code }}</small>
                                                         {% endif %}
                                                     </td>
-                                                    <td class="item-price" data-price="{{ item.unit_price }}">Rs.{{ item.unit_price }}</td>
+                                                    <td class="item-price" data-price="{{ item.unit_price }}">{{ currency_symbol }}{{ item.unit_price }}</td>
                                                     <td>
                                                         <div class="d-flex align-items-center">
                                                             <!-- Quantity control group -->
@@ -553,10 +553,10 @@
                                                     </td>
                                                     <td class="item-subtotal fw-bold">
                                                         {% if item.has_changed %}
-                                                        <span class="text-danger">Rs.{{ item.total_price }}</span>
-                                                        <small class="text-muted d-block">was Rs.{{ item.original_quantity|multiply:item.unit_price }}</small>
+                                                        <span class="text-danger">{{ currency_symbol }}{{ item.total_price }}</span>
+                                                        <small class="text-muted d-block">was {{ currency_symbol }}{{ item.original_quantity|multiply:item.unit_price }}</small>
                                                         {% else %}
-                                                        Rs.{{ item.total_price }}
+                                                        {{ currency_symbol }}{{ item.total_price }}
                                                         {% endif %}
                                                     </td>
                                                     <td class="actions-col text-end">
@@ -580,7 +580,7 @@
                                                 {% for item in deleted_items %}
                                                 <tr data-item-id="{{ item.id }}" class="table-danger text-decoration-line-through">
                                                     <td>{{ item.product.name }} <span class="badge bg-danger">Will be deleted</span></td>
-                                                    <td class="item-price" data-price="{{ item.unit_price }}">Rs.{{ item.unit_price }}</td>
+                                                    <td class="item-price" data-price="{{ item.unit_price }}">{{ currency_symbol }}{{ item.unit_price }}</td>
                                                     <td>
                                                         <div class="d-flex align-items-center">
                                                             <!-- Quantity control group -->
@@ -604,7 +604,7 @@
                                                         </div>
                                                     </td>
                                                     <td class="item-subtotal">
-                                                        <span class="text-danger text-decoration-line-through">Rs.{{ item.original_quantity|multiply:item.unit_price }}</span>
+                                                        <span class="text-danger text-decoration-line-through">{{ currency_symbol }}{{ item.original_quantity|multiply:item.unit_price }}</span>
                                                     </td>
                                                     <td class="actions-col text-end">
                                                         <button type="button" class="btn btn-sm btn-outline-secondary restore-item" data-item-id="{{ item.id }}">
@@ -623,7 +623,7 @@
                                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                         <h6 class="m-0 font-weight-bold text-primary">Order Summary</h6>
                                         <span class="badge bg-primary px-3 py-2">
-                                            <i class="fas fa-receipt me-1"></i> Total: <span id="summary-total">Rs.0.00</span>
+                                            <i class="fas fa-receipt me-1"></i> Total: <span id="summary-total">{{ currency_symbol }}0.00</span>
                                         </span>
                                     </div>
                                     <div class="card-body">
@@ -632,7 +632,7 @@
                                                 <tbody>
                                                     <tr>
                                                         <th style="width:40%">Subtotal:</th>
-                                                        <td class="text-end" id="order-subtotal">Rs.{{ subtotal|default:'0.00' }}</td>
+                                                        <td class="text-end" id="order-subtotal">{{ currency_symbol }}{{ subtotal|default:'0.00' }}</td>
                                             </tr>
                                             <tr>
                                                 <th>Discount:
@@ -644,29 +644,29 @@
                                                     <span class="badge bg-info">({{ order.discount_code }})</span>
                                                     {% endif %}
                                                 </th>
-                                                <td class="text-end text-danger" id="order-discount">-Rs.{{ discount_amount|floatformat:2 }}</td>
+                                                <td class="text-end text-danger" id="order-discount">-{{ currency_symbol }}{{ discount_amount|floatformat:2 }}</td>
                                             </tr>
                                             <tr>
                                                 <th>Tax (<span id="tax-rate-display">{{ tax_rate|floatformat:1 }}</span>%):</th>
-                                                <td class="text-end" id="order-tax">Rs.{{ tax_amount|default:'0.00' }}</td>
+                                                <td class="text-end" id="order-tax">{{ currency_symbol }}{{ tax_amount|default:'0.00' }}</td>
                                             </tr>
                                             <tr id="service-charge-row" {% if order.order_type != 'Dine In' or order.service_charge_amount == 0 %}style="display: none;"{% endif %}>
                                                         <th>Service Charge (<span id="service-charge-percent-display">{% if order.service_charge_percent is not None %}{{ order.service_charge_percent }}{% else %}{{ default_service_charge }}{% endif %}</span>%):</th>
                                                         <td class="text-end" id="order-service-charge">
-                                                            Rs.{{ order.service_charge_amount|default:'0.00' }}
+                                                            {{ currency_symbol }}{{ order.service_charge_amount|default:'0.00' }}
                                                         </td>
                                                     </tr>
                                                     <tr id="delivery-charges-row" {% if order.order_type != 'Delivery' %}style="display:none"{% endif %}>
                                                 <th>Delivery Charges:</th>
                                                         <td class="text-end" id="order-delivery-charges">
-                                                            Rs.{{ order.delivery_charges|default:'0.00' }}
+                                                            {{ currency_symbol }}{{ order.delivery_charges|default:'0.00' }}
                                                         </td>
                                             </tr>
                                             <tr>
                                                         <th class="table-primary">Total Amount:</th>
                                                         <td class="text-end table-primary">
                                                             <strong class="text-primary fs-5" id="order-total">
-                                                                Rs.{{ order.total_amount|default:'0.00' }}
+                                                                {{ currency_symbol }}{{ order.total_amount|default:'0.00' }}
                                                             </strong>
                                                 </td>
                                             </tr>
@@ -706,7 +706,7 @@
             <div class="modal-body">
                 <div class="text-center mb-3">
                     <h6 id="editProductName"></h6>
-                    <p class="text-muted">Price: Rs.<span id="editProductPrice"></span> per kg</p>
+                    <p class="text-muted">Price: {{ currency_symbol }}<span id="editProductPrice"></span> per kg</p>
                 </div>
                 <div class="mb-3">
                     <label for="editProductWeight" class="form-label">Weight (kg)</label>
@@ -714,7 +714,7 @@
                     <div class="form-text">Minimum weight: 0.5 kg</div>
                 </div>
                 <div class="text-center">
-                    <p class="fw-bold">Total: Rs.<span id="editWeightTotal">0.00</span></p>
+                    <p class="fw-bold">Total: {{ currency_symbol }}<span id="editWeightTotal">0.00</span></p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -729,6 +729,7 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+        const currencySymbol = window.CURRENCY_SYMBOL || 'Rs';
     // Store initial order ID to track if we're editing
     const orderId = "{{ order.id|default:'new' }}";
     const isEditable = {{ is_editable|yesno:"true,false" }};
@@ -929,7 +930,7 @@ $(document).ready(function() {
         });
         
         // Update subtotal display
-        $('#order-subtotal').text('Rs.' + subtotal.toFixed(2));
+        $('#order-subtotal').text(currencySymbol + subtotal.toFixed(2));
         
         // Get discount information
         const discountCode = $('#hidden_discount_code').val();
@@ -947,7 +948,7 @@ $(document).ready(function() {
         }
         
         // Update discount display
-        $('#order-discount').text('-Rs.' + discountAmount.toFixed(2));
+        $('#order-discount').text('-{{ currency_symbol }}' + discountAmount.toFixed(2));
         
         // Calculate tax
         const taxableAmount = subtotal - discountAmount;
@@ -972,7 +973,7 @@ $(document).ready(function() {
         $('#tax-rate').text(taxRate.toFixed(1));
         
         // Update tax display
-        $('#order-tax').text('Rs.' + taxAmount.toFixed(2));
+        $('#order-tax').text(currencySymbol + taxAmount.toFixed(2));
         
         // Calculate service charge for Dine In orders
         let serviceChargeAmount = 0;
@@ -981,7 +982,7 @@ $(document).ready(function() {
             serviceChargeAmount = subtotal * (serviceChargePercent / 100);
             
             // Update service charge display
-            $('#order-service-charge').text('Rs.' + serviceChargeAmount.toFixed(2));
+            $('#order-service-charge').text(currencySymbol + serviceChargeAmount.toFixed(2));
             $('#service-charge-percent-display').text(serviceChargePercent.toFixed(1));
             
             // Update hidden field
@@ -999,21 +1000,21 @@ $(document).ready(function() {
         
         // Get delivery charges
         const deliveryCharges = parseFloat($('#id_delivery_charges').val()) || 0;
-        $('#order-delivery-charges').text('Rs.' + deliveryCharges.toFixed(2));
+        $('#order-delivery-charges').text(currencySymbol + deliveryCharges.toFixed(2));
         
         // Calculate total
         const total = taxableAmount + taxAmount + serviceChargeAmount + deliveryCharges;
-        $('#order-total').text('Rs.' + total.toFixed(2));
+        $('#order-total').text(currencySymbol + total.toFixed(2));
         
         // Also update the summary badge
-        $('#summary-total').text('Rs.' + total.toFixed(2));
+        $('#summary-total').text(currencySymbol + total.toFixed(2));
         
         // Update hidden fields
         $('#hidden_discount_amount').val(discountAmount.toFixed(2));
         
         // Update text in the Discount card badge if discountAmount > 0
         if (discountAmount > 0) {
-            $('#discountBadge').removeClass('d-none').text(`${discountType === 'percentage' ? discountValue + '%' : 'Rs.' + discountValue.toFixed(2)}`);
+            $('#discountBadge').removeClass('d-none').text(`${discountType === 'percentage' ? discountValue + '%' : currencySymbol + discountValue.toFixed(2)}`);
         } else {
             $('#discountBadge').addClass('d-none');
         }
@@ -1175,7 +1176,7 @@ $(document).ready(function() {
                 } else {
                     // For temporary items, update the subtotal directly
                     const price = parseFloat($tr.find('.item-price').data('price'));
-                    $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+                    $tr.find('.item-subtotal').text(currencySymbol + (price * newQty).toFixed(2));
                 }
                 
                 // Update stock cache if not running item and we're using new stock
@@ -1267,7 +1268,7 @@ $(document).ready(function() {
     //         } else {
     //             // For temporary items, update the subtotal directly
     //             const price = parseFloat($tr.find('.item-price').data('price'));
-    //             $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //             $tr.find('.item-subtotal').text(currencySymbol + (price * newQty).toFixed(2));
     //         }
     //         
     //         // Check max quantity
@@ -1312,7 +1313,7 @@ $(document).ready(function() {
             
             // For temporary items, update the subtotal directly
             const price = parseFloat($tr.find('.item-price').data('price'));
-            $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+            $tr.find('.item-subtotal').text(currencySymbol + (price * newQty).toFixed(2));
             
             // Update totals
             updateOrderTotals();
@@ -1395,7 +1396,7 @@ $(document).ready(function() {
     //            
     //            // Update subtotal
     //            const price = parseFloat($tr.find('.item-price').data('price'));
-    //            $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //            $tr.find('.item-subtotal').text(currencySymbol + (price * newQty).toFixed(2));
     //            
     //            // Update local stock cache if not a running item
     //            if (!productStock.running_item) {
@@ -1421,7 +1422,7 @@ $(document).ready(function() {
     //                        
     //                        // Update subtotal
     //                        const price = parseFloat($tr.find('.item-price').data('price'));
-    //                        $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //                        $tr.find('.item-subtotal').text(currencySymbol + (price * newQty).toFixed(2));
     //                        
     //                        // Cache the stock info
     //                        productStocks[productId] = {
@@ -1458,7 +1459,7 @@ $(document).ready(function() {
     //        
     //        // Update subtotal
     //        const price = parseFloat($tr.find('.item-price').data('price'));
-    //        $tr.find('.item-subtotal').text('Rs.' + (price * newQty).toFixed(2));
+    //        $tr.find('.item-subtotal').text(currencySymbol + (price * newQty).toFixed(2));
     //        
     //        // Update stock cache if not running item
     //        if (productId && productStocks[productId] && !productStocks[productId].running_item) {
@@ -1560,7 +1561,7 @@ $(document).ready(function() {
         if (productId) {
             // Get product details from the selected option
             const productName = productOption.text().split(' - ')[0];
-            const productPrice = parseFloat(productOption.text().split('Rs.')[1]);
+            const productPrice = parseFloat(productOption.text().split(currencySymbol)[1]);
             
             // Check if we have stock data locally first
             const productStock = productStocks[productId];
@@ -1627,7 +1628,7 @@ $(document).ready(function() {
             
             // Update subtotal
             let subtotal = productPrice * newQty;
-            existingRow.find('.item-subtotal').text('Rs.' + subtotal.toFixed(2));
+            existingRow.find('.item-subtotal').text(currencySymbol + subtotal.toFixed(2));
             
             // If it's an existing item (not temporary), handle original quantity
             if (quantitySpan.hasClass('item-quantity')) {
@@ -1661,7 +1662,7 @@ $(document).ready(function() {
                         ${productName}
                         <input type="hidden" name="new_items[${tempId}]" value='${JSON.stringify({product_id: productId, quantity: quantity})}'>
                     </td>
-                    <td class="item-price text-right" data-price="${productPrice}">Rs.${productPrice.toFixed(2)}</td>
+                    <td class="item-price text-right" data-price="${productPrice}">{{ currency_symbol }}${productPrice.toFixed(2)}</td>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center">
                                 <div class="input-group" style="width: 130px;">
@@ -1675,7 +1676,7 @@ $(document).ready(function() {
                                 </div>
                             </div>
                         </td>
-                    <td class="item-subtotal text-right">Rs.${(productPrice * quantity).toFixed(2)}</td>
+                    <td class="item-subtotal text-right">{{ currency_symbol }}${(productPrice * quantity).toFixed(2)}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-outline-danger temp-delete-item">
                             <i class="fas fa-trash"></i>
@@ -1793,7 +1794,7 @@ $(document).ready(function() {
                     // Show discount details
                     let displayText = discountData.type.toLowerCase() === 'percentage' ? 
                         `${discountData.value}% off (${discountData.name})` : 
-                        `Rs.${discountData.value.toFixed(2)} off (${discountData.name})`;
+                        `${currencySymbol}${discountData.value.toFixed(2)} off (${discountData.name})`;
                     
                     $('#discount-type-display').text(displayText);
                     
@@ -1861,7 +1862,7 @@ $(document).ready(function() {
         // Show discount details
         let displayText = selectedType === 'percentage' ? 
             `${discountValue}% off (Manual)` : 
-            `Rs.${discountValue.toFixed(2)} off (Manual)`;
+            `${currencySymbol}${discountValue.toFixed(2)} off (Manual)`;
         
         $('#discount-type-display').text(displayText);
         

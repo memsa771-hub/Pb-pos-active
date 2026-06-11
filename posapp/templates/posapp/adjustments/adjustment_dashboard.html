@@ -177,7 +177,7 @@
                             <tr>
                                 <td><span class="admin-link">{{ adjustment.name }}</span></td>
                                 <td>{{ adjustment.quantity }}</td>
-                                <td><span class="adj-amount">Rs.{{ adjustment.price|floatformat:2 }}</span></td>
+                                <td><span class="adj-amount">{{ currency_symbol }}{{ adjustment.price|floatformat:2 }}</span></td>
                                 <td>{{ adjustment.created_at|pkt_date }}</td>
                             </tr>
                             {% endfor %}
@@ -214,7 +214,7 @@
                             {% for adjustment in advance_adjustments %}
                             <tr>
                                 <td><span class="admin-link">{{ adjustment.name }}</span></td>
-                                <td><span class="adj-amount">Rs.{{ adjustment.amount|floatformat:2 }}</span></td>
+                                <td><span class="adj-amount">{{ currency_symbol }}{{ adjustment.amount|floatformat:2 }}</span></td>
                                 <td>{{ adjustment.date|pkt_date }}</td>
                             </tr>
                             {% endfor %}

@@ -675,6 +675,7 @@
         });
     </script>
 
+    <script>window.CURRENCY_SYMBOL = '{{ currency_symbol|default:"Rs"|escapejs }}';</script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

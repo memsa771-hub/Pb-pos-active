@@ -48,7 +48,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Stock Value</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs. {{ total_stock_value|floatformat:2|intcomma }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }} {{ total_stock_value|floatformat:2|intcomma }}</div>
                         </div>
                         <div class="col-auto"><i class="fas fa-wallet fa-2x text-gray-300"></i></div>
                     </div>
@@ -62,7 +62,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Purchases (Mo)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs. {{ monthly_purchase_total|floatformat:2|intcomma }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }} {{ monthly_purchase_total|floatformat:2|intcomma }}</div>
                         </div>
                         <div class="col-auto"><i class="fas fa-truck-loading fa-2x text-gray-300"></i></div>
                     </div>
@@ -76,7 +76,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Wastage (Mo)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rs. {{ monthly_wastage_value|floatformat:2|intcomma }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }} {{ monthly_wastage_value|floatformat:2|intcomma }}</div>
                         </div>
                         <div class="col-auto"><i class="fas fa-trash-alt fa-2x text-gray-300"></i></div>
                     </div>
@@ -138,7 +138,7 @@
                                 <span class="fw-bold text-dark">Inv#{{ purchase.invoice_number|default:"-" }}</span>
                                 <br><small class="text-muted">{{ purchase.supplier.name }} | {{ purchase.created_at|date:"M d" }}</small>
                             </div>
-                            <span class="badge bg-success rounded-pill">Rs. {{ purchase.total_amount|floatformat:2|intcomma }}</span>
+                            <span class="badge bg-success rounded-pill">{{ currency_symbol }} {{ purchase.total_amount|floatformat:2|intcomma }}</span>
                         </li>
                         {% empty %}
                         <li class="list-group-item text-center text-muted py-3">No data available</li>

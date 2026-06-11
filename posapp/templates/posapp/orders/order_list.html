@@ -630,7 +630,7 @@
                                 <span class="text-muted">--</span>
                                 {% endif %}
                             </td>
-                            <td><span class="order-total">Rs.{{ order.total_amount|floatformat:2 }}</span></td>
+                            <td><span class="order-total">{{ currency_symbol }}{{ order.total_amount|floatformat:2 }}</span></td>
                             <td>
                                 {% if order.order_status == 'Pending' %}
                                 <span class="order-status-badge pending">Pending</span>

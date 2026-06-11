@@ -75,7 +75,7 @@
                             <td class="fw-bold">{{ item.name }}</td>
                             <td>{{ item.sku|default:"--" }}</td>
                             <td><span class="badge bg-secondary">{{ item.category.name|default:"Uncategorized" }}</span></td>
-                            <td>Rs. {{ item.cost_price|floatformat:2|intcomma }} / {{ item.unit }}</td>
+                            <td>{{ currency_symbol }} {{ item.cost_price|floatformat:2|intcomma }} / {{ item.unit }}</td>
                             
                             <td class="{% if item.current_stock <= item.min_stock_level %}text-danger fw-bold{% else %}text-success fw-bold{% endif %}">
                                 {{ item.current_stock|floatformat:2 }} {{ item.unit }}

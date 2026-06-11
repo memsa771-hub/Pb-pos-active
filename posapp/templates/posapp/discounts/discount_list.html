@@ -118,7 +118,7 @@
                                         {% if discount.type == 'Percentage' %}
                                         {{ discount.value }}%
                                         {% else %}
-                                        Rs.{{ discount.value }}
+                                        {{ currency_symbol }}{{ discount.value }}
                                         {% endif %}
                                     </span>
                                 </td>

@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from ..models import PosCategory
 from ..decorators import admin_required
+from .product_import_export_views import EXCEL_AVAILABLE
 
 @login_required
 @admin_required
@@ -14,7 +15,7 @@ def category_list(request):
     search_query = request.GET.get('search', '')
     
     # Filter categories based on search
-    categories = PosCategory.objects.all().order_by('name')
+    categories = PosCategory.objects.annotate(product_count=Count('products')).order_by('name')
     
     if search_query:
         categories = categories.filter(
@@ -30,6 +31,7 @@ def category_list(request):
     context = {
         'categories': categories_page,
         'search_query': search_query,
+        'excel_available': EXCEL_AVAILABLE,
     }
     
     # Check if this is an AJAX request
@@ -144,7 +146,7 @@ def category_delete(request, category_id):
     
     if request.method == 'POST':
         # Check if category has related products
-        if category.product_set.exists():
+        if category.products.exists():
             messages.error(request, f'Cannot delete category "{category.name}" because it has related products.')
             return redirect('category_detail', category_id=category.id)
         

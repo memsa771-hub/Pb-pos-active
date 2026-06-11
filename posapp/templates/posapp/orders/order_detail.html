@@ -308,7 +308,7 @@
             <div class="order-detail-card-body">
                 <div class="order-total-row">
                     <span>Subtotal</span>
-                    <span>Rs.{{ subtotal|floatformat:2 }}</span>
+                    <span>{{ currency_symbol }}{{ subtotal|floatformat:2 }}</span>
                 </div>
                 {% if order.discount_amount > 0 or discount_amount > 0 %}
                 <div class="order-total-row discount">
@@ -316,28 +316,28 @@
                         Discount
                         {% if order.discount %}({{ order.discount.name }}){% elif order.discount_code == 'MANUAL' %}(Manual){% elif order.discount_code %}({{ order.discount_code }}){% endif %}
                     </span>
-                    <span>-Rs.{{ discount_amount|floatformat:2 }}</span>
+                    <span>-{{ currency_symbol }}{{ discount_amount|floatformat:2 }}</span>
                 </div>
                 {% endif %}
                 <div class="order-total-row">
                     <span>Tax ({{ tax_rate|floatformat:1 }}%)</span>
-                    <span>Rs.{{ tax_amount|floatformat:2 }}</span>
+                    <span>{{ currency_symbol }}{{ tax_amount|floatformat:2 }}</span>
                 </div>
                 {% if order.order_type == 'Dine In' and order.service_charge_percent > 0 %}
                 <div class="order-total-row">
                     <span>Service Charge ({{ order.service_charge_percent|floatformat:1 }}%)</span>
-                    <span>Rs.{{ service_charge_amount|floatformat:2 }}</span>
+                    <span>{{ currency_symbol }}{{ service_charge_amount|floatformat:2 }}</span>
                 </div>
                 {% endif %}
                 {% if order.order_type == 'Delivery' and order.delivery_charges > 0 %}
                 <div class="order-total-row">
                     <span>Delivery Charges</span>
-                    <span>Rs.{{ order.delivery_charges|floatformat:2 }}</span>
+                    <span>{{ currency_symbol }}{{ order.delivery_charges|floatformat:2 }}</span>
                 </div>
                 {% endif %}
                 <div class="order-total-row grand-total">
                     <span>Total Amount</span>
-                    <span>Rs.{{ total|floatformat:2 }}</span>
+                    <span>{{ currency_symbol }}{{ total|floatformat:2 }}</span>
                 </div>
             </div>
         </div>
@@ -368,9 +368,9 @@
                             <div class="order-item-code">#{{ item.product.product_code }}</div>
                             {% endif %}
                         </td>
-                        <td>Rs.{{ item.unit_price }}</td>
+                        <td>{{ currency_symbol }}{{ item.unit_price }}</td>
                         <td>{{ item.quantity|stringformat:"g" }}{% if item.product.calculate_price_per_kg %} kg{% endif %}</td>
-                        <td><strong>Rs.{{ item.total_price|floatformat:2 }}</strong></td>
+                        <td><strong>{{ currency_symbol }}{{ item.total_price|floatformat:2 }}</strong></td>
                         <td class="text-muted small">{{ item.notes|default:"-" }}</td>
                     </tr>
                     {% empty %}
@@ -402,7 +402,7 @@
             <div class="modal-body p-4">
                 <div class="text-center mb-4">
                     <div class="fs-4 fw-bold text-primary">
-                        Total Amount: <span>Rs.{{ total|floatformat:2 }}</span>
+                        Total Amount: <span>{{ currency_symbol }}{{ total|floatformat:2 }}</span>
                     </div>
                     <div class="text-muted">Payment Method: <strong>{{ order.payment_method }}</strong></div>
                 </div>
@@ -419,7 +419,7 @@
                                 Cash Given by Customer
                             </label>
                             <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-white border-end-0 fs-5">Rs.</span>
+                                <span class="input-group-text bg-white border-end-0 fs-5">{{ currency_symbol }}</span>
                                 <input type="number" class="form-control border-start-0 fs-5" id="cashGiven" 
                                        placeholder="0.00" min="0" step="0.01" autofocus value="{{ order.cash_given|default:'' }}">
                             </div>
@@ -430,7 +430,7 @@
                                 <span class="fw-bold fs-5">
                                     <i class="fas fa-exchange-alt me-2"></i>Change to Return:
                                 </span>
-                                <span class="fs-4 fw-bold" id="change-amount">Rs.0.00</span>
+                                <span class="fs-4 fw-bold" id="change-amount">{{ currency_symbol }}0.00</span>
                             </div>
                         </div>
                         
@@ -502,7 +502,7 @@
             if (cashGiven > 0) {
                 if (cashGiven >= totalAmount) {
                     const changeAmount = cashGiven - totalAmount;
-                    $('#change-amount').text('Rs.' + changeAmount.toFixed(2));
+                    $('#change-amount').text('{{ currency_symbol }}' + changeAmount.toFixed(2));
                     $('#change-display').removeClass('d-none');
                     $('#insufficient-cash-warning').addClass('d-none');
                     $('#completeOrderBtn').prop('disabled', false);

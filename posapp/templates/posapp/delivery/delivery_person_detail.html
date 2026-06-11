@@ -96,7 +96,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-primary">Rs.{{ total_amount|floatformat:2 }}</h4>
+                            <h4 class="text-primary">{{ currency_symbol }}{{ total_amount|floatformat:2 }}</h4>
                             <small class="text-muted">Total Value</small>
                         </div>
                     </div>
@@ -146,7 +146,7 @@
                                             </a>
                                         </td>
                                         <td>{{ order.customer_name|default:"--" }}</td>
-                                        <td>Rs.{{ order.total_amount|floatformat:2 }}</td>
+                                        <td>{{ currency_symbol }}{{ order.total_amount|floatformat:2 }}</td>
                                         <td>
                                             {% if order.order_status == 'Completed' %}
                                                 <span class="badge bg-success">Completed</span>

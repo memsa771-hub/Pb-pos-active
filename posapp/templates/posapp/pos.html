@@ -1635,7 +1635,7 @@
                     <h6 class="card-title" title="{{ product.name }}">{{ product.name }}</h6>
                 </div>
                 <div class="pos-product-action-bar">
-                    <span class="pos-product-price">Rs. {{ product.price|intcomma }}</span>
+                    <span class="pos-product-price">{{ currency_symbol }} {{ product.price|intcomma }}</span>
                     <span class="pos-add-btn" aria-hidden="true"><i class="fas fa-plus"></i></span>
                 </div>
             </div>
@@ -1672,7 +1672,7 @@
                     <div class="cart-totals mt-auto">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="fs-5 fw-bold text-dark">Total:</span>
-                            <span id="cart-total" class="fs-4 fw-bold text-primary">Rs.0.00</span>
+                            <span id="cart-total" class="fs-4 fw-bold text-primary">{{ currency_symbol }}0.00</span>
                         </div>
 
                         <div class="cart-actions">
@@ -1701,7 +1701,7 @@
             <div class="modal-body">
                 <div class="text-center mb-3">
                     <h6 id="selectedProductName"></h6>
-                    <p class="text-muted">Price: Rs.<span id="selectedProductPrice"></span> per kg</p>
+                    <p class="text-muted">Price: {{ currency_symbol }}<span id="selectedProductPrice"></span> per kg</p>
                 </div>
                 <div class="mb-3">
                     <label for="productWeight" class="form-label">Weight (kg)</label>
@@ -1709,7 +1709,7 @@
                     <div class="form-text">Minimum weight: 0.5 kg</div>
                 </div>
                 <div class="alert alert-info">
-                    <strong>Total: Rs.<span id="weightTotal">0.00</span></strong>
+                    <strong>Total: {{ currency_symbol }}<span id="weightTotal">0.00</span></strong>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1754,7 +1754,7 @@
 
                         <div class="pos-modal-info" id="service-charge-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            A service charge of <strong>{{ default_service_charge }}%</strong> will be applied to Dine In orders with total value above <strong>Rs.1000</strong>.
+                            A service charge of <strong>{{ default_service_charge }}%</strong> will be applied to Dine In orders with total value above <strong>{{ currency_symbol }}1000</strong>.
                         </div>
 
                         <div class="pos-modal-section">
@@ -1803,7 +1803,7 @@
                                     </div>
                                     <div class="mb-0">
                                         <label for="deliveryCharges" class="form-label">
-                                            Delivery Charges (Rs.) <span class="text-danger">*</span>
+                                            Delivery Charges ({{ currency_symbol }}) <span class="text-danger">*</span>
                                         </label>
                                         <input type="number" class="form-control rounded-3" id="deliveryCharges" min="0" value="0" placeholder="Enter delivery charges" required>
                                         <div class="invalid-feedback d-none" id="deliveryChargesError">
@@ -1855,11 +1855,11 @@
                             <div class="pos-modal-summary-body">
                                 <div class="pos-summary-row">
                                     <span>Subtotal</span>
-                                    <span id="summary-subtotal" class="value">Rs.0.00</span>
+                                    <span id="summary-subtotal" class="value">{{ currency_symbol }}0.00</span>
                                 </div>
                                 <div class="pos-summary-row">
                                     <span>Tax (<span id="summary-tax-rate-display">15</span>%)</span>
-                                    <span id="summary-tax" class="value">Rs.0.00</span>
+                                    <span id="summary-tax" class="value">{{ currency_symbol }}0.00</span>
                                 </div>
                                 
                                 <div class="pos-summary-row" id="service-charge-row">
@@ -1869,19 +1869,19 @@
                                             <input type="number" class="form-control" id="serviceChargePercent" value="{{ default_service_charge }}" min="0" max="100" step="1">
                                             <span class="input-group-text">%</span>
                                         </div>
-                                        <span id="summary-service-charge" class="value">Rs.0.00</span>
+                                        <span id="summary-service-charge" class="value">{{ currency_symbol }}0.00</span>
                                     </div>
                                 </div>
 
                                 <div class="pos-summary-row" id="delivery-charges-row">
                                     <span>Delivery Charges</span>
-                                    <span id="summary-delivery-charges" class="value">Rs.0.00</span>
+                                    <span id="summary-delivery-charges" class="value">{{ currency_symbol }}0.00</span>
                                 </div>
 
                                 <div class="pos-summary-row discount-row">
                                     <span>Discount</span>
                                     <div class="text-end">
-                                        <span id="summary-discount" class="value">Rs.0.00</span>
+                                        <span id="summary-discount" class="value">{{ currency_symbol }}0.00</span>
                                         <div id="discount-details" class="small text-success mt-1 d-none">
                                             <span id="discount-type-display"></span>
                                             <button class="btn btn-sm text-danger p-0 remove-discount ms-2" title="Remove discount">
@@ -1893,7 +1893,7 @@
 
                                 <div class="pos-summary-total">
                                     <span class="label">Total</span>
-                                    <span id="summary-total" class="value">Rs.0.00</span>
+                                    <span id="summary-total" class="value">{{ currency_symbol }}0.00</span>
                                 </div>
                                 
                                 <!-- Discount Code Section -->
@@ -2030,6 +2030,7 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
+        const currencySymbol = window.CURRENCY_SYMBOL || 'Rs';
         // Variables for cart functionality
         let cart = [];
         let subtotal = 0;
@@ -2240,7 +2241,7 @@
                         <div class="cart-item-compact">
                             <div class="cart-item-content">
                                 <div class="cart-item-name">${item.name}</div>
-                                <div class="cart-item-price">Rs.${item.price.toFixed(2)}</div>
+                                <div class="cart-item-price">{{ currency_symbol }}${item.price.toFixed(2)}</div>
                                     </div>
                             <div class="cart-item-controls">
                                 <div class="cart-quantity-control">
@@ -2252,7 +2253,7 @@
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
-                                <span class="cart-item-total">Rs.${(item.price * item.quantity).toFixed(2)}</span>
+                                <span class="cart-item-total">{{ currency_symbol }}${(item.price * item.quantity).toFixed(2)}</span>
                                 <button class="cart-remove-btn btn-remove" data-index="${index}">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -2294,7 +2295,7 @@
                 serviceChargeAmount = subtotal * serviceChargePercent;
                 
                 // Update service charge display
-                $('#summary-service-charge').text('Rs.' + serviceChargeAmount.toFixed(2));
+                $('#summary-service-charge').text(currencySymbol + serviceChargeAmount.toFixed(2));
             }
             
             // Include delivery charges and service charges in total
@@ -2304,18 +2305,18 @@
             $('#tax-rate-display').text(currentTaxRate);
             $('#summary-tax-rate-display').text(currentTaxRate);
             
-            $('#cart-subtotal').text('Rs.' + subtotal.toFixed(2));
-            $('#cart-tax').text('Rs.' + tax.toFixed(2));
-            $('#cart-discount').text('Rs.' + discountAmount.toFixed(2));
-            $('#cart-total').text('Rs.' + total.toFixed(2));
+            $('#cart-subtotal').text(currencySymbol + subtotal.toFixed(2));
+            $('#cart-tax').text(currencySymbol + tax.toFixed(2));
+            $('#cart-discount').text(currencySymbol + discountAmount.toFixed(2));
+            $('#cart-total').text(currencySymbol + total.toFixed(2));
             
             // Update payment modal
-            $('#summary-subtotal').text('Rs.' + subtotal.toFixed(2));
-            $('#summary-tax').text('Rs.' + tax.toFixed(2));
-            $('#summary-service-charge').text('Rs.' + serviceChargeAmount.toFixed(2));
-            $('#summary-delivery-charges').text('Rs.' + deliveryCharges.toFixed(2));
-            $('#summary-discount').text('Rs.' + discountAmount.toFixed(2));
-            $('#summary-total').text('Rs.' + total.toFixed(2));
+            $('#summary-subtotal').text(currencySymbol + subtotal.toFixed(2));
+            $('#summary-tax').text(currencySymbol + tax.toFixed(2));
+            $('#summary-service-charge').text(currencySymbol + serviceChargeAmount.toFixed(2));
+            $('#summary-delivery-charges').text(currencySymbol + deliveryCharges.toFixed(2));
+            $('#summary-discount').text(currencySymbol + discountAmount.toFixed(2));
+            $('#summary-total').text(currencySymbol + total.toFixed(2));
             
             // Show/hide discount details based on whether a discount is applied
             if (discount > 0) {
@@ -2784,7 +2785,7 @@
             const orderNotes = $('#orderNotes').val();
             const customerName = $('#customerName').val();
             const customerPhone = $('#customerPhone').val();
-            const total = parseFloat($('#summary-total').text().replace('Rs.', ''));
+            const total = parseFloat($('#summary-total').text().replace(currencySymbol, ''));
             
             // Process all orders normally (cash handling will be done at completion)
             // Validate table number for Dine In orders
@@ -2885,12 +2886,12 @@
                 }
 
                 // Continue with payment processing
-                const subtotal = parseFloat($('#summary-subtotal').text().replace('Rs.', ''));
+                const subtotal = parseFloat($('#summary-subtotal').text().replace(currencySymbol, ''));
                 
                 // Create order data - ensure all numeric values are correctly formatted
-                const taxAmount = parseFloat($('#summary-tax').text().replace('Rs.', ''));
-                const discountAmount = parseFloat($('#summary-discount').text().replace('Rs.', ''));
-                const serviceChargeAmount = selectedOrderType === 'Dine In' ? parseFloat($('#summary-service-charge').text().replace('Rs.', '')) : 0;
+                const taxAmount = parseFloat($('#summary-tax').text().replace(currencySymbol, ''));
+                const discountAmount = parseFloat($('#summary-discount').text().replace(currencySymbol, ''));
+                const serviceChargeAmount = selectedOrderType === 'Dine In' ? parseFloat($('#summary-service-charge').text().replace(currencySymbol, '')) : 0;
                 
                 // Cash payment details will be handled at order completion
                 let cashGiven = null;
@@ -3157,7 +3158,7 @@
                         $('#discount-type-display').text(
                             discountType === 'percentage' ? 
                             `${discount}% off (${discountData.name})` : 
-                            `Rs.${discount.toFixed(2)} off (${discountData.name})`
+                            `${currencySymbol}${discount.toFixed(2)} off (${discountData.name})`
                         );
                         
                         // Clear the input field
@@ -3235,7 +3236,7 @@
             $('#discount-type-display').text(
                 discountType === 'percentage' ? 
                 `${discount}% off (Manual)` : 
-                `Rs.${discount.toFixed(2)} off (Manual)`
+                `${currencySymbol}${discount.toFixed(2)} off (Manual)`
             );
             
             // Make discount details visible

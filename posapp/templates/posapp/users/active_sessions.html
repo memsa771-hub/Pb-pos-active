@@ -341,7 +341,7 @@
                                 <div class="label">Total Orders</div>
                             </div>
                             <div class="session-stat-item">
-                                <div class="value success">Rs.{{ user_session.revenue_today|floatformat:0 }}</div>
+                                <div class="value success">{{ currency_symbol }}{{ user_session.revenue_today|floatformat:0 }}</div>
                                 <div class="label">Revenue</div>
                             </div>
                         </div>

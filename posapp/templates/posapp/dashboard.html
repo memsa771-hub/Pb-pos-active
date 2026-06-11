@@ -146,7 +146,7 @@
                         <tr>
                             <td>{{ product.name }}</td>
                             <td>{{ product.category.name }}</td>
-                            <td>Rs.{{ product.price }}</td>
+                            <td>{{ currency_symbol }}{{ product.price }}</td>
                             <td>
                                 {% if product.running_item %}
                                 <span title="Running item - unlimited stock">∞</span>
@@ -187,7 +187,7 @@
                         <tr>
                             <td><span class="admin-link">{{ order.reference_number }}</span></td>
                             <td>{{ order.customer_name|default:"Walk-in Customer" }}</td>
-                            <td>Rs.{{ order.total_amount }}</td>
+                            <td>{{ currency_symbol }}{{ order.total_amount }}</td>
                             <td>
                                 {% if order.order_status == 'Completed' %}
                                 <span class="admin-status-badge success">{{ order.order_status }}</span>
@@ -227,7 +227,7 @@
                         <tr>
                             <td>{{ product.name }}</td>
                             <td>{{ product.category.name }}</td>
-                            <td>Rs.{{ product.price }}</td>
+                            <td>{{ currency_symbol }}{{ product.price }}</td>
                             <td>
                                 {% if product.running_item %}
                                 <span title="Running item - unlimited stock">∞</span>
@@ -362,7 +362,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'Rs.' + context.raw.toFixed(2);
+                                    return '{{ currency_symbol }}' + context.raw.toFixed(2);
                                 }
                             }
                         }
@@ -372,7 +372,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return 'Rs.' + value;
+                                    return '{{ currency_symbol }}' + value;
                                 }
                             }
                         }
@@ -409,7 +409,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': Rs.' + context.raw.toFixed(2);
+                                    return context.label + ': {{ currency_symbol }}' + context.raw.toFixed(2);
                                 }
                             }
                         }

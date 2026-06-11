@@ -156,25 +156,25 @@
         <div class="admin-stat-card primary">
             <i class="fas fa-coins stat-icon"></i>
             <div class="stat-label">Revenue Today</div>
-            <div class="stat-value">Rs.{{ revenue_today|floatformat:0 }}</div>
+            <div class="stat-value">{{ currency_symbol }}{{ revenue_today|floatformat:0 }}</div>
             <div class="reports-stat-sub">{{ today_range }}</div>
         </div>
         <div class="admin-stat-card success">
             <i class="fas fa-money-bill-wave stat-icon"></i>
             <div class="stat-label">Revenue (7 Days)</div>
-            <div class="stat-value">Rs.{{ revenue_week|floatformat:0 }}</div>
+            <div class="stat-value">{{ currency_symbol }}{{ revenue_week|floatformat:0 }}</div>
             <div class="reports-stat-sub">{{ week_range }}</div>
         </div>
         <div class="admin-stat-card info">
             <i class="fas fa-wallet stat-icon"></i>
             <div class="stat-label">Revenue (30 Days)</div>
-            <div class="stat-value">Rs.{{ revenue_month|floatformat:0 }}</div>
+            <div class="stat-value">{{ currency_symbol }}{{ revenue_month|floatformat:0 }}</div>
             <div class="reports-stat-sub">{{ month_range }}</div>
         </div>
         <div class="admin-stat-card warning">
             <i class="fas fa-piggy-bank stat-icon"></i>
             <div class="stat-label">All Time Revenue</div>
-            <div class="stat-value">Rs.{{ revenue_total|floatformat:0 }}</div>
+            <div class="stat-value">{{ currency_symbol }}{{ revenue_total|floatformat:0 }}</div>
         </div>
     </div>
     {% else %}

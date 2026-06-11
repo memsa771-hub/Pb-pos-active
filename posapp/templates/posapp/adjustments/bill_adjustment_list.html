@@ -90,7 +90,7 @@
                         <tr>
                             <td><strong>{{ adjustment.name }}</strong></td>
                             <td>{{ adjustment.quantity|default:'—' }}</td>
-                            <td>Rs.{{ adjustment.price|floatformat:2 }}</td>
+                            <td>{{ currency_symbol }}{{ adjustment.price|floatformat:2 }}</td>
                             <td>{{ adjustment.created_by.username }}</td>
                             <td>{{ adjustment.created_at|pkt_date }}</td>
                             <td class="actions-col">

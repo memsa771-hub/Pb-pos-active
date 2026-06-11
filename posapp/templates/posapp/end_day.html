@@ -128,7 +128,7 @@
         <div class="admin-stat-card success">
             <i class="fas fa-coins stat-icon"></i>
             <div class="stat-label">Order Total</div>
-            <div class="stat-value">Rs.{{ order_total|floatformat:0 }}</div>
+            <div class="stat-value">{{ currency_symbol }}{{ order_total|floatformat:0 }}</div>
         </div>
         <div class="admin-stat-card danger">
             <i class="fas fa-sliders-h stat-icon"></i>
@@ -138,7 +138,7 @@
         <div class="admin-stat-card warning">
             <i class="fas fa-minus-circle stat-icon"></i>
             <div class="stat-label">Adjustment Total</div>
-            <div class="stat-value">Rs.{{ adjustment_total|floatformat:0 }}</div>
+            <div class="stat-value">{{ currency_symbol }}{{ adjustment_total|floatformat:0 }}</div>
         </div>
         {% if pending_orders > 0 %}
         <div class="admin-stat-card danger">
@@ -231,7 +231,7 @@
                     <tbody>
                         <tr>
                             <td>{{ orders.count }}</td>
-                            <td><strong>Rs. {{ order_total|floatformat:2 }}</strong></td>
+                            <td><strong>{{ currency_symbol }} {{ order_total|floatformat:2 }}</strong></td>
                         </tr>
                     </tbody>
                 </table>
@@ -253,7 +253,7 @@
                     <tbody>
                         <tr>
                             <td>{{ bill_adjustments.count }}</td>
-                            <td><strong>Rs. {{ adjustment_total|floatformat:2 }}</strong></td>
+                            <td><strong>{{ currency_symbol }} {{ adjustment_total|floatformat:2 }}</strong></td>
                         </tr>
                     </tbody>
                 </table>

@@ -105,7 +105,7 @@
                         {% for product in products %}
                         <tr>
                             <td><strong>{{ product.name }}</strong></td>
-                            <td>Rs.{{ product.price }}</td>
+                            <td>{{ currency_symbol }}{{ product.price }}</td>
                             <td>
                                 {% if product.running_item %}
                                 <span title="Running item - unlimited stock">∞</span>

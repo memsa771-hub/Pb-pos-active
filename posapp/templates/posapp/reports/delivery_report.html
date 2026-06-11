@@ -81,7 +81,7 @@
                                     <span class="badge bg-secondary">{{ order.order_status }}</span>
                                 {% endif %}
                             </td>
-                            <td>Rs.{{ order.total_amount|floatformat:2|intcomma }}</td>
+                            <td>{{ currency_symbol }}{{ order.total_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr>

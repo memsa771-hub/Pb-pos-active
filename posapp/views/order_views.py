@@ -1961,7 +1961,11 @@ def complete_order(request, order_id):
         
         # Create success message based on payment method
         if order.payment_method == 'Cash' and order.cash_given:
-            messages.success(request, f'Order {order.reference_number} completed! Cash given: Rs.{order.cash_given}, Change: Rs.{order.change_amount}')
+            currency = Setting.get_currency_symbol()
+            messages.success(
+                request,
+                f'Order {order.reference_number} completed! Cash given: {currency}{order.cash_given}, Change: {currency}{order.change_amount}',
+            )
         else:
             messages.success(request, f'Order {order.reference_number} has been marked as completed and paid.')
         

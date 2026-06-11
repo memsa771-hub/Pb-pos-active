@@ -70,7 +70,7 @@
                     <div class="col-md-6">
                         <label for="cost_price" class="form-label fw-bold">Cost Price (Per Unit) <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text">Rs.</span>
+                            <span class="input-group-text">{{ currency_symbol }}</span>
                             <input type="number" step="0.01" class="form-control" id="cost_price" name="cost_price" value="{{ item.cost_price|default:'' }}" required>
                         </div>
                         <small class="text-muted">Used to calculate total stock value.</small>

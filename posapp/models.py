@@ -297,12 +297,17 @@ class Setting(models.Model):
             return default
 
     @classmethod
-    def get_currency_symbol(cls, default='$'):
-        """Return currency symbol for receipts and price displays."""
+    def get_currency_symbol(cls, default='Rs'):
+        """Return currency symbol from business settings for receipts and price displays."""
         raw = (cls.get_value('currency_symbol', default='') or '').strip()
+        if not raw:
+            try:
+                raw = (BusinessSettings.get_settings().currency_symbol or '').strip()
+            except Exception:
+                raw = ''
         symbol = raw or default
         if symbol.lower() in ('rs', 'rs.'):
-            return '$'
+            return 'Rs'
         return symbol
 
     @classmethod

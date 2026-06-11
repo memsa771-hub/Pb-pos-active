@@ -120,8 +120,8 @@
                             <td>{{ adjustment.created_at|pkt_datetime }}</td>
                             <td><strong>{{ adjustment.name }}</strong></td>
                             <td>{{ adjustment.quantity|default:'—' }}</td>
-                            <td>Rs.{{ adjustment.price|floatformat:2 }}</td>
-                            <td><span class="adj-negative">-Rs.{{ adjustment.price|floatformat:2 }}</span></td>
+                            <td>{{ currency_symbol }}{{ adjustment.price|floatformat:2 }}</td>
+                            <td><span class="adj-negative">-{{ currency_symbol }}{{ adjustment.price|floatformat:2 }}</span></td>
                             <td>{{ adjustment.created_by.username }}</td>
                         </tr>
                         {% endfor %}
@@ -160,7 +160,7 @@
                         <tr>
                             <td>{{ adjustment.created_at|pkt_datetime }}</td>
                             <td><strong>{{ adjustment.name }}</strong></td>
-                            <td><span class="adj-negative">-Rs.{{ adjustment.amount|floatformat:2 }}</span></td>
+                            <td><span class="adj-negative">-{{ currency_symbol }}{{ adjustment.amount|floatformat:2 }}</span></td>
                             <td>{{ adjustment.created_by.username }}</td>
                         </tr>
                         {% endfor %}

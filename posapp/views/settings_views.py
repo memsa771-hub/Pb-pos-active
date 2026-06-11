@@ -147,7 +147,7 @@ def business_settings(request):
         'business_email': {'type': 'text', 'required': False, 'help_text': 'Contact email address'},
         'business_website': {'type': 'text', 'required': False, 'help_text': 'Business website URL'},
         'business_tagline': {'type': 'text', 'required': False, 'help_text': 'Your business tagline or slogan'},
-        'currency_symbol': {'type': 'text', 'required': True, 'help_text': 'Currency symbol (e.g., $, €, £)', 'value': '$'},
+        'currency_symbol': {'type': 'text', 'required': True, 'help_text': 'Currency symbol (e.g., Rs, $, €)', 'value': 'Rs'},
         'tax_rate_card': {'type': 'number', 'required': True, 'help_text': 'Tax rate (%) for card payments', 'value': '5.0'},
         'tax_rate_cash': {'type': 'number', 'required': True, 'help_text': 'Tax rate (%) for cash payments', 'value': '15.0'},
         'default_service_charge': {'type': 'number', 'required': True, 'help_text': 'Default service charge (%) for Dine In orders', 'value': '5.0'},
