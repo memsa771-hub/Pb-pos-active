@@ -1597,7 +1597,7 @@
 
                         <div class="search-container">
                             <i class="fas fa-search"></i>
-                            <input type="text" class="form-control" id="product-search" placeholder="Search product or scan code + Enter">
+                            <input type="text" class="form-control" id="product-search" placeholder="Search product or scan code + Enter" autocomplete="off" autofocus>
                         </div>
                     </div>
 
@@ -1803,9 +1803,9 @@
                                     </div>
                                     <div class="mb-0">
                                         <label for="deliveryCharges" class="form-label">
-                                            Delivery Charges ({{ currency_symbol }}) <span class="text-danger">*</span>
+                                            Delivery Charges ({{ currency_symbol }}) <span class="text-muted small">(optional)</span>
                                         </label>
-                                        <input type="number" class="form-control rounded-3" id="deliveryCharges" min="0" value="0" placeholder="Enter delivery charges" required>
+                                        <input type="number" class="form-control rounded-3" id="deliveryCharges" min="0" value="0" placeholder="0 if none">
                                         <div class="invalid-feedback d-none" id="deliveryChargesError">
                                             Delivery charges are required for delivery orders.
                                         </div>
@@ -2046,6 +2046,23 @@
         let serviceChargeRate = parseFloat({{ default_service_charge|default:0 }});
         let serviceChargeThreshold = 1000;
         let deliveryCharges = 0;
+
+        function focusProductSearch() {
+            const searchInput = document.getElementById('product-search');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
+
+        focusProductSearch();
+        setTimeout(focusProductSearch, 150);
+
+        $('#successModal').on('hidden.bs.modal', focusProductSearch);
+        $('#paymentModal').on('hidden.bs.modal', function() {
+            if (!$('#successModal').hasClass('show')) {
+                focusProductSearch();
+            }
+        });
         
         // Display tax rate
         $('#tax-rate-display').text(taxRate);
@@ -2713,8 +2730,6 @@
                 $('#service-charge-row').addClass('d-none');
                 // Update delivery charges
                 deliveryCharges = parseFloat($('#deliveryCharges').val()) || 0;
-                // Make delivery fields required
-                $('#deliveryCharges').attr('required', true);
                 $('#deliveryPerson').attr('required', true);
                 // Clear any table number validation errors
                 $('#tableNumber').removeClass('is-invalid');
@@ -2846,7 +2861,7 @@
                 if (selectedOrderType === 'Delivery') {
                     const deliveryAddress = $('#deliveryAddress').val().trim();
                     const deliveryPerson = $('#deliveryPerson').val();
-                    const deliveryChargesValue = parseFloat($('#deliveryCharges').val()) || 0;
+                    deliveryCharges = parseFloat($('#deliveryCharges').val()) || 0;
                     
                     // Validate delivery address
                     if (!deliveryAddress) {
@@ -2872,17 +2887,6 @@
                         $('#deliveryPersonError').addClass('d-none');
                     }
                     
-                    // Validate delivery charges
-                    if (deliveryChargesValue <= 0) {
-                        // Show error for delivery charges
-                        $('#deliveryCharges').addClass('is-invalid');
-                        $('#deliveryChargesError').removeClass('d-none');
-                        return;
-                    } else {
-                        // Clear validation error if previously set
-                        $('#deliveryCharges').removeClass('is-invalid');
-                        $('#deliveryChargesError').addClass('d-none');
-                    }
                 }
 
                 // Continue with payment processing

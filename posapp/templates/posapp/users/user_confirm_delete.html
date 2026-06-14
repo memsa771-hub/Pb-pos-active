@@ -1,70 +1,114 @@
 {% extends 'posapp/base.html' %}
+{% load custom_filters %}
 
-{% block title %}Delete User{% endblock %}
+{% block title %}Delete User — {{ user_obj.username }}{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+<style>
+    .user-delete-banner {
+        background: #fff5f5;
+        border: 1px solid #feb2b2;
+        color: #742a2a;
+        border-radius: 12px;
+        padding: 1rem 1.15rem;
+        margin-bottom: 1rem;
+    }
+
+    .user-delete-banner h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0 0 0.35rem;
+    }
+
+    .user-delete-banner p {
+        margin: 0;
+        font-size: 0.92rem;
+    }
+
+    .user-delete-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #edf2f7;
+        background: #f8fafc;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Delete User</h1>
-        <a href="{% url 'user_list' %}" class="btn btn-secondary btn-sm">
-            <i class="fas fa-arrow-left"></i> Back to Users
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-user-times me-2"></i>Delete User</h1>
+                <p>Permanently remove {{ user_obj.username }} from the system</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'user_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Users
+            </a>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-danger">Confirm User Deletion</h6>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-danger">
-                        <h4 class="alert-heading">Warning!</h4>
-                        <p>You are about to delete the user <strong>{{ user_obj.username }}</strong> ({{ user_obj.get_full_name }}). This action cannot be undone.</p>
-                        <p>Are you sure you want to proceed?</p>
-                    </div>
-                    
-                    <div class="user-info mb-4">
-                        <h5>User Information</h5>
-                        <table class="table table-bordered">
-                            <tr>
-                                <th style="width: 30%">Username</th>
-                                <td>{{ user_obj.username }}</td>
-                            </tr>
-                            <tr>
-                                <th>Name</th>
-                                <td>{{ user_obj.get_full_name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Email</th>
-                                <td>{{ user_obj.email }}</td>
-                            </tr>
-                            <tr>
-                                <th>Role</th>
-                                <td>
-                                    {% if user_obj.is_superuser %}
-                                        Superuser
-                                    {% elif user_obj.profile.role %}
-                                        {{ user_obj.profile.role.name }}
-                                    {% else %}
-                                        No Role
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-danger">Delete User</button>
-                            <a href="{% url 'user_detail' user_obj.id %}" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
+    <div class="user-delete-banner">
+        <h3><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone</h3>
+        <p>
+            You are about to delete <strong>{{ user_obj.username }}</strong>
+            {% if user_obj.get_full_name %}({{ user_obj.get_full_name }}){% endif %}.
+            If this user has order history, they may be deactivated instead of deleted.
+        </p>
+    </div>
+
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>User Information</h2>
+        </div>
+        <div class="admin-detail-grid">
+            <div class="admin-detail-item">
+                <div class="label">Username</div>
+                <div class="value">{{ user_obj.username }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Full Name</div>
+                <div class="value">{{ user_obj.get_full_name|default:"—" }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Email</div>
+                <div class="value">{{ user_obj.email|default:"—" }}</div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="label">Role</div>
+                <div class="value">
+                    {% if user_obj.is_superuser %}
+                    <span class="admin-status-badge danger">Admin</span>
+                    {% elif user_obj.profile.role %}
+                    {% with role=user_obj|display_role_name %}
+                    <span class="admin-status-badge {% if role == 'Branch Manager' %}warning{% else %}muted{% endif %}">{{ role }}</span>
+                    {% endwith %}
+                    {% else %}
+                    <span class="text-muted">No role assigned</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="user-delete-actions">
+                <a href="{% url 'user_detail' user_obj.id %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> Delete User
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
