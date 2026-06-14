@@ -2,127 +2,86 @@
 {% load humanize %}
 
 {% block title %}Inventory Reports | POS System{% endblock %}
-{% block nav_title %}Inventory Management{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Inventory Reports & Analytics</h1>
-        
-        {% if excel_export_available %}
-        <a href="{% url 'inventory:export_inventory_excel' %}" class="btn btn-success shadow-sm">
-            <i class="fas fa-file-excel fa-sm text-white-50 me-1"></i> Export Valuation (Excel)
-        </a>
-        {% else %}
-        <button class="btn btn-secondary shadow-sm" disabled title="Library missing">
-            <i class="fas fa-file-excel fa-sm text-white-50 me-1"></i> Export Unavailable
-        </button>
-        {% endif %}
-    </div>
-
-    <div class="row">
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Inventory Value (Assets)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }} {{ stock_valuation|intcomma }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-coins fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-chart-bar me-2"></i>Inventory Reports</h1>
+                <p>Valuation, purchases, and stock health</p>
             </div>
         </div>
-
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Purchases (This Month)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }} {{ monthly_purchases|intcomma }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Loss / Wastage (This Month)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ currency_symbol }} {{ monthly_wastage_value|intcomma }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-trash-alt fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-light me-2">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+            {% if excel_export_available %}
+            <a href="{% url 'inventory:export_inventory_excel' %}" class="btn btn-light">
+                <i class="fas fa-file-excel me-1"></i> Export Excel
+            </a>
+            {% endif %}
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Detailed Reports</h6>
-                </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        <a href="{% url 'inventory:purchase_report' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-chart-area text-primary me-2"></i> Purchase History & Trends
-                            </div>
-                            <i class="fas fa-chevron-right text-gray-400"></i>
-                        </a>
-                        <a href="{% url 'inventory:item_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-boxes text-success me-2"></i> Stock Level Report
-                            </div>
-                            <i class="fas fa-chevron-right text-gray-400"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <div class="admin-stats">
+        <div class="admin-stat-card primary">
+            <i class="fas fa-coins stat-icon"></i>
+            <div class="stat-label">Inventory Value</div>
+            <div class="stat-value" style="font-size:1.2rem;">{{ currency_symbol }}{{ stock_valuation|floatformat:0|intcomma }}</div>
         </div>
-
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-warning">System Status</h6>
-                </div>
-                <div class="card-body">
-                    {% if low_stock_count > 0 %}
-                        <div class="text-center text-danger py-3">
-                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                            <h4>Attention Needed</h4>
-                            <p>{{ low_stock_count }} items are running low on stock.</p>
-                            <a href="{% url 'inventory:item_list' %}" class="btn btn-danger btn-sm">Check Now</a>
-                        </div>
-                    {% else %}
-                        <div class="text-center text-success py-3">
-                            <i class="fas fa-check-circle fa-3x mb-3"></i>
-                            <h4>System Healthy</h4>
-                            <p>All stock levels are optimal.</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="admin-stat-card info">
+            <i class="fas fa-shopping-cart stat-icon"></i>
+            <div class="stat-label">Purchases (Month)</div>
+            <div class="stat-value" style="font-size:1.2rem;">{{ currency_symbol }}{{ monthly_purchases|floatformat:0|intcomma }}</div>
+        </div>
+        <div class="admin-stat-card danger">
+            <i class="fas fa-trash-alt stat-icon"></i>
+            <div class="stat-label">Wastage (Month)</div>
+            <div class="stat-value" style="font-size:1.2rem;">{{ currency_symbol }}{{ monthly_wastage_value|floatformat:0|intcomma }}</div>
         </div>
     </div>
 
+    <div class="admin-grid-2">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-file-alt me-2 text-primary"></i>Detailed Reports</h2>
+            </div>
+            <div class="admin-quick-links">
+                <a href="{% url 'inventory:purchase_report' %}" class="admin-quick-link">
+                    <i class="fas fa-chart-area"></i> Purchase History & Trends
+                </a>
+                <a href="{% url 'inventory:item_list' %}" class="admin-quick-link">
+                    <i class="fas fa-boxes"></i> Stock Level Report
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-heartbeat me-2 text-primary"></i>Stock Health</h2>
+            </div>
+            <div class="admin-panel-body padded text-center">
+                {% if low_stock_count > 0 %}
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                <h5 class="fw-bold">{{ low_stock_count }} low-stock item{{ low_stock_count|pluralize }}</h5>
+                <p class="text-muted mb-3">Some items need restocking.</p>
+                <a href="{% url 'inventory:item_list' %}" class="btn btn-warning btn-sm">Check Items</a>
+                {% else %}
+                <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                <h5 class="fw-bold">All stocks healthy</h5>
+                <p class="text-muted mb-0">No items below minimum level.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

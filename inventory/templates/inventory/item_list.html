@@ -2,133 +2,109 @@
 {% load humanize %}
 
 {% block title %}Inventory Items | POS System{% endblock %}
-{% block nav_title %}Inventory Management{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Inventory Items (Raw Materials)</h1>
-        <a href="{% url 'inventory:item_create' %}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Add New Item
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-boxes me-2"></i>Inventory Items</h1>
+                <p>Raw materials and stock levels</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-light me-2">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+            <a href="{% url 'inventory:item_create' %}" class="btn btn-light">
+                <i class="fas fa-plus me-1"></i> Add Item
+            </a>
+        </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Filters & Search</h6>
-        </div>
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Search Item</label>
-                    <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search by Name or SKU...">
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label" for="itemSearch">Search</label>
+                    <div class="admin-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="itemSearch" name="search" value="{{ search_query }}" placeholder="Search by name or SKU...">
+                    </div>
                 </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Category</label>
-                    <select name="category" class="form-select">
+                <div class="col-md-4">
+                    <label class="form-label" for="itemCategory">Category</label>
+                    <select name="category" id="itemCategory" class="form-select">
                         <option value="">All Categories</option>
                         {% for cat in categories %}
-                            <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>
-                                {{ cat.name }}
-                            </option>
+                        <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1" style="min-height: 42px; border-radius: 10px;">
                         <i class="fas fa-filter me-1"></i> Filter
                     </button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{% url 'inventory:item_list' %}" class="btn btn-secondary w-100" title="Reset">
+                    <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary" style="min-height: 42px; border-radius: 10px;" title="Clear">
                         <i class="fas fa-undo"></i>
                     </a>
                 </div>
-            </form>
-        </div>
-    </div>
+            </div>
+        </form>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">All Items List</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                    <thead class="bg-light">
+        <div class="admin-panel-body">
+            {% if items %}
+            <div class="focus-table-wrap admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
                         <tr>
                             <th>Name</th>
-                            <th>SKU/Code</th>
+                            <th>SKU</th>
                             <th>Category</th>
-                            <th>Cost Price</th>
-                            <th>Current Stock</th>
+                            <th>Cost</th>
+                            <th>Stock</th>
                             <th>Status</th>
-                            <th class="text-center" style="width: 120px;">Actions</th>
+                            <th class="actions-col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
                         <tr>
-                            <td class="fw-bold">{{ item.name }}</td>
-                            <td>{{ item.sku|default:"--" }}</td>
-                            <td><span class="badge bg-secondary">{{ item.category.name|default:"Uncategorized" }}</span></td>
-                            <td>{{ currency_symbol }} {{ item.cost_price|floatformat:2|intcomma }} / {{ item.unit }}</td>
-                            
-                            <td class="{% if item.current_stock <= item.min_stock_level %}text-danger fw-bold{% else %}text-success fw-bold{% endif %}">
-                                {{ item.current_stock|floatformat:2 }} {{ item.unit }}
+                            <td class="fw-semibold">{{ item.name }}</td>
+                            <td>{{ item.sku|default:"—" }}</td>
+                            <td>{{ item.category.name|default:"Uncategorized" }}</td>
+                            <td>{{ currency_symbol }}{{ item.cost_price|floatformat:2|intcomma }} / {{ item.unit }}</td>
+                            <td>
                                 {% if item.current_stock <= item.min_stock_level %}
-                                    <i class="fas fa-exclamation-circle ms-1" title="Low Stock"></i>
+                                <span class="admin-stock-low">{{ item.current_stock|floatformat:2 }} {{ item.unit }}</span>
+                                {% else %}
+                                <span class="admin-stock-ok">{{ item.current_stock|floatformat:2 }} {{ item.unit }}</span>
                                 {% endif %}
                             </td>
-
                             <td>
                                 {% if item.is_active %}
-                                    <span class="badge bg-success">Active</span>
+                                <span class="admin-status-badge success">Active</span>
                                 {% else %}
-                                    <span class="badge bg-danger">Inactive</span>
+                                <span class="admin-status-badge danger">Inactive</span>
                                 {% endif %}
                             </td>
-
-                            <td class="text-center">
-                                <a href="{% url 'inventory:item_update' item.id %}" class="btn btn-sm btn-info text-white" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-
-                                <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Confirm Deactivation</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-start">
-                                                Are you sure you want to deactivate <strong>{{ item.name }}</strong>?<br>
-                                                <small class="text-muted">This item will be hidden from lists but transaction history will remain.</small>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{% url 'inventory:item_delete' item.id %}" method="post" class="d-inline">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-danger">Yes, Deactivate</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <td class="actions-col">
+                                <div class="admin-action-btns">
+                                    <a href="{% url 'inventory:item_update' item.id %}" class="btn btn-warning admin-action-btn" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger admin-action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}" title="Deactivate">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
-                                <i class="fas fa-box-open fa-3x mb-3"></i><br>
-                                No items found. <a href="{% url 'inventory:item_create' %}">Add your first item</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -136,40 +112,52 @@
                 </table>
             </div>
 
+            {% for item in items %}
+            <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Deactivate Item?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Deactivate <strong>{{ item.name }}</strong>? History will be kept.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form action="{% url 'inventory:item_delete' item.id %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Deactivate</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
             {% if items.has_other_pages %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
+            <nav class="admin-pagination" aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0 py-3">
                     {% if items.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ items.previous_page_number }}&search={{ search_query }}&category={{ selected_category }}">Previous</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ items.previous_page_number }}&search={{ search_query|urlencode }}&category={{ selected_category }}">Previous</a></li>
                     {% endif %}
-
-                    {% for i in items.paginator.page_range %}
-                        {% if items.number == i %}
-                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ i }}&search={{ search_query }}&category={{ selected_category }}">{{ i }}</a>
-                        </li>
-                        {% endif %}
-                    {% endfor %}
-
+                    <li class="page-item active"><span class="page-link">{{ items.number }} / {{ items.paginator.num_pages }}</span></li>
                     {% if items.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ items.next_page_number }}&search={{ search_query }}&category={{ selected_category }}">Next</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ items.next_page_number }}&search={{ search_query|urlencode }}&category={{ selected_category }}">Next</a></li>
                     {% endif %}
                 </ul>
             </nav>
             {% endif %}
-
+            {% else %}
+            <div class="admin-empty">
+                <i class="fas fa-box-open"></i>
+                No items found.
+                <div class="mt-3">
+                    <a href="{% url 'inventory:item_create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i> Add First Item</a>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
-
 </div>
 {% endblock %}

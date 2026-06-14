@@ -1,189 +1,164 @@
 {% extends 'posapp/base.html' %}
 
 {% block title %}{{ title }} | Inventory{% endblock %}
-{% block nav_title %}Inventory Management{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary shadow-sm">
-            <i class="fas fa-times fa-sm text-white-50 me-1"></i> Cancel
-        </a>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Enter Details</h6>
-                </div>
-                <div class="card-body">
-                    <form method="POST" id="transactionForm">
-                        {% csrf_token %}
-
-                        {% if type == 'purchase' %}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Supplier <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <select class="form-select" name="supplier" required>
-                                        <option value="">Select Supplier...</option>
-                                        {% for sup in suppliers %}
-                                            <option value="{{ sup.id }}">{{ sup.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <a href="{% url 'inventory:supplier_create' %}" class="btn btn-outline-secondary" title="Add Supplier"><i class="fas fa-plus"></i></a>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Invoice Number</label>
-                                <input type="text" class="form-control" name="invoice_number" placeholder="e.g. INV-001">
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Purchase Date</label>
-                                <input type="date" class="form-control" name="purchase_date" value="{% now 'Y-m-d' %}">
-                            </div>
-                        </div>
-                        <hr>
-                        {% endif %}
-
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Select Item <span class="text-danger">*</span></label>
-                                <select class="form-select" name="item" id="itemSelect" required>
-                                    <option value="" data-unit="">Choose Item...</option>
-                                    {% for item in items %}
-                                        <option value="{{ item.id }}" data-unit="{{ item.unit }}" data-price="{{ item.cost_price }}">
-                                            {{ item.name }} (Current: {{ item.current_stock|floatformat:2 }} {{ item.unit }})
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" step="0.001" class="form-control" name="quantity" id="quantityInput" required placeholder="0.00">
-                                    <span class="input-group-text" id="unitLabel">Unit</span>
-                                </div>
-                            </div>
-
-                            {% if type == 'purchase' %}
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Cost Amount <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">{{ currency_symbol }}</span>
-                                    <input type="number" step="0.01" class="form-control" name="cost" id="costInput" required placeholder="0.00">
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Cost Type</label>
-                                <select class="form-select bg-light border-primary" name="cost_type" id="costTypeSelect">
-                                    <option value="Total">Total Cost (Full Bill)</option>
-                                    <option value="Unit">Per Unit Price</option>
-                                </select>
-                                <small class="text-primary fw-bold mt-1 d-block" id="calcPreview">
-                                    </small>
-                            </div>
-                            {% endif %}
-
-                            {% if type == 'adjustment' %}
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Action</label>
-                                <select class="form-select" name="action">
-                                    <option value="REMOVE" class="text-danger">Remove Stock (-)</option>
-                                    <option value="ADD" class="text-success">Add Stock (+)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Reason</label>
-                                <select class="form-select" name="reason">
-                                    {% for code, label in reasons %}
-                                        <option value="{{ code }}">{{ label }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Notes / Remarks</label>
-                            <textarea class="form-control" name="notes" rows="2"></textarea>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary py-2">
-                                <i class="fas fa-check-circle me-2"></i> 
-                                {% if type == 'purchase' %}Confirm Purchase{% else %}Save Adjustment{% endif %}
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1>
+                    <i class="fas fa-{% if type == 'purchase' %}download{% else %}upload{% endif %} me-2"></i>{{ title }}
+                </h1>
+                <p>{% if type == 'purchase' %}Record stock received from a supplier{% else %}Adjust stock for wastage or corrections{% endif %}</p>
             </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-light">
+                <i class="fas fa-times me-1"></i> Cancel
+            </a>
         </div>
     </div>
 
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Transaction Details</h2>
+        </div>
+        <form method="post" id="transactionForm" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                {% if type == 'purchase' %}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select class="form-select" name="supplier" required>
+                                <option value="">Select Supplier...</option>
+                                {% for sup in suppliers %}
+                                <option value="{{ sup.id }}">{{ sup.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <a href="{% url 'inventory:supplier_create' %}" class="btn btn-outline-secondary" title="Add Supplier"><i class="fas fa-plus"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" class="form-control" name="invoice_number" placeholder="e.g. INV-001">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Purchase Date</label>
+                        <input type="date" class="form-control" name="purchase_date" value="{% now 'Y-m-d' %}">
+                    </div>
+                </div>
+                <hr class="my-3">
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Select Item <span class="text-danger">*</span></label>
+                        <select class="form-select" name="item" id="itemSelect" required>
+                            <option value="" data-unit="">Choose Item...</option>
+                            {% for item in items %}
+                            <option value="{{ item.id }}" data-unit="{{ item.unit }}" data-price="{{ item.cost_price }}">
+                                {{ item.name }} (Current: {{ item.current_stock|floatformat:2 }} {{ item.unit }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="0.001" class="form-control" name="quantity" id="quantityInput" required placeholder="0.00">
+                            <span class="input-group-text" id="unitLabel">Unit</span>
+                        </div>
+                    </div>
+
+                    {% if type == 'purchase' %}
+                    <div class="col-md-4">
+                        <label class="form-label">Cost Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">{{ currency_symbol }}</span>
+                            <input type="number" step="0.01" class="form-control" name="cost" id="costInput" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cost Type</label>
+                        <select class="form-select" name="cost_type" id="costTypeSelect">
+                            <option value="Total">Total Cost (Full Bill)</option>
+                            <option value="Unit">Per Unit Price</option>
+                        </select>
+                        <small class="text-primary fw-semibold mt-1 d-block" id="calcPreview"></small>
+                    </div>
+                    {% endif %}
+
+                    {% if type == 'adjustment' %}
+                    <div class="col-md-4">
+                        <label class="form-label">Action</label>
+                        <select class="form-select" name="action">
+                            <option value="REMOVE">Remove Stock (−)</option>
+                            <option value="ADD">Add Stock (+)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Reason</label>
+                        <select class="form-select" name="reason">
+                            {% for code, label in reasons %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="Optional remarks"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle me-1"></i>
+                    {% if type == 'purchase' %}Confirm Purchase{% else %}Save Adjustment{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        
-        // 1. Update Unit Label when Item Changes
         $('#itemSelect').change(function() {
-            var selected = $(this).find(':selected');
-            var unit = selected.data('unit');
-            var price = selected.data('price');
-            
-            // Update Unit Label
+            var unit = $(this).find(':selected').data('unit');
             $('#unitLabel').text(unit ? unit : 'Unit');
-            
-            // Auto-fill cost if element exists (Purchase Mode)
-            // Hum check kar rahy hain k kya 'costInput' screen par hai?
-            if ($('#costInput').length > 0 && price) {
-                // Optional: Agar tum chaho to auto-fill logic yahan rakh sakty ho
-                // $('#costInput').val(price);
-            }
         });
 
-        // 2. Real-time Calculation (Sirf Purchase Form k liye)
-        // Logic: Hum check karein gay ke kya 'costInput' field exist karti hai?
         if ($('#costInput').length > 0) {
-            
             function updateCalculation() {
                 var qty = parseFloat($('#quantityInput').val()) || 0;
                 var cost = parseFloat($('#costInput').val()) || 0;
                 var type = $('#costTypeSelect').val();
-                var text = "";
+                var text = '';
 
                 if (qty > 0 && cost > 0) {
                     if (type === 'Total') {
-                        // User ne Total dia, Unit Price dikhao
-                        var perUnit = cost / qty;
-                        text = "Calculated Unit Price: Rs. " + perUnit.toFixed(2);
-                        $('#calcPreview').removeClass('text-success').addClass('text-primary');
+                        text = 'Calculated Unit Price: {{ currency_symbol }} ' + (cost / qty).toFixed(2);
                     } else {
-                        // User ne Unit Price dia, Total dikhao
-                        var total = cost * qty;
-                        text = "Total Bill Amount: Rs. " + total.toFixed(2);
-                        $('#calcPreview').removeClass('text-primary').addClass('text-success');
+                        text = 'Total Bill Amount: {{ currency_symbol }} ' + (cost * qty).toFixed(2);
                     }
-                } else {
-                    text = "";
                 }
                 $('#calcPreview').text(text);
             }
-
-            // Events bind karo
             $('#quantityInput, #costInput, #costTypeSelect').on('input change', updateCalculation);
         }
     });

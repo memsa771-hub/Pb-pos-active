@@ -1,55 +1,60 @@
 {% extends 'posapp/base.html' %}
 
-{% block title %}{% if supplier %}Edit{% else %}Add{% endif %} Supplier | Inventory{% endblock %}
-{% block nav_title %}Inventory Management{% endblock %}
+{% block title %}{% if supplier %}Edit Supplier{% else %}Add Supplier{% endif %} | Inventory{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if supplier %}Edit Supplier{% else %}Add New Supplier{% endif %}
-        </h1>
-        <a href="{% url 'inventory:supplier_list' %}" class="btn btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50 me-1"></i> Back
-        </a>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Supplier Details</h6>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Supplier Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" value="{{ supplier.name|default:'' }}" required placeholder="e.g. Ali Chicken Center">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Phone Number</label>
-                            <input type="text" name="phone" class="form-control" value="{{ supplier.phone|default:'' }}" placeholder="e.g. 0300-1234567">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Address</label>
-                            <textarea name="address" class="form-control" rows="3" placeholder="Office or Shop Address...">{{ supplier.address|default:'' }}</textarea>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i> Save Supplier
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-truck me-2"></i>{% if supplier %}Edit Supplier{% else %}Add Supplier{% endif %}</h1>
+                <p>{% if supplier %}Update vendor details{% else %}Add a new supplier for purchases{% endif %}</p>
             </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:supplier_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Suppliers
+            </a>
         </div>
     </div>
 
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Supplier Details</h2>
+        </div>
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Supplier Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" value="{{ supplier.name|default:'' }}" required placeholder="e.g. Ali Chicken Center">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" value="{{ supplier.phone|default:'' }}" placeholder="0300-1234567">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="3" placeholder="Shop or office address">{{ supplier.address|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% url 'inventory:supplier_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Supplier
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

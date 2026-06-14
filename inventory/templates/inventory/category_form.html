@@ -1,55 +1,56 @@
 {% extends 'posapp/base.html' %}
 
-{% block title %}
-    {% if category %}Edit Category{% else %}Add New Category{% endif %} | Inventory
+{% block title %}{% if category %}Edit Category{% else %}Add Category{% endif %} | Inventory{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
 {% endblock %}
 
-{% block nav_title %}Inventory Management{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if category %}Edit Category{% else %}Add New Category{% endif %}
-        </h1>
-        <a href="{% url 'inventory:category_list' %}" class="btn btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50 me-1"></i> Back to List
-        </a>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Category Details</h6>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="name" class="form-label fw-bold">Category Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ category.name|default:'' }}" required placeholder="e.g. Meat, Spices, Dairy">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="description" class="form-label fw-bold">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Optional description...">{{ category.description|default:'' }}</textarea>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i> 
-                                {% if category %}Update Category{% else %}Save Category{% endif %}
-                            </button>
-                            <a href="{% url 'inventory:category_list' %}" class="btn btn-light border">Cancel</a>
-                        </div>
-                    </form>
-                </div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-folder me-2"></i>{% if category %}Edit Category{% else %}Add Category{% endif %}</h1>
+                <p>{% if category %}Update inventory category{% else %}Create a new inventory category{% endif %}</p>
             </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Categories
+            </a>
         </div>
     </div>
 
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Category Details</h2>
+        </div>
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="name" class="form-label">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ category.name|default:'' }}" required placeholder="e.g. Meat, Spices">
+                    </div>
+                    <div class="col-12">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Optional">{{ category.description|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {% if category %}Update{% else %}Save{% endif %} Category
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

@@ -1,61 +1,75 @@
 {% extends 'posapp/base.html' %}
 
-{% block title %}Manage Recipes | Inventory{% endblock %}
-{% block nav_title %}Recipe Management{% endblock %}
+{% block title %}Product Recipes | Inventory{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Product Recipes</h1>
-        <p class="mb-0 text-muted">Define ingredients for your kitchen items.</p>
-    </div>
-
-    <div class="alert alert-info border-left-info shadow-sm">
-        <i class="fas fa-info-circle me-2"></i>
-        Only products marked as <strong>"Kitchen/Recipe Based"</strong> in Product Settings appear here.
-    </div>
-
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Select Product to Configure</h6>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-utensils me-2"></i>Product Recipes</h1>
+                <p>Define ingredients for kitchen / recipe-based products</p>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="bg-light">
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-info-banner">
+        <i class="fas fa-info-circle me-2"></i>
+        Only products marked as <strong>Recipe Based</strong> in POS Products appear here.
+    </div>
+
+    <div class="admin-panel mb-0">
+        <div class="admin-panel-header">
+            <h2><i class="fas fa-list me-2 text-primary"></i>Recipe Products</h2>
+        </div>
+        <div class="admin-panel-body">
+            {% if products %}
+            <div class="focus-table-wrap admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
                         <tr>
-                            <th>Product Name</th>
+                            <th>Product</th>
                             <th>Category</th>
-                            <th>Ingredients Configured</th>
-                            <th>Action</th>
+                            <th>Ingredients</th>
+                            <th class="actions-col">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for product in products %}
                         <tr>
-                            <td class="fw-bold">{{ product.name }}</td>
-                            <td>{{ product.category.name }}</td>
-                            <td>
-                                <span class="badge bg-secondary">{{ product.recipes.count }} ingredients</span>
-                            </td>
-                            <td>
-                                <a href="{% url 'inventory:manage_recipe' product.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-cogs me-1"></i> Manage Recipe
+                            <td class="fw-semibold">{{ product.name }}</td>
+                            <td>{{ product.category.name|default:"—" }}</td>
+                            <td><span class="admin-status-badge muted">{{ product.recipes.count }} ingredient{{ product.recipes.count|pluralize }}</span></td>
+                            <td class="actions-col">
+                                <a href="{% url 'inventory:manage_recipe' product.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cogs me-1"></i> Manage
                                 </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">
-                                No recipe-based products found. <br>
-                                Go to <strong>POS Products</strong> and check "Is Recipe Based" for items like Burgers/Tea.
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <div class="admin-empty">
+                <i class="fas fa-utensils"></i>
+                No recipe-based products found.
+                <div class="text-muted small mt-2">Enable <strong>Recipe Based</strong> on products in the POS Products menu.</div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

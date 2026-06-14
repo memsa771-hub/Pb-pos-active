@@ -1,105 +1,90 @@
 {% extends 'posapp/base.html' %}
 
-{% block title %}
-    {% if item %}Edit Item - {{ item.name }}{% else %}Add New Item{% endif %} | Inventory
+{% block title %}{% if item %}Edit {{ item.name }}{% else %}Add Item{% endif %} | Inventory{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
 {% endblock %}
 
-{% block nav_title %}Inventory Management{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if item %}
-                Edit Item: <span class="text-primary">{{ item.name }}</span>
-            {% else %}
-                Add New Raw Material
-            {% endif %}
-        </h1>
-        <a href="{% url 'inventory:item_list' %}" class="btn btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50 me-1"></i> Back to List
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-boxes me-2"></i>{% if item %}Edit Item{% else %}Add Item{% endif %}</h1>
+                <p>{% if item %}Update raw material details for {{ item.name }}{% else %}Add a new raw material to inventory{% endif %}</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Items
+            </a>
+        </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Item Details</h6>
+    <div class="admin-panel admin-form-panel">
+        <div class="admin-panel-header">
+            <h2>Item Details</h2>
         </div>
-        <div class="card-body">
-            <form method="POST" action="">
-                {% csrf_token %}
-                
-                <div class="row mb-3">
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            <div class="admin-form-body">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="name" class="form-label fw-bold">Item Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ item.name|default:'' }}" required placeholder="e.g. Chicken Breast, Cooking Oil">
+                        <label for="name" class="form-label">Item Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ item.name|default:'' }}" required placeholder="e.g. Chicken Breast">
                     </div>
                     <div class="col-md-6">
-                        <label for="category" class="form-label fw-bold">Category</label>
+                        <label for="category" class="form-label">Category</label>
                         <select class="form-select" id="category" name="category">
                             <option value="">Select Category</option>
                             {% for cat in categories %}
-                                <option value="{{ cat.id }}" 
-                                    {% if item and item.category.id == cat.id %}selected{% endif %}>
-                                    {{ cat.name }}
-                                </option>
+                            <option value="{{ cat.id }}" {% if item and item.category.id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-
-                <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="sku" class="form-label fw-bold">SKU / Barcode</label>
-                        <input type="text" class="form-control" id="sku" name="sku" value="{{ item.sku|default:'' }}" placeholder="Optional scan code">
+                        <label for="sku" class="form-label">SKU / Barcode</label>
+                        <input type="text" class="form-control" id="sku" name="sku" value="{{ item.sku|default:'' }}" placeholder="Optional">
                     </div>
                     <div class="col-md-6">
-                        <label for="unit" class="form-label fw-bold">Measuring Unit <span class="text-danger">*</span></label>
+                        <label for="unit" class="form-label">Measuring Unit <span class="text-danger">*</span></label>
                         <select class="form-select" id="unit" name="unit" required>
                             {% for code, label in units %}
-                                <option value="{{ code }}" {% if item and item.unit == code %}selected{% endif %}>
-                                    {{ label }} ({{ code }})
-                                </option>
+                            <option value="{{ code }}" {% if item and item.unit == code %}selected{% endif %}>{{ label }} ({{ code }})</option>
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-
-                <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="cost_price" class="form-label fw-bold">Cost Price (Per Unit) <span class="text-danger">*</span></label>
+                        <label for="cost_price" class="form-label">Cost Price (Per Unit) <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">{{ currency_symbol }}</span>
                             <input type="number" step="0.01" class="form-control" id="cost_price" name="cost_price" value="{{ item.cost_price|default:'' }}" required>
                         </div>
-                        <small class="text-muted">Used to calculate total stock value.</small>
+                        <div class="form-text">Used to calculate total stock value.</div>
                     </div>
                     <div class="col-md-6">
-                        <label for="min_stock" class="form-label fw-bold">Low Stock Alert Level</label>
+                        <label for="min_stock" class="form-label">Low Stock Alert Level</label>
                         <input type="number" step="0.01" class="form-control" id="min_stock" name="min_stock" value="{{ item.min_stock_level|default:'5' }}">
-                        <small class="text-muted">Alert will show when stock goes below this number.</small>
+                        <div class="form-text">Alert when stock falls below this level.</div>
+                    </div>
+                    <div class="col-12">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ item.description|default:'' }}</textarea>
                     </div>
                 </div>
-
-                <div class="mb-4">
-                    <label for="description" class="form-label fw-bold">Description / Notes</label>
-                    <textarea class="form-control" id="description" name="description" rows="3">{{ item.description|default:'' }}</textarea>
-                </div>
-
-                <hr>
-
-                <div class="d-flex justify-content-end">
-                    <a href="{% url 'inventory:item_list' %}" class="btn btn-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save me-1"></i> 
-                        {% if item %}Update Item{% else %}Save Item{% endif %}
-                    </button>
-                </div>
-
-            </form>
-        </div>
+            </div>
+            <div class="admin-form-actions">
+                <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {% if item %}Update Item{% else %}Save Item{% endif %}
+                </button>
+            </div>
+        </form>
     </div>
-
 </div>
 {% endblock %}

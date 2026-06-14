@@ -1,99 +1,79 @@
 {% extends 'posapp/base.html' %}
 
-{% block title %}Categories | Inventory{% endblock %}
-{% block nav_title %}Inventory Management{% endblock %}
+{% block title %}Inventory Categories | POS System{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Inventory Categories</h1>
-        <a href="{% url 'inventory:category_create' %}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Add New Category
-        </a>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-folder me-2"></i>Inventory Categories</h1>
+                <p>Organize raw materials into categories</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-light me-2">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+            <a href="{% url 'inventory:category_create' %}" class="btn btn-light">
+                <i class="fas fa-plus me-1"></i> Add Category
+            </a>
+        </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">All Categories</h6>
-            
-            <form class="d-none d-sm-inline-block form-inline mw-100 navbar-search" method="GET">
-                <div class="input-group">
-                    <input type="text" name="search" value="{{ search_query }}" class="form-control bg-light border-0 small" placeholder="Search categories..." aria-label="Search">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="button">
-                            <i class="fas fa-search fa-sm"></i>
-                        </button>
+    <div class="admin-panel">
+        <form method="get" class="admin-filters mb-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-9">
+                    <label class="form-label" for="catSearch">Search</label>
+                    <div class="admin-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="catSearch" name="search" value="{{ search_query }}" placeholder="Search categories...">
                     </div>
                 </div>
-            </form>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                    <thead class="bg-light">
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100" style="min-height: 42px; border-radius: 10px;">
+                        <i class="fas fa-search me-1"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="admin-panel-body">
+            {% if categories %}
+            <div class="focus-table-wrap admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
                         <tr>
-                            <th>Category Name</th>
+                            <th>Category</th>
                             <th>Description</th>
-                            <th class="text-center">Total Items</th>
-                            <th class="text-center" style="width: 120px;">Actions</th>
+                            <th>Items</th>
+                            <th class="actions-col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for category in categories %}
                         <tr>
-                            <td class="fw-bold text-gray-800">{{ category.name }}</td>
-                            <td>{{ category.description|default:"--"|truncatechars:50 }}</td>
-                            <td class="text-center">
-                                <span class="badge bg-info rounded-pill">{{ category.items.count }} items</span>
-                            </td>
-                            <td class="text-center">
-                                <a href="{% url 'inventory:category_update' category.id %}" class="btn btn-sm btn-info text-white" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCat{{ category.id }}" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-
-                                <div class="modal fade" id="deleteCat{{ category.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Delete Category?</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-start">
-                                                Are you sure you want to delete <strong>{{ category.name }}</strong>?
-                                                
-                                                {% if category.items.count > 0 %}
-                                                <div class="alert alert-danger mt-3 mb-0">
-                                                    <i class="fas fa-exclamation-triangle me-2"></i> 
-                                                    <strong>Warning:</strong> This category contains <strong>{{ category.items.count }}</strong> items. You cannot delete it until you move or delete those items.
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                
-                                                {% if category.items.count == 0 %}
-                                                <form action="{% url 'inventory:category_delete' category.id %}" method="post">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                                                </form>
-                                                {% else %}
-                                                <button disabled class="btn btn-danger" title="Category is not empty">Delete</button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
+                            <td class="fw-semibold">{{ category.name }}</td>
+                            <td class="text-muted">{{ category.description|default:"—"|truncatechars:50 }}</td>
+                            <td><span class="admin-status-badge muted">{{ category.items.count }}</span></td>
+                            <td class="actions-col">
+                                <div class="admin-action-btns">
+                                    <a href="{% url 'inventory:category_update' category.id %}" class="btn btn-warning admin-action-btn" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger admin-action-btn" data-bs-toggle="modal" data-bs-target="#deleteCat{{ category.id }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">
-                                No categories found. <a href="{% url 'inventory:category_create' %}">Create one?</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -101,30 +81,59 @@
                 </table>
             </div>
 
+            {% for category in categories %}
+            <div class="modal fade" id="deleteCat{{ category.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Category?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Delete <strong>{{ category.name }}</strong>?
+                            {% if category.items.count > 0 %}
+                            <div class="alert alert-danger mt-3 mb-0 small">
+                                This category has {{ category.items.count }} item{{ category.items.count|pluralize }}. Move or delete them first.
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            {% if category.items.count == 0 %}
+                            <form action="{% url 'inventory:category_delete' category.id %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                            {% else %}
+                            <button type="button" class="btn btn-danger" disabled>Delete</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
             {% if categories.has_other_pages %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
+            <nav class="admin-pagination">
+                <ul class="pagination justify-content-center mb-0 py-3">
                     {% if categories.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ categories.previous_page_number }}&search={{ search_query }}">Previous</a></li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ categories.previous_page_number }}&search={{ search_query|urlencode }}">Previous</a></li>
                     {% endif %}
-
-                    {% for i in categories.paginator.page_range %}
-                        {% if categories.number == i %}
-                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                        {% else %}
-                        <li class="page-item"><a class="page-link" href="?page={{ i }}&search={{ search_query }}">{{ i }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-
+                    <li class="page-item active"><span class="page-link">{{ categories.number }} / {{ categories.paginator.num_pages }}</span></li>
                     {% if categories.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ categories.next_page_number }}&search={{ search_query }}">Next</a></li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ categories.next_page_number }}&search={{ search_query|urlencode }}">Next</a></li>
                     {% endif %}
                 </ul>
             </nav>
+            {% endif %}
+            {% else %}
+            <div class="admin-empty">
+                <i class="fas fa-folder-open"></i>
+                No categories found.
+                <div class="mt-3">
+                    <a href="{% url 'inventory:category_create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i> Add Category</a>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>

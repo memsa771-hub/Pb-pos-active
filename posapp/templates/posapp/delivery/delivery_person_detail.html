@@ -1,180 +1,210 @@
 {% extends 'posapp/base.html' %}
-{% load custom_filters %}
+{% load humanize custom_filters %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ delivery_person.name }} - Delivery Staff{% endblock %}
+{% block body_class %}focus-page{% endblock %}
+
+{% block extra_css %}
+{% include 'posapp/partials/admin_page_styles.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <div>
+<div class="container-fluid admin-page">
+    <div class="focus-toolbar">
+        <div class="focus-toolbar-left">
+            <button type="button" class="focus-menu-btn" id="focusMenuToggle" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1><i class="fas fa-motorcycle me-2"></i>{{ delivery_person.name }}</h1>
+                <p>Delivery staff profile, orders, and performance</p>
+            </div>
+        </div>
+        <div class="focus-toolbar-actions">
+            <a href="{% url 'delivery_person_list' %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Delivery Staff
+            </a>
             {% if user.is_superuser or user.profile.role.name == 'Admin' %}
-            <a href="{% url 'delivery_person_edit' delivery_person.id %}" class="btn btn-warning shadow-sm me-2">
-                <i class="fas fa-edit fa-sm text-white-50"></i> Edit
+            <a href="{% url 'delivery_person_edit' delivery_person.id %}" class="btn btn-light">
+                <i class="fas fa-edit me-1"></i> Edit
             </a>
             {% endif %}
-            <a href="{% url 'delivery_person_list' %}" class="btn btn-secondary shadow-sm">
-                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
-            </a>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Delivery Person Information -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Delivery Person Information</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong><i class="fas fa-user text-primary me-2"></i>Name:</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            {{ delivery_person.name }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong><i class="fas fa-phone text-primary me-2"></i>Phone:</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            {{ delivery_person.phone|default:"--" }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong><i class="fas fa-check-circle text-primary me-2"></i>Status:</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            {% if delivery_person.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inactive</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong><i class="fas fa-calendar text-primary me-2"></i>Created:</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            {{ delivery_person.created_at|pkt_datetime }}
-                        </div>
-                    </div>
-                </div>
-            </div>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
 
-            <!-- Statistics Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Statistics</h6>
+    <div class="admin-stats">
+        <div class="admin-stat-card info">
+            <i class="fas fa-receipt stat-icon"></i>
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value">{{ total_orders }}</div>
+        </div>
+        <div class="admin-stat-card success">
+            <i class="fas fa-check-circle stat-icon"></i>
+            <div class="stat-label">Completed</div>
+            <div class="stat-value">{{ completed_orders }}</div>
+        </div>
+        <div class="admin-stat-card warning">
+            <i class="fas fa-clock stat-icon"></i>
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">{{ pending_orders }}</div>
+        </div>
+        <div class="admin-stat-card primary">
+            <i class="fas fa-coins stat-icon"></i>
+            <div class="stat-label">Total Value</div>
+            <div class="stat-value" style="font-size:1.2rem;">{{ currency_symbol }}{{ total_amount|floatformat:0|intcomma }}</div>
+        </div>
+    </div>
+
+    <div class="admin-grid-2">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-user me-2 text-primary"></i>Profile</h2>
+            </div>
+            <div class="admin-detail-grid">
+                <div class="admin-detail-item">
+                    <div class="label">Name</div>
+                    <div class="value">{{ delivery_person.name }}</div>
                 </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <div class="border-end">
-                                <h4 class="text-info">{{ total_orders }}</h4>
-                                <small class="text-muted">Total Orders</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <h4 class="text-success">{{ completed_orders }}</h4>
-                            <small class="text-muted">Completed</small>
-                        </div>
+                <div class="admin-detail-item">
+                    <div class="label">Phone</div>
+                    <div class="value">{{ delivery_person.phone|default:"—" }}</div>
+                </div>
+                <div class="admin-detail-item">
+                    <div class="label">Status</div>
+                    <div class="value">
+                        {% if delivery_person.is_active %}
+                        <span class="admin-status-badge success">Active</span>
+                        {% else %}
+                        <span class="admin-status-badge danger">Inactive</span>
+                        {% endif %}
                     </div>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <div class="border-end">
-                                <h4 class="text-warning">{{ pending_orders }}</h4>
-                                <small class="text-muted">Pending</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <h4 class="text-primary">{{ currency_symbol }}{{ total_amount|floatformat:2 }}</h4>
-                            <small class="text-muted">Total Value</small>
-                        </div>
-                    </div>
+                </div>
+                <div class="admin-detail-item">
+                    <div class="label">Created</div>
+                    <div class="value">{{ delivery_person.created_at|pkt_datetime }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Orders List -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6>
-                    <div class="d-flex align-items-center">
-                        {% if pending_orders > 0 %}
-                        <button class="btn btn-success btn-sm me-2" onclick="completeAllOrders({{ delivery_person.id }})" title="Complete All Pending Orders">
-                            <i class="fas fa-check-double"></i> Complete All ({{ pending_orders }})
-                        </button>
-                        <button class="btn btn-primary btn-sm me-3" onclick="generateCombinedBill({{ delivery_person.id }})" title="Generate Combined Bill">
-                            <i class="fas fa-receipt"></i> Combined Bill
-                        </button>
-                        {% endif %}
-                        <small class="text-muted">
-                            Showing orders from {{ start_date }} to {{ end_date }}
-                        </small>
-                    </div>
-                </div>
-                <div class="card-body">
-                    {% if orders %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Order #</th>
-                                        <th>Customer</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
-                                        <th>Date</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for order in orders %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'order_detail' order.id %}" class="text-decoration-none">
-                                                {{ order.reference_number }}
-                                            </a>
-                                        </td>
-                                        <td>{{ order.customer_name|default:"--" }}</td>
-                                        <td>{{ currency_symbol }}{{ order.total_amount|floatformat:2 }}</td>
-                                        <td>
-                                            {% if order.order_status == 'Completed' %}
-                                                <span class="badge bg-success">Completed</span>
-                                            {% elif order.order_status == 'Pending' %}
-                                                <span class="badge bg-warning">Pending</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">{{ order.order_status }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ order.created_at|pkt_datetime_short }}</td>
-                                        <td>
-                                            <a href="{% url 'order_detail' order.id %}" class="btn btn-info btn-sm" title="View Order">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h2>
+            </div>
+            <div class="admin-quick-links">
+                {% if pending_orders > 0 %}
+                <button type="button" class="admin-quick-link border-success text-success" onclick="completeAllOrders({{ delivery_person.id }})">
+                    <i class="fas fa-check-double"></i> Complete All ({{ pending_orders }})
+                </button>
+                <button type="button" class="admin-quick-link" onclick="generateCombinedBill({{ delivery_person.id }})">
+                    <i class="fas fa-receipt"></i> Combined Bill
+                </button>
+                {% else %}
+                <span class="text-muted small px-2 py-1">No pending orders to action.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h2><i class="fas fa-truck me-2 text-primary"></i>Delivery Orders</h2>
+            <span class="text-muted small">
+                {% if start_date or end_date %}
+                    {% if start_date and end_date %}
+                        {{ start_date|pkt_date }} – {{ end_date|pkt_date }}
+                    {% elif start_date %}
+                        From {{ start_date|pkt_date }}
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-truck fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No delivery orders found for the selected date range.</p>
-                        </div>
+                        Until {{ end_date|pkt_date }}
                     {% endif %}
+                {% else %}
+                    All orders
+                {% endif %}
+            </span>
+        </div>
+
+        <form method="get" class="admin-filters mb-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label" for="startDate">From</label>
+                    <input type="date" class="form-control" id="startDate" name="start_date"
+                           {% if start_date %}value="{{ start_date|date:'Y-m-d' }}"{% endif %}>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="endDate">To</label>
+                    <input type="date" class="form-control" id="endDate" name="end_date"
+                           {% if end_date %}value="{{ end_date|date:'Y-m-d' }}"{% endif %}>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1" style="min-height: 42px; border-radius: 10px;">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                    <a href="{% url 'delivery_person_detail' delivery_person.id %}" class="btn btn-outline-secondary" style="min-height: 42px; border-radius: 10px;">
+                        Clear
+                    </a>
                 </div>
             </div>
+        </form>
+
+        <div class="admin-panel-body">
+            {% if orders %}
+            <div class="focus-table-wrap admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'order_detail' order.id %}" class="admin-link">{{ order.reference_number }}</a>
+                            </td>
+                            <td>{{ order.customer_name|default:"Walk-in" }}</td>
+                            <td>{{ currency_symbol }}{{ order.total_amount|floatformat:0|intcomma }}</td>
+                            <td>
+                                {% if order.order_status == 'Completed' %}
+                                <span class="admin-status-badge success">{{ order.order_status }}</span>
+                                {% elif order.order_status == 'Pending' %}
+                                <span class="admin-status-badge warning">{{ order.order_status }}</span>
+                                {% else %}
+                                <span class="admin-status-badge danger">{{ order.order_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ order.created_at|pkt_datetime_short }}</td>
+                            <td class="actions-col">
+                                <div class="admin-action-btns">
+                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-info admin-action-btn" title="View order">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="admin-empty">
+                <i class="fas fa-truck"></i>
+                No delivery orders found for this period.
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -182,35 +212,32 @@
 
 {% block extra_js %}
 <script>
-    // Complete all orders for this delivery person
     function completeAllOrders(deliveryPersonId) {
-        if (confirm('Are you sure you want to complete ALL pending orders for this delivery person?')) {
-            fetch(`/complete-all-delivery-orders/${deliveryPersonId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('All orders completed successfully!');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while completing orders.');
-            });
+        if (!confirm('Complete all pending orders for this delivery person?')) {
+            return;
         }
+        fetch(`/complete-all-delivery-orders/${deliveryPersonId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(function() {
+            alert('An error occurred while completing orders.');
+        });
     }
 
-    // Generate combined bill for this delivery person
     function generateCombinedBill(deliveryPersonId) {
         window.open(`/delivery-combined-bill/${deliveryPersonId}/`, '_blank');
     }
 </script>
-{% endblock %} 
+{% endblock %}
