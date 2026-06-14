@@ -92,8 +92,8 @@
                                     {% if user_obj.is_superuser or user_obj.is_staff %}
                                     <span class="user-role-badge admin">Admin</span>
                                     {% elif user_obj.profile.role %}
-                                    <span class="user-role-badge {% if user_obj.profile.role.name == 'Admin' %}admin{% elif user_obj.profile.role.name == 'Branch Manager' %}manager{% else %}staff{% endif %}">
-                                        {{ user_obj.profile.role.name }}
+                                    <span class="user-role-badge {% with role=user_obj|display_role_name %}{% if role == 'Admin' %}admin{% elif role == 'Branch Manager' %}manager{% else %}staff{% endif %}{% endwith %}">
+                                        {{ user_obj|display_role_name }}
                                     </span>
                                     {% else %}
                                     <span class="user-role-badge muted">No Role</span>

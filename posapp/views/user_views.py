@@ -11,6 +11,24 @@ import django.db.models.deletion
 
 from ..models import UserProfile, UserRole, UserSession
 from ..permissions import is_admin
+
+ASSIGNABLE_ROLES = ('Branch Manager', 'Cashier')
+
+
+def _assignable_roles_queryset():
+    return UserRole.objects.filter(name__in=ASSIGNABLE_ROLES)
+
+
+def _resolve_standard_role(role):
+    """Map legacy per-user roles (e.g. Cashier_csh1) back to Branch Manager or Cashier."""
+    if not role:
+        return None
+    if role.name in ASSIGNABLE_ROLES:
+        return role
+    for base in ASSIGNABLE_ROLES:
+        if role.name == base or role.name.startswith(f'{base}_'):
+            return UserRole.objects.filter(name=base).first()
+    return None
 from ..session_manager import get_active_users, force_logout_user
 
 # Custom Forms
@@ -37,7 +55,7 @@ class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Restrict role choices to only Branch Manager and Cashier
-        self.fields['role'].queryset = UserRole.objects.filter(name__in=['Branch Manager', 'Cashier'])
+        self.fields['role'].queryset = _assignable_roles_queryset()
         
     
     class Meta:
@@ -49,9 +67,9 @@ class UserEditForm(forms.ModelForm):
     last_name = forms.CharField(max_length=150, required=True)
     email = forms.EmailField(required=True)
     role = forms.ModelChoiceField(
-        queryset=UserRole.objects.filter(name__in=['Branch Manager', 'Cashier']), 
+        queryset=_assignable_roles_queryset(),
         required=True,
-        help_text="Select a role template - you can customize permissions below"
+        help_text="Select Branch Manager or Cashier"
     )
     phone = forms.CharField(max_length=20, required=False)
     
@@ -82,9 +100,11 @@ class UserEditForm(forms.ModelForm):
         if user_instance and hasattr(user_instance, 'profile'):
             profile = user_instance.profile
             
-            # Set role and phone
+            # Set role and phone (map legacy Cashier_username roles to standard role)
             if profile.role:
-                self.fields['role'].initial = profile.role
+                standard_role = _resolve_standard_role(profile.role)
+                if standard_role:
+                    self.fields['role'].initial = standard_role
             if profile.phone:
                 self.fields['phone'].initial = profile.phone
             
@@ -109,9 +129,9 @@ class UserCreationWithRoleForm(UserCreationForm):
     last_name = forms.CharField(max_length=150, required=True)
     email = forms.EmailField(required=True)
     role = forms.ModelChoiceField(
-        queryset=UserRole.objects.all(), 
+        queryset=_assignable_roles_queryset(),
         required=True,
-        help_text="Select a role template - you can customize permissions below"
+        help_text="Select Branch Manager or Cashier"
     )
     phone = forms.CharField(max_length=20, required=False)
     
@@ -128,7 +148,9 @@ class UserCreationWithRoleForm(UserCreationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
+        self.fields['role'].queryset = _assignable_roles_queryset()
+
         # Add CSS classes for better styling
         for field_name, field in self.fields.items():
             if field_name.startswith('can_'):
@@ -328,30 +350,13 @@ def user_create(request):
             try:
                 with transaction.atomic():
                     user = form.save()
-                    
-                    # Get or create the selected role
+
                     selected_role = form.cleaned_data['role']
-                    
-                    # Create a custom role for this user with the selected permissions
-                    custom_role_name = f"{selected_role.name}_{user.username}"
-                    custom_role, created = UserRole.objects.get_or_create(
-                        name=custom_role_name,
-                        defaults={
-                            'description': f"Custom role for {user.username} based on {selected_role.name}"
-                        }
-                    )
-                    
-                    # Set all permission fields from the form (skip for superusers)
-                    if not user.is_superuser:
-                        permission_fields = [field for field in form.fields.keys() if field.startswith('can_')]
-                        for field in permission_fields:
-                            setattr(custom_role, field, form.cleaned_data.get(field, False))
-                    
-                    custom_role.save()
-                    
+                    permission_fields = [field for field in form.fields.keys() if field.startswith('can_')]
+
                     profile_defaults = {
                         'phone': form.cleaned_data['phone'],
-                        'role': custom_role,
+                        'role': selected_role,
                         'is_active': True,
                     }
                     if not user.is_superuser:
@@ -365,13 +370,13 @@ def user_create(request):
 
                     if not created:
                         profile.phone = form.cleaned_data['phone']
-                        profile.role = custom_role
+                        profile.role = selected_role
                         if not user.is_superuser:
                             for field in permission_fields:
                                 setattr(profile, field, form.cleaned_data.get(field, False))
                         profile.save()
-                        
-                messages.success(request, f'User {user.username} created successfully with custom permissions.')
+
+                messages.success(request, f'User {user.username} created successfully.')
                 return redirect('user_list')
             except Exception as e:
                 # If something went wrong, display the error

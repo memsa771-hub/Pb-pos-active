@@ -17,12 +17,21 @@ def _to_pkt(value):
     return pytz.utc.localize(value).astimezone(PKT)
 
 @register.filter
+def display_role_name(user):
+    """Show standard role name (Admin, Branch Manager, Cashier) in templates."""
+    from posapp.permissions import get_base_role_name
+    if not user:
+        return ''
+    return get_base_role_name(user) or ''
+
+
+@register.filter
 def multiply(value, arg):
     """Multiplies the value by the argument"""
     try:
         return float(value) * float(arg)
     except (ValueError, TypeError):
-        return '' 
+        return ''
 
 @register.filter
 def dictsumattr(items, attr):
