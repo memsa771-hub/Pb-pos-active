@@ -1,11 +1,72 @@
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/rsvp@4.8.5/dist/rsvp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/qzind/tray@v2.2.4/js/sha-256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/11.1.0/jsrsasign-all-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
+<script src="{% static 'js/qz_security.js' %}"></script>
+<script src="{% static 'js/kitchen_block_print.js' %}"></script>
 <script>
 (function() {
+    var BLOCK_SELECTOR = '.receipt .block.smallprint';
+
+    function getKitchenBlockHtmlList() {
+        return Array.prototype.slice.call(document.querySelectorAll(BLOCK_SELECTOR))
+            .map(function(block) { return block.outerHTML; });
+    }
+
+    function printKitchenBlocksSequentially(blockHtmlList, options) {
+        if (!blockHtmlList || !blockHtmlList.length) {
+            return Promise.resolve();
+        }
+        if (window.KitchenBlockPrint && window.KitchenBlockPrint.printBrowserBlocksSequentially) {
+            return window.KitchenBlockPrint.printBrowserBlocksSequentially(blockHtmlList, options || {});
+        }
+        if (window.KitchenBlockPrint && window.KitchenBlockPrint.printHtmlBlocksSequentially) {
+            return window.KitchenBlockPrint.printHtmlBlocksSequentially(blockHtmlList, { browserOnly: true });
+        }
+        return Promise.resolve();
+    }
+
+    function tryQzPrintIfReady(blockHtmlList) {
+        if (!window.KitchenBlockPrint || !window.KitchenBlockPrint.isQzReady ||
+            !window.KitchenBlockPrint.isQzReady() ||
+            typeof qz === 'undefined' || !qz.websocket.isActive()) {
+            return null;
+        }
+        return window.KitchenBlockPrint.printHtmlBlocksSequentially(blockHtmlList);
+    }
+
+    // Manual button click — print immediately (keeps browser user-gesture)
     window.printThermalReceipt = function() {
-        window.print();
+        var blockHtmlList = getKitchenBlockHtmlList();
+        if (!blockHtmlList.length) {
+            window.print();
+            return Promise.resolve();
+        }
+        return printKitchenBlocksSequentially(blockHtmlList, { immediate: true });
     };
 
     window.printThermalElement = function() {
-        window.print();
+        return window.printThermalReceipt();
+    };
+
+    window.printKitchenBlocksSequentially = function() {
+        return printKitchenBlocksSequentially(getKitchenBlockHtmlList(), { immediate: true });
+    };
+
+    // Auto-print on page open — silent QZ if already connected, else browser
+    window.runKitchenCategoryPrint = function() {
+        var blockHtmlList = getKitchenBlockHtmlList();
+        if (!blockHtmlList.length) {
+            return Promise.resolve();
+        }
+        var qzPrint = tryQzPrintIfReady(blockHtmlList);
+        if (qzPrint) {
+            return qzPrint.catch(function() {
+                return printKitchenBlocksSequentially(blockHtmlList);
+            });
+        }
+        return printKitchenBlocksSequentially(blockHtmlList);
     };
 
     window.fitThermalReceiptPage = function() {};

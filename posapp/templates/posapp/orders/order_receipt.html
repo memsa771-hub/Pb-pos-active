@@ -13,7 +13,7 @@
 <body>
     <div class="print-controls no-print">
         <button type="button" onclick="printThermalReceipt()"><i class="fas fa-print"></i> Print</button>
-        <a href="{% url 'kitchen_receipt' order.id %}" target="_blank"><i class="fas fa-utensils"></i> Kitchen</a>
+        <a href="{% url 'kitchen_receipt' order.id %}?autoprint=1" target="_blank"><i class="fas fa-utensils"></i> Kitchen</a>
         <a href="javascript:window.close()"><i class="fas fa-times"></i> Close</a>
     </div>
 

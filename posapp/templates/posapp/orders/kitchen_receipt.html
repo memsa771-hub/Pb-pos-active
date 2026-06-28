@@ -8,6 +8,7 @@
     <title>Kitchen Order #{{ order.reference_number }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'posapp/partials/thermal_receipt_styles.html' %}
+    <script>window.KITCHEN_PRINTER_NAME = "{{ kitchen_printer_name|default:''|escapejs }}"; window.USE_QZ_SILENT_PRINT = true;</script>
     {% include 'posapp/partials/thermal_receipt_print_script.html' %}
 </head>
 <body>
@@ -22,61 +23,87 @@
     </div>
 
     <div class="receipt">
-        <div class="thermal-header">
-            {% if is_additional %}
-            <h1 class="kitchen-title">ADDITIONAL ITEMS</h1>
-            {% else %}
-            <h1 class="kitchen-title">KITCHEN ORDER</h1>
-            {% endif %}
-            <p class="thermal-label">Order #{{ order.daily_order_number }} · {{ order.reference_number }}</p>
-            <p>{{ order.created_at|pkt_datetime }}</p>
-            {% if order.order_type == 'Dine In' and order.table_number %}
-            <p class="thermal-label thermal-highlight">TABLE {{ order.table_number }}</p>
-            {% elif order.order_type == 'Delivery' %}
-            <p class="thermal-label thermal-highlight">DELIVERY</p>
-            {% elif order.order_type == 'Takeaway' %}
-            <p class="thermal-label thermal-highlight">TAKEAWAY</p>
-            {% endif %}
-            {% if order.customer_name %}<p>Customer: {{ order.customer_name }}</p>{% endif %}
-        </div>
-
-        {% if order.notes %}
-        <hr class="thermal-divider">
-        <div class="thermal-meta">
-            <p class="thermal-label">Notes: {{ order.notes }}</p>
-        </div>
-        {% endif %}
-
-        <hr class="thermal-divider">
-
-        {% for item in order_items %}
-        <div class="kitchen-item">
-            <div class="kitchen-qty">{{ item.quantity|stringformat:"g" }}</div>
-            <div class="kitchen-name-wrap">
-                <div class="kitchen-name">{{ item.display_name }}</div>
-                {% if item.is_per_kg %}
-                <div class="kitchen-sub">Weight item (kg)</div>
+        {% for block in category_blocks %}
+        <div class="block smallprint">
+            <div class="thermal-header">
+                {% if is_additional %}
+                <h1 class="kitchen-title">ADDITIONAL · {{ block.category|upper }}</h1>
+                {% else %}
+                <h1 class="kitchen-title">{{ block.category|upper }}</h1>
                 {% endif %}
-                {% if item.notes %}
-                <div class="kitchen-sub">Note: {{ item.notes }}</div>
+                <p class="thermal-label">Order #{{ order.daily_order_number }} · {{ order.reference_number }}</p>
+                <p>{{ order.created_at|pkt_datetime }}</p>
+                {% if order.order_type == 'Dine In' and order.table_number %}
+                <p class="thermal-label thermal-highlight">TABLE {{ order.table_number }}</p>
+                {% elif order.order_type == 'Delivery' %}
+                <p class="thermal-label thermal-highlight">DELIVERY</p>
+                {% elif order.order_type == 'Takeaway' %}
+                <p class="thermal-label thermal-highlight">TAKEAWAY</p>
                 {% endif %}
+                {% if order.customer_name %}<p>Customer: {{ order.customer_name }}</p>{% endif %}
             </div>
+
+            {% if order.notes %}
+            <hr class="thermal-divider">
+            <div class="thermal-meta">
+                <p class="thermal-label">Notes: {{ order.notes }}</p>
+            </div>
+            {% endif %}
+
+            <hr class="thermal-divider">
+
+            {% for item in block.items %}
+            <div class="kitchen-item">
+                <div class="kitchen-qty">{{ item.quantity|stringformat:"g" }}</div>
+                <div class="kitchen-name-wrap">
+                    <div class="kitchen-name">{{ item.display_name }}</div>
+                    {% if item.is_per_kg %}
+                    <div class="kitchen-sub">Weight item (kg)</div>
+                    {% endif %}
+                    {% if item.notes %}
+                    <div class="kitchen-sub">Note: {{ item.notes }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="thermal-meta">No items</p>
+            {% endfor %}
         </div>
         {% empty %}
-        <p class="thermal-meta">No items</p>
+        <div class="block smallprint">
+            <p class="thermal-meta">No items</p>
+        </div>
         {% endfor %}
     </div>
 
     <script>
         window.addEventListener('load', function() {
-            setTimeout(function() { printThermalReceipt(); }, 500);
-            {% if auto_print %}
-            window.addEventListener('afterprint', function() {
-                window.location.href = '{{ redirect_url }}';
-            });
+            function runPrint() {
+                var printPromise = window.runKitchenCategoryPrint
+                    ? window.runKitchenCategoryPrint()
+                    : printThermalReceipt();
+                {% if auto_print %}
+                if (printPromise && typeof printPromise.then === 'function') {
+                    printPromise.then(function() {
+                        window.location.href = '{{ redirect_url }}';
+                    });
+                }
+                setTimeout(function() {
+                    window.location.href = '{{ redirect_url }}';
+                }, 20000);
+                {% endif %}
+            }
+
+            {% if auto_print_on_open or auto_print %}
             setTimeout(function() {
-                window.location.href = '{{ redirect_url }}';
-            }, 3000);
+                if (window.KitchenBlockPrint && window.KitchenBlockPrint.initQz) {
+                    window.KitchenBlockPrint.initQz(function() {
+                        runPrint();
+                    });
+                } else {
+                    runPrint();
+                }
+            }, 500);
             {% endif %}
         });
     </script>

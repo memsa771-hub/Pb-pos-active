@@ -1,5 +1,6 @@
 {% extends 'posapp/base.html' %}
 {% load humanize %}
+{% load static %}
 {% block body_class %}pos-page{% endblock %}
 {% block title %}POS Terminal | POS System{% endblock %}
 
@@ -1542,10 +1543,20 @@
             max-width: 72mm !important;
             height: auto !important;
             margin: 0 !important;
-            padding: 2mm !important;
+            padding: 0 !important;
             overflow: visible !important;
             page-break-after: avoid !important;
+            page-break-inside: auto !important;
+        }
+
+        .receipt .block.smallprint {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 2mm !important;
+            margin: 0 !important;
             page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
         }
 
         .receipt .receipt-preview {
@@ -1556,12 +1567,21 @@
             border: none !important;
             padding: 0 !important;
         }
+
+        .receipt.no-print,
+        .receipt.no-print * {
+            display: none !important;
+            visibility: hidden !important;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+<div id="kiosk-print-warning" class="alert alert-info border-0 rounded-0 mb-0 d-none" role="alert" style="position: sticky; top: 0; z-index: 1070; font-size: 0.85rem;">
+    <i class="fas fa-print me-2"></i>Kitchen tickets auto-print on each order (one slip per category).
+</div>
 <div class="pos-terminal-wrapper">
     <div class="pos-toolbar">
         <div class="pos-toolbar-left">
@@ -1613,7 +1633,8 @@
                  data-code="{{ product.product_code }}" 
                  data-available="{% if product.stock_quantity > 0 or product.running_item or product.is_recipe_based %}true{% else %}false{% endif %}" 
                  data-running="{% if product.running_item or product.is_recipe_based %}true{% else %}false{% endif %}" 
-                 data-per-kg="{% if product.calculate_price_per_kg %}true{% else %}false{% endif %}">
+                 data-per-kg="{% if product.calculate_price_per_kg %}true{% else %}false{% endif %}"
+                 data-category="{% if product.category %}{{ product.category.name }}{% else %}Other{% endif %}">
 
                 <div class="card-body">
                     <div class="pos-product-meta">
@@ -2028,8 +2049,34 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/rsvp@4.8.5/dist/rsvp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/qzind/tray@v2.2.4/js/sha-256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/11.1.0/jsrsasign-all-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
+<script src="{% static 'js/qz_security.js' %}"></script>
+<script src="{% static 'js/kitchen_block_print.js' %}"></script>
+<script>
+    window.KITCHEN_PRINTER_NAME = "{{ kitchen_printer_name|escapejs }}";
+    window.USE_QZ_SILENT_PRINT = true;
+</script>
+<script>
+    // Browser print fallback — one slip per category via hidden iframe
+    function printKitchenBlocksNow(blockHtmlList) {
+        if (!blockHtmlList || !blockHtmlList.length) {
+            return;
+        }
+        if (window.KitchenBlockPrint && window.KitchenBlockPrint.printBrowserBlocksSequentially) {
+            window.KitchenBlockPrint.printBrowserBlocksSequentially(blockHtmlList, { immediate: true });
+        }
+    }
+</script>
 <script>
     $(document).ready(function() {
+        // Connect QZ Tray in background for silent print (no dialog)
+        if (window.KitchenBlockPrint && window.KitchenBlockPrint.initQz) {
+            window.KitchenBlockPrint.initQz();
+        }
+
         const currencySymbol = window.CURRENCY_SYMBOL || 'Rs';
         // Variables for cart functionality
         let cart = [];
@@ -2390,6 +2437,9 @@
                 }
                 existingItem.quantity += quantity; // Add the specified quantity (can be decimal)
                 existingItem.total = existingItem.quantity * existingItem.price;
+                if (!existingItem.category) {
+                    existingItem.category = productEl.dataset.category || 'Other';
+                }
             } else {
                 // For non-running items, check stock before adding new item
                 if (!isRunning) {
@@ -2411,7 +2461,8 @@
                     name: name,
                     price: parseFloat(price),
                     quantity: quantity,
-                    total: parseFloat(price) * quantity
+                    total: parseFloat(price) * quantity,
+                    category: productEl.dataset.category || 'Other'
                 });
             }
             
@@ -2961,10 +3012,11 @@
                             discountAmount = discount;
                         }
                         
-                        // Snapshot cart and form before reset (for kitchen receipt + success modal)
+                        // Snapshot cart BEFORE reset (for kitchen receipt)
                         const kitchenItems = cart.map(item => ({
                             name: item.name,
-                            quantity: item.quantity
+                            quantity: item.quantity,
+                            category: item.category || 'Other'
                         }));
                         const completedOrderType = selectedOrderType;
                         const completedTableNumber = $('#tableNumber').val();
@@ -2986,7 +3038,59 @@
                         $('.payment-method[data-method="Cash"]').addClass('selected');
                         resetDiscount();
 
-                        // Show success message with link to orders
+                        // Auto-print kitchen receipt — one separate small block per category
+                        const kitchenGroups = {};
+                        kitchenItems.forEach(function(item) {
+                            const cat = item.category || 'Other';
+                            if (!kitchenGroups[cat]) {
+                                kitchenGroups[cat] = [];
+                            }
+                            kitchenGroups[cat].push(item);
+                        });
+
+                        const kitchenBlockHtmlList = Object.keys(kitchenGroups).map(function(category) {
+                            const items = kitchenGroups[category];
+                            return `
+                                <div class="block smallprint">
+                                    <div style="text-align: center; margin-bottom: 6px; color: #000000;">
+                                        <h1 style="font-size: 14px; font-weight: bold; margin: 0; color: #000000; text-transform: uppercase;">${category}</h1>
+                                        <p style="font-size: 10px; font-weight: bold; margin: 2px 0; color: #000000;">Order ${orderNumberDisplay}</p>
+                                        ${completedOrderType === 'Dine In' && completedTableNumber ?
+                                            `<p style="font-size: 10px; font-weight: bold; margin: 2px 0; color: #000000;">Table ${completedTableNumber}</p>` :
+                                         completedOrderType === 'Delivery' ?
+                                            `<p style="font-size: 10px; font-weight: bold; margin: 2px 0; color: #000000;">Delivery</p>` :
+                                         completedOrderType === 'Takeaway' ?
+                                            `<p style="font-size: 10px; font-weight: bold; margin: 2px 0; color: #000000;">Takeaway</p>` : ''}
+                                    </div>
+                                    <div style="border-top: 1px dashed #000; margin: 4px 0; clear: both;"></div>
+                                    ${items.map(item => `
+                                        <div style="display: flex; align-items: center; margin: 3px 0; padding: 3px; border: 1px solid #000; background-color: white; color: #000000;">
+                                            <div style="font-weight: bold; font-size: 12px; color: #000000; min-width: 26px; text-align: center; margin-right: 6px; border-right: 1px solid #000; padding-right: 6px;">${item.quantity}</div>
+                                            <div style="font-weight: bold; font-size: 10px; color: #000000; flex: 1;">${item.name}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        });
+
+                        function printPosKitchenReceiptBlocks(blockHtmlList) {
+                            if (!blockHtmlList || !blockHtmlList.length) {
+                                return;
+                            }
+                            if (window.KitchenBlockPrint && window.KitchenBlockPrint.isQzReady &&
+                                window.KitchenBlockPrint.isQzReady() &&
+                                typeof qz !== 'undefined' && qz.websocket.isActive()) {
+                                window.KitchenBlockPrint.printHtmlBlocksSequentially(blockHtmlList).catch(function() {
+                                    printKitchenBlocksNow(blockHtmlList);
+                                });
+                            } else {
+                                printKitchenBlocksNow(blockHtmlList);
+                            }
+                        }
+
+                        // Print kitchen immediately — one slip per category
+                        printPosKitchenReceiptBlocks(kitchenBlockHtmlList);
+
                         $('#successModalContent').html(`
                             <div class="text-center mb-4">
                                 <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
@@ -3003,39 +3107,6 @@
                             </div>
                         `);
                         $('#successModal').modal('show');
-
-                        // Auto-print kitchen receipt
-                        const receiptHTML = `
-                            <div id="receipt-container" class="receipt print-only">
-                                <div class="receipt-preview" style="width: 70mm; padding: 1mm; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.1; color: #000000;">
-                                    <div style="text-align: center; margin-bottom: 8px; color: #000000;">
-                                        <h1 style="font-size: 16px; font-weight: bold; margin: 0; color: #000000;">Order ${orderNumberDisplay}</h1>
-                                        ${completedOrderType === 'Dine In' && completedTableNumber ?
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Table ${completedTableNumber}</p>` :
-                                         completedOrderType === 'Delivery' ?
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Delivery</p>` :
-                                         completedOrderType === 'Takeaway' ?
-                                            `<p style="font-size: 11px; font-weight: bold; margin: 2px 0; color: #000000;">Takeaway</p>` : ''}
-                                    </div>
-                                    <div style="border-top: 1px dashed #000; margin: 6px 0; clear: both;"></div>
-                                    ${kitchenItems.map(item => `
-                                        <div style="display: flex; align-items: center; margin: 4px 0; padding: 4px; border: 1px solid #000; background-color: white; color: #000000;">
-                                            <div style="font-weight: bold; font-size: 14px; color: #000000; min-width: 30px; text-align: center; margin-right: 8px; border-right: 1px solid #000; padding-right: 8px;">${item.quantity}</div>
-                                            <div style="font-weight: bold; font-size: 11px; color: #000000; flex: 1;">${item.name}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
-                        $('body').append(receiptHTML);
-                        try {
-                            window.print();
-                        } catch (printError) {
-                            console.error('Kitchen receipt print failed:', printError);
-                        }
-                        setTimeout(function() {
-                            $('#receipt-container').remove();
-                        }, 1000);
                     },
                     error: function(xhr, status, error) {
                         console.error('Error saving order:', error);

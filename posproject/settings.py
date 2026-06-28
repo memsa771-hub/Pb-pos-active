@@ -142,8 +142,7 @@ USE_L10N = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
-    # Add custom static directories here when needed
-    # os.path.join(BASE_DIR, 'posapp/static'),
+    os.path.join(BASE_DIR, 'static'),
 ]
 
 if not DEBUG:

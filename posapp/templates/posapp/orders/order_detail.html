@@ -224,7 +224,7 @@
             <a href="{% url 'order_receipt' order.id %}" class="btn btn-light btn-sm" target="_blank">
                 <i class="fas fa-print me-1"></i> Receipt
             </a>
-            <a href="{% url 'kitchen_receipt' order.id %}" class="btn btn-warning btn-sm" target="_blank">
+            <a href="{% url 'kitchen_receipt' order.id %}?autoprint=1" class="btn btn-warning btn-sm" target="_blank">
                 <i class="fas fa-utensils me-1"></i> Kitchen
             </a>
             {% if order.order_status != 'Completed' and order.order_status != 'Cancelled' %}

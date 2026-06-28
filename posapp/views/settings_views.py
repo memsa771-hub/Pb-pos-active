@@ -220,6 +220,7 @@ def receipt_settings(request):
         'receipt_footer': {'type': 'textarea', 'required': False, 'help_text': 'Text to show at the bottom of receipts'},
         'receipt_show_logo': {'type': 'checkbox', 'required': False, 'help_text': 'Show business logo on receipts'},
         'receipt_show_cashier': {'type': 'checkbox', 'required': False, 'help_text': 'Show cashier name on receipts'},
+        'kitchen_printer_name': {'type': 'text', 'required': False, 'help_text': 'Kitchen printer name for silent print (e.g. BlackCopper 80mm Series). Leave blank for Windows default printer.'},
     }
     
     # Get existing settings

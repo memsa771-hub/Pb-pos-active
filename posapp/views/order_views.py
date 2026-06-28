@@ -29,6 +29,20 @@ from inventory.models import Recipe, InventoryItem
 # Set up logger
 logger = logging.getLogger('posapp')
 
+
+def _group_order_items_by_category(order_items):
+    """Group kitchen order lines by product category for block-wise printing."""
+    from collections import OrderedDict
+
+    grouped = OrderedDict()
+    for item in order_items:
+        category_name = 'Other'
+        if item.product_id and item.product and item.product.category_id:
+            category_name = item.product.category.name
+        grouped.setdefault(category_name, []).append(item)
+    return [{'category': name, 'items': items} for name, items in grouped.items()]
+
+
 @login_required
 def order_list(request):
     """Display list of all orders"""
@@ -989,17 +1003,21 @@ def kitchen_receipt(request, order_id):
     - Delivery address (for Delivery orders)
     """
     order = get_object_or_404(Order, id=order_id)
-    order_items = OrderItem.objects.filter(order=order).select_related('product')
+    order_items = OrderItem.objects.filter(order=order).select_related('product', 'product__category')
     
-    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css'])
+    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css', 'kitchen_printer_name'])
     receipt_paper_size = receipt_settings['receipt_paper_size'].setting_value
     receipt_custom_css = receipt_settings['receipt_custom_css'].setting_value
+    kitchen_printer_name = receipt_settings['kitchen_printer_name'].setting_value
 
     context = {
         'order': order,
         'order_items': order_items,
+        'category_blocks': _group_order_items_by_category(order_items),
         'receipt_paper_size': receipt_paper_size,
         'receipt_custom_css': receipt_custom_css,
+        'kitchen_printer_name': kitchen_printer_name,
+        'auto_print_on_open': request.GET.get('autoprint') == '1',
     }
     
     return render(request, 'posapp/orders/kitchen_receipt.html', context)
@@ -1020,30 +1038,46 @@ def kitchen_receipt_additional(request, order_id):
         messages.info(request, "No additional items to print.")
         return redirect('order_detail', order_id=order_id)
     
-    # Create custom items list with only additional quantities
+    # Build items list with only additional quantities (from DB for category grouping)
     additional_items = []
     for item_id, item_data in additional_items_data.items():
-        # Create a mock item object for the template
-        class MockItem:
-            def __init__(self, product_name, quantity):
-                self.product = type('Product', (), {'name': product_name})()
-                self.quantity = quantity
-        
-        additional_items.append(MockItem(
-            product_name=item_data['product_name'],
-            quantity=item_data['quantity']
-        ))
+        try:
+            item = OrderItem.objects.select_related('product', 'product__category').get(
+                id=int(item_id), order=order
+            )
+            item.quantity = item_data['quantity']
+            additional_items.append(item)
+        except (OrderItem.DoesNotExist, ValueError, TypeError):
+            class MockItem:
+                def __init__(self, product_name, quantity):
+                    self.product = type('Product', (), {'name': product_name, 'category': None})()
+                    self.product_name = product_name
+                    self.quantity = quantity
+                    self.notes = None
+                    self.is_per_kg = False
+
+                @property
+                def display_name(self):
+                    return self.product_name
+
+            additional_items.append(MockItem(
+                product_name=item_data['product_name'],
+                quantity=item_data['quantity'],
+            ))
     
-    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css'])
+    receipt_settings = get_or_create_settings(['receipt_paper_size', 'receipt_custom_css', 'kitchen_printer_name'])
     receipt_paper_size = receipt_settings['receipt_paper_size'].setting_value
     receipt_custom_css = receipt_settings['receipt_custom_css'].setting_value
+    kitchen_printer_name = receipt_settings['kitchen_printer_name'].setting_value
 
     context = {
         'order': order,
         'order_items': additional_items,
+        'category_blocks': _group_order_items_by_category(additional_items),
         'is_additional': True,
         'receipt_paper_size': receipt_paper_size,
         'receipt_custom_css': receipt_custom_css,
+        'kitchen_printer_name': kitchen_printer_name,
     }
     
     # Check if this was triggered by order save
@@ -1060,6 +1094,7 @@ def kitchen_receipt_additional(request, order_id):
         request.session.modified = True
     
     context['auto_print'] = auto_print
+    context['auto_print_on_open'] = auto_print or request.GET.get('autoprint') == '1'
     context['redirect_url'] = request.build_absolute_uri(f'/orders/{order_id}/')
     
     return render(request, 'posapp/orders/kitchen_receipt.html', context)
